@@ -109,7 +109,7 @@ export default function QuestPage() {
             <span className="text-lg">{formatProgress(media.source, media.seasons, progress)}</span>
             <button type="button" className="btn btn-primary" onClick={plusOne}>+1 episódio</button>
           </div>
-          <ProgressEditor quest={quest} onSaved={refresh} />
+          <ProgressEditor key={`${quest.progress_season}:${quest.progress_episode}`} quest={quest} onSaved={refresh} />
         </section>
       )}
 

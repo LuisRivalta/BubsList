@@ -90,3 +90,16 @@ it('does not refresh fresh catalog data', async () => {
   await screen.findByText('T1 E1')
   expect(catalog.fetchCatalogDetails).not.toHaveBeenCalled()
 })
+
+it('the progress editor shows the latest progress after +1', async () => {
+  vi.mocked(api.loadAll)
+    .mockResolvedValueOnce(appData({ categories: allCats(), quests: [dark(1, 10)], media: [darkMedia] }))
+    .mockResolvedValue(appData({ categories: allCats(), quests: [dark(2, 1)], media: [darkMedia] }))
+  const user = userEvent.setup()
+  renderRoute(routes, '/quests/dark')
+  await user.click(await screen.findByRole('button', { name: '+1 episódio' }))
+  expect(await screen.findByText('T2 E1')).toBeInTheDocument()
+  await user.click(screen.getByText('Editar progresso'))
+  expect(screen.getByLabelText('Temporada')).toHaveValue(2)
+  expect(screen.getByLabelText('Episódio')).toHaveValue(1)
+})
