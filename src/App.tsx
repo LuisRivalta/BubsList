@@ -1,11 +1,12 @@
 import { createBrowserRouter, RouterProvider } from 'react-router'
 import Layout from './components/Layout'
+import QuestsPage from './pages/QuestsPage'
 
 const router = createBrowserRouter([
   {
     element: <Layout />,
     children: [
-      { path: '/', element: <p className="text-gray-500">Em construção…</p> },
+      { path: '/', element: <QuestsPage /> },
       { path: '*', element: <p>Página não encontrada.</p> },
     ],
   },
