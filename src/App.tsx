@@ -5,6 +5,7 @@ import AchievementsPage from './pages/AchievementsPage'
 import CompletePage from './pages/CompletePage'
 import QuestFormPage from './pages/QuestFormPage'
 import QuestPage from './pages/QuestPage'
+import ProfilePage from './pages/ProfilePage'
 import QuestsPage from './pages/QuestsPage'
 import ReportPage from './pages/ReportPage'
 
@@ -21,6 +22,7 @@ const router = createBrowserRouter([
       { path: '/conquistas/nova', element: <AchievementFormPage /> },
       { path: '/conquistas/:id/editar', element: <AchievementFormPage /> },
       { path: '/relatorio', element: <ReportPage /> },
+      { path: '/perfil', element: <ProfilePage /> },
       { path: '*', element: <p>Página não encontrada.</p> },
     ],
   },
