@@ -1,3 +1,16 @@
+import { createBrowserRouter, RouterProvider } from 'react-router'
+import Layout from './components/Layout'
+
+const router = createBrowserRouter([
+  {
+    element: <Layout />,
+    children: [
+      { path: '/', element: <p className="text-gray-500">Em construção…</p> },
+      { path: '*', element: <p>Página não encontrada.</p> },
+    ],
+  },
+])
+
 export default function App() {
-  return <h1 className="p-4 text-2xl font-bold text-brand">BubsList</h1>
+  return <RouterProvider router={router} />
 }
