@@ -114,9 +114,9 @@ Categorias criadas pelo casal têm sempre `kind = 'general'`.
 ### 7.5 Catálogo (filmes, séries, animes)
 - Categoria `movie` ou `series` → busca no TMDB (via Edge Function). Categoria `anime` → busca no AniList. Resultados em pt-BR quando disponível.
 - Escolher um resultado cria (ou reaproveita, por `source + external_id`) a linha em `media` e preenche título e dificuldade sugerida.
-- TMDB séries: temporadas = `seasons` do TMDB **excluindo a temporada 0** (especiais); `runtime_minutes` = média de `episode_run_time` (vazio → 45).
+- TMDB séries: temporadas = `seasons` do TMDB **excluindo a temporada 0** (especiais) e temporadas sem episódios; `runtime_minutes` = média de `episode_run_time`; se vazio, `last_episode_to_air.runtime`; se também vazio, 45.
 - TMDB filmes: `runtime_minutes` = `runtime` (nulo → 120).
-- AniList: `seasons = [{"season":1,"episodes":episodes}]` se `episodes` conhecido, senão `[]`; `runtime_minutes` = `duration` (nulo → 24).
+- AniList: total de episódios = `episodes`; se nulo (anime em exibição, ex.: One Piece), `nextAiringEpisode.episode − 1`. `seasons = [{"season":1,"episodes":total}]` se o total é conhecido, senão `[]`; `runtime_minutes` = `duration` (nulo → 24).
 - **Atualização:** ao abrir a página de uma quest com mídia `tmdb_tv` ou `anilist` cujo `fetched_at` tem mais de 7 dias, o app busca de novo e atualiza `media` (episódios novos). A dificuldade nunca muda sozinha.
 - Busca falhou ou não achou → a quest pode ser salva só com o título, sem mídia; a mídia pode ser vinculada depois pela edição.
 - Trocar a categoria de uma quest para um tipo incompatível com a mídia (`movie` ↔ `tmdb_movie`, `series` ↔ `tmdb_tv`, `anime` ↔ `anilist`) remove o vínculo: `media_id`, `progress_season` e `progress_episode` viram nulos.
@@ -162,14 +162,14 @@ Se o total de episódios é desconhecido (`seasons = []` em série/anime), não 
 
 ### 7.10 Categorias
 - Criar/editar: nome (único), ícone (emoji), cor.
-- Categorias base não podem ser excluídas (RLS impede). Categoria criada só pode ser excluída se nenhuma quest e nenhuma conquista a usam; senão: "Categoria em uso por N quests/conquistas".
+- Categorias base não podem ser excluídas (RLS impede) nem editadas (a interface não oferece edição — o padrão "Atividade" das subquests depende do nome). Categoria criada só pode ser excluída se nenhuma quest e nenhuma conquista a usam; senão: "Categoria em uso por N quests/conquistas".
 
 ## 8. Telas
 
 Navegação: celular (< 768 px) → barra inferior; PC (≥ 768 px) → menu lateral. Itens: **Quests · Conquistas · Relatório · Perfil** (a Fase 2 adiciona **Mapa**). Alvos de toque ≥ 44 px; foco visível; campos com rótulo.
 
 1. **Login** — e-mail, senha, "esqueci a senha".
-2. **Quests (início)** — aviso de resenhas pendentes; abas **Pendentes / Feitas**; filtros por categoria (chips) e dificuldade; busca por título (sem diferenciar maiúsculas/acentos). Lista só quests de nível superior. Card: ícone/cor da categoria, título, dificuldade, pôster ou 1ª foto de referência, progresso de subquests, progresso de episódios. Botão flutuante **+**. No PC, cards em grade.
+2. **Quests (início)** — aviso de resenhas pendentes; abas **Pendentes / Feitas**; filtros por categoria (chips) e dificuldade; busca por título (sem diferenciar maiúsculas/acentos). Lista só quests de nível superior; **com busca preenchida, encontra quests de qualquer nível** e o card mostra o caminho do pai ("Japão ›"). Card: ícone/cor da categoria, título, dificuldade, pôster ou 1ª foto de referência, progresso de subquests, progresso de episódios. Botão flutuante **+**. No PC, cards em grade.
 3. **Criar/editar quest** — categoria primeiro; se `movie`/`series`/`anime`, busca no catálogo (preenche título, pôster, dificuldade sugerida). Campos: título, dificuldade, notas, fotos de referência. Ao criar subquest, o pai vem fixado.
 4. **Página da quest** — caminho clicável (Japão › Tóquio › Ichiran); cabeçalho (título, categoria, dificuldade, pôster, sinopse); fotos de referência; progresso de episódios com "+1 episódio"; lista de subquests diretas (status, nº de filhas); histórico de conclusões com as resenhas dos dois; ações: **Concluir** / **Fazer de novo**, **+ Subquest**, editar, excluir.
 5. **Concluir / resenha** — data → resenha (estrelas, texto, fotos) com "Pular". Editar resenha reabre o mesmo formulário.
@@ -284,6 +284,7 @@ Navegação: celular (< 768 px) → barra inferior; PC (≥ 768 px) → menu lat
 2. Rodar `npx supabase login` no terminal (abre o navegador) e informar o *project ref* e a senha do banco para o `supabase link`.
 3. Criar conta no TMDB, gerar o *API Read Access Token* e gravá-lo com `npx supabase secrets set TMDB_TOKEN=<token>`.
 4. Criar o repositório no GitHub e a conta na Vercel; importar o repositório e definir `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
+5. No Supabase, em Auth → URL Configuration: *Site URL* = endereço do site na Vercel; *Redirect URLs* += `http://localhost:5173` (para o e-mail de recuperação de senha voltar ao site).
 
 **Fase 2:** conta Google Cloud com cobrança ativa, APIs ativadas, chave restrita, Map ID e os limites diários de §13.
 
