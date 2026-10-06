@@ -141,10 +141,12 @@ export async function updateProfile(id: string, patch: Partial<Pick<Profile, 'di
   check(await supabase.from('profiles').update(patch).eq('id', id))
 }
 
-export async function uploadAvatar(userId: string, blob: Blob) {
-  const path = `avatars/${userId}.jpg`
-  check(await supabase.storage.from('photos').upload(path, blob, { contentType: 'image/jpeg', upsert: true }))
+export async function uploadAvatar(userId: string, blob: Blob, oldPath: string | null) {
+  // A fresh path per upload: the same path would keep serving the cached signed URL / CDN copy of the old picture.
+  const path = `avatars/${userId}-${Date.now()}.jpg`
+  check(await supabase.storage.from('photos').upload(path, blob, { contentType: 'image/jpeg' }))
   await updateProfile(userId, { avatar_path: path })
+  if (oldPath) await supabase.storage.from('photos').remove([oldPath])
 }
 
 export const signOut = () => supabase.auth.signOut()

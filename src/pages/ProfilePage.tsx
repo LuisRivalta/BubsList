@@ -54,7 +54,7 @@ function ProfileForm({ profile, onSaved }: { profile: Profile; onSaved: () => vo
   async function changeAvatar(file: File | undefined) {
     if (!file) return
     try {
-      await uploadAvatar(profile.id, await compressImage(file))
+      await uploadAvatar(profile.id, await compressImage(file), profile.avatar_path)
       onSaved()
     } catch (e) {
       setMessage(e instanceof UnsupportedImageError ? e.message : 'Não foi possível trocar a foto.')
