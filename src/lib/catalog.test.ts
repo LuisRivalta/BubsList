@@ -52,3 +52,9 @@ it('propagates function errors', async () => {
   invoke.mockResolvedValue({ data: null, error: new Error('boom') } as never)
   await expect(searchCatalog('series', 'dark')).rejects.toThrow('boom')
 })
+
+it('anime search excludes adult titles', async () => {
+  anilistReplies({ Page: { media: [] } })
+  await searchCatalog('anime', 'x y')
+  expect(JSON.parse(fetchMock.mock.calls[0][1].body).query).toContain('isAdult: false')
+})

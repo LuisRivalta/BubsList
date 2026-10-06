@@ -7,7 +7,7 @@ type CatalogKind = Exclude<CategoryKind, 'general'>
 export const KIND_SOURCE: Record<CatalogKind, MediaSource> = { movie: 'tmdb_movie', series: 'tmdb_tv', anime: 'anilist' }
 
 const ANILIST = 'https://graphql.anilist.co'
-const SEARCH = `query ($q: String) { Page(perPage: 10) { media(search: $q, type: ANIME, sort: SEARCH_MATCH) {
+const SEARCH = `query ($q: String) { Page(perPage: 10) { media(search: $q, type: ANIME, isAdult: false, sort: SEARCH_MATCH) {
   id title { romaji english } coverImage { large } seasonYear } } }`
 const DETAILS = `query ($id: Int) { Media(id: $id, type: ANIME) {
   id title { romaji english } coverImage { large } description episodes duration genres seasonYear nextAiringEpisode { episode } } }`
