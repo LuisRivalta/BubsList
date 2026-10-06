@@ -39,6 +39,8 @@ function CompleteForm({ data, quest, existing }: { data: AppData; quest: Quest; 
   const [failedReviewId, setFailedReviewId] = useState<string | null>(null)
   const [celebrate, setCelebrate] = useState<Achievement[] | null>(null)
   const unlocked = useRef<Achievement[]>([])
+  // Set once createCompletion succeeds, so a retry after a failed review save doesn't insert a second completion.
+  const created = useRef<Completion | null>(null)
 
   const back = () => navigate(`/quests/${quest.id}`, { replace: true })
   const afterSave = () => (unlocked.current.length ? setCelebrate(unlocked.current) : back())
@@ -52,20 +54,22 @@ function CompleteForm({ data, quest, existing }: { data: AppData; quest: Quest; 
     try {
       const before = evaluateAchievements(data.achievements, data.quests, data.completions)
       let completion: Completion
-      if (existing) {
-        if (existing.done_on !== doneOn) await updateCompletion(existing.id, doneOn)
-        completion = { ...existing, done_on: doneOn }
+      const saved = existing ?? created.current
+      if (saved) {
+        if (saved.done_on !== doneOn) await updateCompletion(saved.id, doneOn)
+        completion = { ...saved, done_on: doneOn }
       } else {
         completion = await createCompletion(quest.id, doneOn)
+        created.current = completion
       }
       let failed: Blob[] = []
       let reviewId: string | null = null
       if (withReview) {
-        const saved = await saveReview({ id: mine?.id, completion_id: completion.id, rating, body: body.trim() || null })
-        reviewId = saved.id
-        failed = await uploadPending({ review_id: saved.id }, pending)
+        const review = await saveReview({ id: mine?.id, completion_id: completion.id, rating, body: body.trim() || null })
+        reviewId = review.id
+        failed = await uploadPending({ review_id: review.id }, pending)
       }
-      const completions = existing ? data.completions.map((c) => (c.id === completion.id ? completion : c)) : [...data.completions, completion]
+      const completions = [...data.completions.filter((c) => c.id !== completion.id), completion]
       unlocked.current = newlyUnlocked(before, evaluateAchievements(data.achievements, data.quests, completions))
       await refresh()
       if (failed.length) {
