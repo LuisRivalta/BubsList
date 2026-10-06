@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { achievement, completion, quest } from '../test/fixtures'
-import { evaluateAchievements, newlyUnlocked } from './achievements'
+import { achievement, category, completion, quest } from '../test/fixtures'
+import { describeRule, evaluateAchievements, newlyUnlocked } from './achievements'
 
 const q1 = quest({ id: 'q1', category_id: 'rest', difficulty: 'easy' })
 const q2 = quest({ id: 'q2', category_id: 'rest', difficulty: 'hard' })
@@ -65,4 +65,10 @@ it('newlyUnlocked lists only achievements unlocked by the change', () => {
   const before = evaluateAchievements([first, two], quests, [])
   const after = evaluateAchievements([first, two], quests, [completion({ quest_id: 'q1' })])
   expect(newlyUnlocked(before, after).map((a) => a.id)).toEqual(['first'])
+})
+
+it('describes a rule', () => {
+  const rest = category({ id: 'rest', name: 'Restaurante' })
+  expect(describeRule(achievement({ rule_category_id: 'rest', rule_min_difficulty: 'hard', rule_count: 10 }), [rest])).toBe('Restaurante · Difícil+ · 10')
+  expect(describeRule(achievement({ rule_min_difficulty: 'epic', rule_count: 5 }), [])).toBe('Qualquer categoria · Épica · 5')
 })

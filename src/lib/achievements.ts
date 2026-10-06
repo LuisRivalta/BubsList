@@ -1,5 +1,5 @@
-import { difficultyRank } from './difficulty'
-import type { Achievement, Completion, Quest, Rarity } from './types'
+import { DIFFICULTY_LABEL, difficultyRank } from './difficulty'
+import type { Achievement, Category, Completion, Quest, Rarity } from './types'
 
 export const RARITIES: Rarity[] = ['platinum', 'gold', 'silver', 'bronze']
 
@@ -45,4 +45,12 @@ function evaluateAuto(a: Achievement, questById: Map<string, Quest>, ordered: Co
 export function newlyUnlocked(before: AchievementStatus[], after: AchievementStatus[]): Achievement[] {
   const already = new Set(before.filter((s) => s.unlockedOn).map((s) => s.achievement.id))
   return after.filter((s) => s.unlockedOn && !already.has(s.achievement.id)).map((s) => s.achievement)
+}
+
+export function describeRule(a: Achievement, categories: Category[]): string {
+  const category = categories.find((c) => c.id === a.rule_category_id)?.name ?? 'Qualquer categoria'
+  const min = a.rule_min_difficulty
+    ? ` · ${DIFFICULTY_LABEL[a.rule_min_difficulty]}${a.rule_min_difficulty === 'epic' ? '' : '+'}`
+    : ''
+  return `${category}${min} · ${a.rule_count ?? 1}`
 }

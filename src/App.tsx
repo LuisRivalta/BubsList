@@ -1,5 +1,7 @@
 import { createBrowserRouter, RouterProvider } from 'react-router'
 import Layout from './components/Layout'
+import AchievementFormPage from './pages/AchievementFormPage'
+import AchievementsPage from './pages/AchievementsPage'
 import CompletePage from './pages/CompletePage'
 import QuestFormPage from './pages/QuestFormPage'
 import QuestPage from './pages/QuestPage'
@@ -14,6 +16,9 @@ const router = createBrowserRouter([
       { path: '/quests/:id/editar', element: <QuestFormPage /> },
       { path: '/quests/:id', element: <QuestPage /> },
       { path: '/quests/:id/concluir', element: <CompletePage /> },
+      { path: '/conquistas', element: <AchievementsPage /> },
+      { path: '/conquistas/nova', element: <AchievementFormPage /> },
+      { path: '/conquistas/:id/editar', element: <AchievementFormPage /> },
       { path: '*', element: <p>Página não encontrada.</p> },
     ],
   },
