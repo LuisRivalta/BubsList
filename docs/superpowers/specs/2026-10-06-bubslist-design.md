@@ -103,11 +103,11 @@ Categorias criadas pelo casal têm sempre `kind = 'general'`.
 
 ### 7.3 Resenhas
 - Uma por pessoa por conclusão. Nota 1–5 obrigatória; texto e fotos opcionais.
-- **Resenha pendente:** conclusão registrada (`created_at`) nos últimos **14 dias** sem resenha do usuário atual. A tela inicial mostra "Você tem N resenhas pendentes" com link para cada uma.
+- **Resenha pendente:** qualquer conclusão sem resenha do usuário atual, sem prazo — só sai da lista quando a resenha é escrita. A tela inicial mostra "Você tem N resenhas pendentes" com link para cada uma.
 
 ### 7.4 Fotos
 - Antes do upload: redimensionar no aparelho para no máximo **1600 px** no maior lado e codificar em **JPEG qualidade 0,8**.
-- Máximo de **10 fotos** de referência por quest e **10 por resenha**.
+- Máximo de **15 fotos** de referência por quest e **15 por resenha**.
 - Arquivo que o navegador não consegue decodificar (ex.: HEIC no Chrome do PC) → mensagem "Formato de imagem não suportado" e nada é enviado.
 - Falha no upload não perde a resenha: a resenha é salva e a foto mostra "tentar de novo".
 
@@ -203,7 +203,7 @@ Navegação: celular (< 768 px) → barra inferior; PC (≥ 768 px) → menu lat
 
 ## 12. Testes
 
-- **Vitest (lógica pura):** regras de conquista (filtros, dificuldade mínima, itens diferentes, data de desbloqueio, rebloqueio), períodos e contagens do relatório, dificuldade por tamanho (limites exatos 900/2400/6000), avanço de episódio/temporada, normalização TMDB/AniList, resenhas pendentes (janela de 14 dias).
+- **Vitest (lógica pura):** regras de conquista (filtros, dificuldade mínima, itens diferentes, data de desbloqueio, rebloqueio), períodos e contagens do relatório, dificuldade por tamanho (limites exatos 900/2400/6000), avanço de episódio/temporada, normalização TMDB/AniList, resenhas pendentes (sem prazo).
 - **Testing Library:** criar quest; concluir com resenha; "+1 episódio".
 - **Fumaça de segurança:** script que, com a chave anon e sem login, tenta ler `quests` e falha se vier alguma linha.
 
