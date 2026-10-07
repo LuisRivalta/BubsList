@@ -1,9 +1,12 @@
-import { Trash2 } from 'lucide-react'
+import { Heart, Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import Icon, { IconPicker } from '../components/Icon'
+import Avatar from '../components/Avatar'
+import Bubble from '../components/Bubble'
+import { IconPicker } from '../components/Icon'
+import PageHero from '../components/PageHero'
 import { LoadError, PageLoading } from '../components/Status'
 import { deleteCategory, saveCategory, signOut, updateProfile, uploadAvatar, type CategoryInput } from '../data/api'
-import { useAppData, useRefresh, useSignedUrls } from '../data/hooks'
+import { useAppData, useRefresh } from '../data/hooks'
 import { useUserId } from '../data/session'
 import { UnsupportedImageError, compressImage } from '../lib/image'
 import type { AppData, Category, Profile } from '../lib/types'
@@ -15,31 +18,40 @@ export default function ProfilePage() {
   if (q.error) return <LoadError retry={() => q.refetch()} />
   if (!q.data) return <PageLoading />
   const profile = q.data.profiles.find((p) => p.id === me)
+  const partner = q.data.profiles.find((p) => p.id !== me)
 
   return (
-    <div className="mx-auto max-w-xl space-y-8">
-      <h1 className="text-2xl font-bold">Perfil</h1>
-      {profile && <ProfileForm profile={profile} onSaved={refresh} />}
-      <Categories data={q.data} onChange={refresh} />
-      <section className="space-y-2 text-sm text-gray-600">
-        <h2 className="font-semibold text-gray-900">Créditos</h2>
-        <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer">
-          <img src="/tmdb.svg" alt="TMDB" className="h-4" />
-        </a>
-        <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
-        <p>
-          Dados de anime: <a className="underline" href="https://anilist.co" target="_blank" rel="noreferrer">AniList</a>.
-        </p>
-      </section>
-      <button type="button" className="btn btn-danger w-full" onClick={() => signOut()}>Sair</button>
-    </div>
+    <>
+      <PageHero title="Perfil">
+        <div className="flex items-center gap-3">
+          {profile && <Avatar profile={profile} size="lg" />}
+          <Heart aria-hidden className="size-7 fill-accent text-accent drop-shadow" />
+          {partner && <Avatar profile={partner} size="lg" />}
+          <p className="ml-1 font-display text-lg font-semibold text-white/90">
+            {profile?.display_name}{partner ? ` & ${partner.display_name}` : ''}
+          </p>
+        </div>
+      </PageHero>
+      <div className="max-w-2xl space-y-5">
+        <section className="card p-5">{profile && <ProfileForm profile={profile} onSaved={refresh} />}</section>
+        <section className="card p-5"><Categories data={q.data} onChange={refresh} /></section>
+        <section className="card space-y-2 p-5 text-sm text-ink/60">
+          <h2 className="text-lg font-semibold text-ink">Créditos</h2>
+          <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer">
+            <img src="/tmdb.svg" alt="TMDB" className="h-4" />
+          </a>
+          <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+          <p>Dados de anime: <a className="underline" href="https://anilist.co" target="_blank" rel="noreferrer">AniList</a>.</p>
+        </section>
+        <button type="button" className="btn btn-danger min-h-12 w-full" onClick={() => signOut()}>Sair</button>
+      </div>
+    </>
   )
 }
 
 function ProfileForm({ profile, onSaved }: { profile: Profile; onSaved: () => void }) {
   const [name, setName] = useState(profile.display_name)
   const [message, setMessage] = useState<string | null>(null)
-  const avatarUrl = useSignedUrls(profile.avatar_path ? [profile.avatar_path] : []).data?.[profile.avatar_path ?? '']
 
   async function saveName(e: FormEvent) {
     e.preventDefault()
@@ -65,28 +77,20 @@ function ProfileForm({ profile, onSaved }: { profile: Profile; onSaved: () => vo
 
   return (
     <section className="space-y-3">
-      <div className="flex items-center gap-4">
-        {avatarUrl ? (
-          <img src={avatarUrl} alt="" className="size-16 rounded-full object-cover" />
-        ) : (
-          <span aria-hidden className="grid size-16 place-items-center rounded-full bg-brand text-2xl text-white">
-            {profile.display_name[0]?.toUpperCase()}
-          </span>
-        )}
-        <label className="btn cursor-pointer">
-          Trocar foto
-          <input
-            type="file"
-            accept="image/*"
-            className="sr-only"
-            onChange={(e) => {
-              const file = e.target.files?.[0]
-              e.target.value = ''
-              changeAvatar(file)
-            }}
-          />
-        </label>
-      </div>
+      <h2 className="text-lg font-semibold">Você</h2>
+      <label className="btn cursor-pointer">
+        Trocar foto
+        <input
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            e.target.value = ''
+            changeAvatar(file)
+          }}
+        />
+      </label>
       <form onSubmit={saveName} className="flex gap-2">
         <label className="flex-1">
           <span className="sr-only">Seu nome</span>
@@ -168,8 +172,8 @@ function CategoryRow({ category: c, onSave, onDelete }: RowProps) {
     )
   }
   return (
-    <li className="card flex items-center gap-3 p-3">
-      <span style={{ color: c.color }}><Icon name={c.icon} /></span>
+    <li className="flex items-center gap-3 rounded-2xl bg-paper/70 p-2 pr-3">
+      <Bubble icon={c.icon} color={c.color} />
       <span className="flex-1">{c.name}</span>
       {c.builtin ? (
         <span className="text-xs text-gray-500">padrão</span>

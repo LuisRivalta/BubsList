@@ -26,7 +26,7 @@ export default function PageHero({ title, eyebrow, stats, actions, cover, childr
       {cover && <div aria-hidden className="hero-cover" style={{ backgroundImage: `url("${cover}")` }} />}
       <div className="relative space-y-3">
         {eyebrow}
-        <h1 className="break-words text-3xl font-bold leading-tight drop-shadow-sm md:text-5xl">{title}</h1>
+        <h1 className="break-words pr-14 text-3xl font-bold leading-tight drop-shadow-sm md:pr-28 md:text-5xl">{title}</h1>
         {stats && <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-white/80 md:text-base">{stats}</div>}
         {children}
         {actions && <div className="flex flex-wrap gap-2 pt-2">{actions}</div>}
