@@ -4,7 +4,7 @@ import { beforeEach, expect, it, vi } from 'vitest'
 import { normalizeAniList } from '../../supabase/functions/_shared/catalog'
 import * as api from '../data/api'
 import * as catalog from '../lib/catalog'
-import { CATS, allCats, appData, media, quest } from '../test/fixtures'
+import { CATS, allCats, appData, media, quest, questType } from '../test/fixtures'
 import { renderRoute } from '../test/render'
 import QuestFormPage from './QuestFormPage'
 
@@ -86,4 +86,96 @@ it('editing a quest that no longer exists shows a readable not-found hero', asyn
 it('a link from a category page preselects that category', async () => {
   renderRoute(routes, `/quests/nova?categoria=${CATS.restaurante.id}`)
   expect(await screen.findByRole('button', { name: 'Restaurante' })).toHaveAttribute('aria-pressed', 'true')
+})
+
+const burger = questType({ id: 't-burger', category_id: CATS.restaurante.id, name: 'Hamburgueria' })
+const scifi = questType({ id: 't-scifi', category_id: CATS.filme.id, name: 'Ficção científica' })
+const withTypes = (o: Parameters<typeof appData>[0] = {}) =>
+  vi.mocked(api.loadAll).mockResolvedValue(appData({ categories: allCats(), questTypes: [burger, scifi], quests: [japao], ...o }))
+
+it('types follow the category; a new type is created and selected', async () => {
+  withTypes()
+  vi.mocked(api.saveQuestType).mockResolvedValue(questType({ id: 't-new', category_id: CATS.restaurante.id, name: 'Pizzaria' }))
+  const user = userEvent.setup()
+  renderRoute(routes, '/quests/nova')
+  await user.click(await screen.findByRole('button', { name: 'Restaurante' }))
+  expect(screen.getByRole('button', { name: 'Hamburgueria' })).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Ficção científica' })).not.toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Novo tipo' }))
+  await user.type(screen.getByLabelText('Nome do novo tipo'), 'Pizzaria')
+  await user.click(screen.getByRole('button', { name: 'Criar' }))
+  expect(api.saveQuestType).toHaveBeenCalledWith({ category_id: CATS.restaurante.id, name: 'Pizzaria' })
+  expect(await screen.findByRole('button', { name: 'Pizzaria' })).toHaveAttribute('aria-pressed', 'true')
+  await user.click(screen.getByRole('button', { name: 'Filme' }))
+  expect(screen.getByRole('button', { name: 'Nenhum' })).toHaveAttribute('aria-pressed', 'true')
+  expect(screen.getByRole('button', { name: 'Ficção científica' })).toBeInTheDocument()
+})
+
+it('a new type with an existing name selects the existing one', async () => {
+  withTypes()
+  const user = userEvent.setup()
+  renderRoute(routes, '/quests/nova')
+  await user.click(await screen.findByRole('button', { name: 'Restaurante' }))
+  await user.click(screen.getByRole('button', { name: 'Novo tipo' }))
+  await user.type(screen.getByLabelText('Nome do novo tipo'), ' hamburgueria')
+  await user.click(screen.getByRole('button', { name: 'Criar' }))
+  expect(api.saveQuestType).not.toHaveBeenCalled()
+  expect(screen.getByRole('button', { name: 'Hamburgueria' })).toHaveAttribute('aria-pressed', 'true')
+})
+
+it('saves the chosen type and the trimmed city', async () => {
+  withTypes()
+  const user = userEvent.setup()
+  renderRoute(routes, '/quests/nova')
+  await user.click(await screen.findByRole('button', { name: 'Restaurante' }))
+  await user.click(screen.getByRole('button', { name: 'Hamburgueria' }))
+  await user.type(screen.getByLabelText('Título'), 'Brabus Burguer')
+  await user.click(screen.getByRole('button', { name: 'Fácil' }))
+  await user.type(screen.getByLabelText(/Cidade/), '  Ribeirão Preto ')
+  await user.click(screen.getByRole('button', { name: 'Salvar' }))
+  await waitFor(() => expect(api.createQuest).toHaveBeenCalledWith(expect.objectContaining({ type_id: 't-burger', city: 'Ribeirão Preto' })))
+})
+
+it('a new subquest starts with the city of its parent', async () => {
+  withTypes({ quests: [quest({ id: 'japao', title: 'Japão', category_id: CATS.viagem.id, city: 'Tóquio' })] })
+  renderRoute(routes, '/quests/nova?parent=japao')
+  expect(await screen.findByLabelText(/Cidade/)).toHaveValue('Tóquio')
+})
+
+it('editing a quest whose type was deleted shows Nenhum', async () => {
+  withTypes({ quests: [quest({ id: 'velha', title: 'Velha', category_id: CATS.restaurante.id, type_id: 't-apagado' })] })
+  renderRoute([{ path: '/quests/:id/editar', element: <QuestFormPage /> }], '/quests/velha/editar')
+  expect(await screen.findByRole('button', { name: 'Nenhum' })).toHaveAttribute('aria-pressed', 'true')
+})
+
+it('a catalog genre selects the matching type, or offers to create it', async () => {
+  const anime = (genres: string[]) =>
+    ({ ...normalizeAniList({ id: 21, title: { english: 'ONE PIECE' }, episodes: 1100, duration: 24, seasonYear: 1999 }), genres })
+  vi.mocked(catalog.searchCatalog).mockResolvedValue([{ source: 'anilist', external_id: '21', title: 'ONE PIECE', year: 1999, poster_url: null }])
+  withTypes({ questTypes: [questType({ id: 't-adv', category_id: CATS.anime.id, name: 'Aventura' })] })
+  vi.mocked(catalog.fetchCatalogDetails).mockResolvedValue(anime(['Ação', 'aventura']))
+  const user = userEvent.setup()
+  renderRoute(routes, '/quests/nova')
+  await user.click(await screen.findByRole('button', { name: 'Anime' }))
+  await user.type(screen.getByLabelText('Buscar no catálogo'), 'one piece')
+  await user.click(await screen.findByRole('button', { name: 'ONE PIECE (1999)' }))
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Aventura' })).toHaveAttribute('aria-pressed', 'true'))
+})
+
+it('a catalog genre that is not a type yet becomes a one-tap shortcut', async () => {
+  vi.mocked(catalog.searchCatalog).mockResolvedValue([{ source: 'anilist', external_id: '21', title: 'ONE PIECE', year: 1999, poster_url: null }])
+  vi.mocked(catalog.fetchCatalogDetails).mockResolvedValue({
+    ...normalizeAniList({ id: 21, title: { english: 'ONE PIECE' }, episodes: 1100, duration: 24, seasonYear: 1999 }),
+    genres: ['Comédia'],
+  })
+  vi.mocked(api.saveQuestType).mockResolvedValue(questType({ id: 't-com', category_id: CATS.anime.id, name: 'Comédia' }))
+  withTypes()
+  const user = userEvent.setup()
+  renderRoute(routes, '/quests/nova')
+  await user.click(await screen.findByRole('button', { name: 'Anime' }))
+  await user.type(screen.getByLabelText('Buscar no catálogo'), 'one piece')
+  await user.click(await screen.findByRole('button', { name: 'ONE PIECE (1999)' }))
+  await user.click(await screen.findByRole('button', { name: 'Comédia' }))
+  expect(api.saveQuestType).toHaveBeenCalledWith({ category_id: CATS.anime.id, name: 'Comédia' })
+  expect(await screen.findByRole('button', { name: 'Comédia' })).toHaveAttribute('aria-pressed', 'true')
 })

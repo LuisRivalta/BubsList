@@ -1,3 +1,4 @@
+import { Plus } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
 import CatalogSearch from '../components/CatalogSearch'
@@ -6,11 +7,13 @@ import Gems from '../components/Gems'
 import PageHero from '../components/PageHero'
 import PhotoPicker, { uploadPending } from '../components/PhotoPicker'
 import { LoadError, NotFound, PageLoading } from '../components/Status'
-import { createQuest, deletePhoto, updateQuest, upsertMedia, type QuestInput } from '../data/api'
+import { createQuest, deletePhoto, saveQuestType, updateQuest, upsertMedia, type QuestInput } from '../data/api'
 import { useAppData, useRefresh } from '../data/hooks'
 import { KIND_SOURCE } from '../lib/catalog'
 import { DIFFICULTIES, suggestDifficulty } from '../lib/difficulty'
-import type { AppData, Difficulty, Media, NormalizedMedia, Quest } from '../lib/types'
+import { cityOptions, sameText } from '../lib/filters'
+import { effectiveCity } from '../lib/tree'
+import type { AppData, Difficulty, Media, NormalizedMedia, Quest, QuestType } from '../lib/types'
 
 export default function QuestFormPage() {
   const { id } = useParams()
@@ -31,6 +34,12 @@ function QuestForm({ data, existing, parentId, initialCategory }: { data: AppDat
   const parent = parentId ? data.quests.find((x) => x.id === parentId) : undefined
   const atividade = data.categories.find((c) => c.builtin && c.name === 'Atividade')
   const [categoryId, setCategoryId] = useState(existing?.category_id ?? initialCategory ?? (parentId ? atividade?.id ?? '' : ''))
+  // A type that was deleted meanwhile counts as none.
+  const [typeId, setTypeId] = useState<string | null>(data.questTypes.some((t) => t.id === existing?.type_id) ? existing!.type_id : null)
+  const [createdTypes, setCreatedTypes] = useState<QuestType[]>([])
+  const [newType, setNewType] = useState<string | null>(null) // null = the "new type" field is closed
+  const [genre, setGenre] = useState<string | null>(null)
+  const [city, setCity] = useState(existing?.city ?? (parentId ? effectiveCity(data.quests, parentId) ?? '' : ''))
   const [title, setTitle] = useState(existing?.title ?? '')
   const [notes, setNotes] = useState(existing?.notes ?? '')
   const [difficulty, setDifficulty] = useState<Difficulty | null>(existing?.difficulty ?? null)
@@ -46,6 +55,39 @@ function QuestForm({ data, existing, parentId, initialCategory }: { data: AppDat
   const kind = category?.kind ?? 'general'
   const mediaFits = media !== null && kind !== 'general' && KIND_SOURCE[kind] === media.source
   const existingPhotos = existing ? data.photos.filter((p) => p.quest_id === existing.id) : []
+  const types = [...data.questTypes, ...createdTypes.filter((c) => !data.questTypes.some((t) => t.id === c.id))]
+    .filter((t) => t.category_id === categoryId)
+    .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+
+  function chooseCategory(id: string) {
+    if (id !== categoryId) {
+      setTypeId(null)
+      setGenre(null)
+      setNewType(null)
+    }
+    setCategoryId(id)
+  }
+
+  // Creates the type in this category (or picks the existing one with that name) and selects it.
+  async function addType(name: string) {
+    const clean = name.trim()
+    if (!clean || !categoryId) return
+    const found = types.find((t) => sameText(t.name, clean))
+    if (found) setTypeId(found.id)
+    else {
+      try {
+        const created = await saveQuestType({ category_id: categoryId, name: clean })
+        setCreatedTypes((list) => [...list, created])
+        setTypeId(created.id)
+        refresh()
+      } catch {
+        setError('Não foi possível criar o tipo.')
+        return
+      }
+    }
+    setNewType(null)
+    setGenre(null)
+  }
 
   function pickMedia(m: NormalizedMedia) {
     setMedia(m)
@@ -53,6 +95,11 @@ function QuestForm({ data, existing, parentId, initialCategory }: { data: AppDat
     if (!existing) {
       const suggestion = suggestDifficulty(m)
       if (suggestion) setDifficulty(suggestion)
+    }
+    if (typeId === null) {
+      const match = types.find((t) => m.genres.some((g) => sameText(g, t.name)))
+      if (match) setTypeId(match.id)
+      else setGenre(m.genres[0] ?? null)
     }
   }
 
@@ -77,7 +124,7 @@ function QuestForm({ data, existing, parentId, initialCategory }: { data: AppDat
       const mediaId = mediaFits && media ? ('id' in media ? media.id : (await upsertMedia(media)).id) : null
       const input: QuestInput = {
         parent_id: parentId, category_id: category.id, title: title.trim(), notes: notes.trim() || null, difficulty, media_id: mediaId,
-        type_id: existing?.type_id ?? null, city: existing?.city ?? null,
+        type_id: typeId, city: city.trim() || null,
       }
       let questId: string
       if (existing) {
@@ -116,11 +163,45 @@ function QuestForm({ data, existing, parentId, initialCategory }: { data: AppDat
           <h2 id="cat-label" className="text-lg font-semibold">Categoria</h2>
           <div role="group" aria-labelledby="cat-label" className="grid grid-cols-3 gap-2 sm:grid-cols-4">
             {data.categories.map((c) => (
-              <button key={c.id} type="button" aria-pressed={c.id === categoryId} onClick={() => setCategoryId(c.id)} className="tile">
+              <button key={c.id} type="button" aria-pressed={c.id === categoryId} onClick={() => chooseCategory(c.id)} className="tile">
                 <Bubble icon={c.icon} color={c.color} size="lg" /> {c.name}
               </button>
             ))}
           </div>
+          {category && (
+            <div className="space-y-2 border-t border-ink/10 pt-3">
+              <h3 id="type-label" className="font-bold">Tipo</h3>
+              <div role="group" aria-labelledby="type-label" className="flex flex-wrap gap-2">
+                <button type="button" aria-pressed={typeId === null} onClick={() => setTypeId(null)} className="chip pl-3">Nenhum</button>
+                {types.map((t) => (
+                  <button key={t.id} type="button" aria-pressed={typeId === t.id} onClick={() => setTypeId(t.id)} className="chip pl-3">{t.name}</button>
+                ))}
+                {genre && !types.some((t) => sameText(t.name, genre)) && (
+                  <button type="button" onClick={() => addType(genre)} className="chip pl-3"><Plus aria-hidden className="size-4" /> {genre}</button>
+                )}
+                <button type="button" onClick={() => setNewType('')} className="chip pl-3"><Plus aria-hidden className="size-4" /> Novo tipo</button>
+              </div>
+              {newType !== null && (
+                <div className="flex gap-2">
+                  <input
+                    aria-label="Nome do novo tipo"
+                    className="input min-w-0 flex-1"
+                    value={newType}
+                    maxLength={40}
+                    autoFocus
+                    onChange={(e) => setNewType(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        addType(newType)
+                      }
+                    }}
+                  />
+                  <button type="button" className="btn btn-primary" onClick={() => addType(newType)}>Criar</button>
+                </div>
+              )}
+            </div>
+          )}
         </section>
 
         {kind !== 'general' && (
@@ -141,6 +222,13 @@ function QuestForm({ data, existing, parentId, initialCategory }: { data: AppDat
           <label className="block">
             <span className="mb-1 block font-bold">Título</span>
             <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} />
+          </label>
+          <label className="block">
+            <span className="mb-1 block font-bold">Cidade <span className="font-normal text-ink/60">(opcional)</span></span>
+            <input className="input" list="city-options" value={city} maxLength={80} onChange={(e) => setCity(e.target.value)} />
+            <datalist id="city-options">
+              {cityOptions(data.quests).map((c) => <option key={c} value={c} />)}
+            </datalist>
           </label>
           <div className="space-y-2">
             <h2 id="diff-label" className="font-bold">Dificuldade</h2>
