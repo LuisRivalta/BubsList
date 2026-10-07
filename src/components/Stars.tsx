@@ -1,4 +1,6 @@
+import { animate } from 'animejs'
 import { Star } from 'lucide-react'
+import { prefersReducedMotion } from '../lib/motion'
 
 const tone = (on: boolean) => (on ? 'fill-current text-accent' : 'text-gray-300')
 
@@ -19,10 +21,14 @@ export default function Stars({ value, onChange }: { value: number; onChange?: (
           role="radio"
           aria-checked={value === n}
           aria-label={n === 1 ? '1 estrela' : `${n} estrelas`}
-          onClick={() => onChange(n)}
-          className="grid min-h-11 min-w-11 place-items-center"
+          onClick={(e) => {
+            onChange(n)
+            const star = e.currentTarget.firstElementChild as SVGElement | null
+            if (star && !prefersReducedMotion()) animate(star, { scale: [1, 1.45, 1], rotate: [0, -14, 0], duration: 450, ease: 'outBack(2)' })
+          }}
+          className="grid min-h-12 min-w-12 place-items-center"
         >
-          <Star aria-hidden className={`size-8 ${tone(n <= value)}`} />
+          <Star aria-hidden className={`size-9 ${tone(n <= value)}`} />
         </button>
       ))}
     </div>

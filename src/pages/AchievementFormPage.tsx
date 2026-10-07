@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { IconPicker } from '../components/Icon'
+import PageHero from '../components/PageHero'
 import { LoadError, PageLoading } from '../components/Status'
 import { deleteAchievement, saveAchievement, type AchievementInput } from '../data/api'
 import { useAppData, useRefresh } from '../data/hooks'
@@ -58,58 +59,64 @@ function AchievementForm({ data, existing }: { data: AppData; existing?: Achieve
   }
 
   return (
-    <form onSubmit={save} className="mx-auto max-w-xl space-y-4">
-      <h1 className="text-2xl font-bold">{existing ? 'Editar conquista' : 'Nova conquista'}</h1>
-      <label className="block">
-        <span className="mb-1 block font-medium">Nome</span>
-        <input className="input" value={name} onChange={(e) => setName(e.target.value)} />
-      </label>
-      <IconPicker value={icon} onChange={setIcon} />
-      <label className="block">
-        <span className="mb-1 block font-medium">Descrição</span>
-        <input className="input" value={description} onChange={(e) => setDescription(e.target.value)} />
-      </label>
-      <label className="block">
-        <span className="mb-1 block font-medium">Raridade</span>
-        <select className="input" value={rarity} onChange={(e) => setRarity(e.target.value as Rarity)}>
-          {RARITIES.map((r) => <option key={r} value={r}>{RARITY_LABEL[r]}</option>)}
-        </select>
-      </label>
-      <fieldset>
-        <legend className="mb-2 font-medium">Tipo</legend>
-        <div className="grid grid-cols-2 gap-2">
-          {(['auto', 'manual'] as const).map((k) => (
-            <button key={k} type="button" aria-pressed={kind === k} onClick={() => setKind(k)} className={`btn ${kind === k ? 'btn-primary' : ''}`}>
-              {k === 'auto' ? 'Automática' : 'Manual'}
-            </button>
-          ))}
-        </div>
-      </fieldset>
-      {kind === 'auto' && (
-        <>
+    <>
+      <PageHero title={existing ? 'Editar conquista' : 'Nova conquista'} />
+      <form onSubmit={save} className="max-w-2xl space-y-5">
+        <section className="card space-y-4 p-5">
           <label className="block">
-            <span className="mb-1 block font-medium">Categoria</span>
-            <select className="input" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
-              <option value="">Qualquer categoria</option>
-              {data.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            <span className="mb-1 block font-bold">Nome</span>
+            <input className="input" value={name} onChange={(e) => setName(e.target.value)} />
+          </label>
+          <IconPicker value={icon} onChange={setIcon} />
+          <label className="block">
+            <span className="mb-1 block font-bold">Descrição</span>
+            <input className="input" value={description} onChange={(e) => setDescription(e.target.value)} />
+          </label>
+          <label className="block">
+            <span className="mb-1 block font-bold">Raridade</span>
+            <select className="input" value={rarity} onChange={(e) => setRarity(e.target.value as Rarity)}>
+              {RARITIES.map((r) => <option key={r} value={r}>{RARITY_LABEL[r]}</option>)}
             </select>
           </label>
-          <label className="block">
-            <span className="mb-1 block font-medium">Dificuldade mínima</span>
-            <select className="input" value={minDifficulty} onChange={(e) => setMinDifficulty(e.target.value as Difficulty | '')}>
-              <option value="">Qualquer</option>
-              {DIFFICULTIES.map((d) => <option key={d} value={d}>{DIFFICULTY_LABEL[d]}</option>)}
-            </select>
-          </label>
-          <label className="block">
-            <span className="mb-1 block font-medium">Quantidade</span>
-            <input className="input" type="number" min={1} value={count} onChange={(e) => setCount(e.target.value)} />
-          </label>
-        </>
-      )}
-      {error && <p role="alert" className="text-red-600">{error}</p>}
-      <button className="btn btn-primary w-full">Salvar</button>
-      {existing && <button type="button" className="btn btn-danger w-full" onClick={remove}>Excluir conquista</button>}
-    </form>
+        </section>
+
+        <section className="card space-y-4 p-5">
+          <h2 id="kind-label" className="text-lg font-semibold">Tipo</h2>
+          <div role="group" aria-labelledby="kind-label" className="grid grid-cols-2 gap-2">
+            {(['auto', 'manual'] as const).map((k) => (
+              <button key={k} type="button" aria-pressed={kind === k} onClick={() => setKind(k)} className="tile">
+                {k === 'auto' ? 'Automática' : 'Manual'}
+              </button>
+            ))}
+          </div>
+          {kind === 'auto' && (
+            <>
+              <label className="block">
+                <span className="mb-1 block font-bold">Categoria</span>
+                <select className="input" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+                  <option value="">Qualquer categoria</option>
+                  {data.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </label>
+              <label className="block">
+                <span className="mb-1 block font-bold">Dificuldade mínima</span>
+                <select className="input" value={minDifficulty} onChange={(e) => setMinDifficulty(e.target.value as Difficulty | '')}>
+                  <option value="">Qualquer</option>
+                  {DIFFICULTIES.map((d) => <option key={d} value={d}>{DIFFICULTY_LABEL[d]}</option>)}
+                </select>
+              </label>
+              <label className="block">
+                <span className="mb-1 block font-bold">Quantidade</span>
+                <input className="input" type="number" min={1} value={count} onChange={(e) => setCount(e.target.value)} />
+              </label>
+            </>
+          )}
+        </section>
+
+        {error && <p role="alert" className="font-semibold text-red-600">{error}</p>}
+        <button className="btn btn-primary min-h-12 w-full text-lg">Salvar</button>
+        {existing && <button type="button" className="btn btn-danger w-full" onClick={remove}>Excluir conquista</button>}
+      </form>
+    </>
   )
 }

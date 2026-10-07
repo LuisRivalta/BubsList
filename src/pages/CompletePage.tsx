@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
 import Celebration from '../components/Celebration'
+import PageHero from '../components/PageHero'
 import PhotoPicker, { uploadPending } from '../components/PhotoPicker'
 import Stars from '../components/Stars'
 import { LoadError, PageLoading } from '../components/Status'
@@ -109,51 +110,49 @@ function CompleteForm({ data, quest, existing }: { data: AppData; quest: Quest; 
   }
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault()
-        submit(rating > 0 || body.trim() !== '' || pending.length > 0)
-      }}
-      className="mx-auto max-w-xl space-y-5"
-    >
-      <h1 className="text-2xl font-bold">{existing ? 'Editar conclusão' : 'Concluir'}: {quest.title}</h1>
+    <>
+      <PageHero title={`${existing ? 'Editar conclusão' : 'Concluir'}: ${quest.title}`} />
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          submit(rating > 0 || body.trim() !== '' || pending.length > 0)
+        }}
+        className="max-w-2xl space-y-5"
+      >
+        <section className="card p-5">
+          <label className="block">
+            <span className="mb-1 block font-bold">Quando vocês fizeram?</span>
+            <input type="date" className="input" value={doneOn} max={todayISO()} onChange={(e) => setDoneOn(e.target.value)} />
+          </label>
+        </section>
 
-      <label className="block">
-        <span className="mb-1 block font-medium">Quando vocês fizeram?</span>
-        <input type="date" className="input" value={doneOn} max={todayISO()} onChange={(e) => setDoneOn(e.target.value)} />
-      </label>
+        <section className="card space-y-4 p-5">
+          <h2 className="text-lg font-semibold">Sua resenha</h2>
+          <Stars value={rating} onChange={setRating} />
+          <label className="block">
+            <span className="mb-1 block text-sm font-semibold">O que achou? (opcional)</span>
+            <textarea className="input min-h-28" value={body} onChange={(e) => setBody(e.target.value)} />
+          </label>
+          <PhotoPicker existing={mine ? data.photos.filter((p) => p.review_id === mine.id) : []} pending={pending} onChange={setPending} onDeleteExisting={removePhoto} />
+        </section>
 
-      <section className="card space-y-3 p-4">
-        <h2 className="font-semibold">Sua resenha</h2>
-        <Stars value={rating} onChange={setRating} />
-        <label className="block">
-          <span className="mb-1 block text-sm">O que achou? (opcional)</span>
-          <textarea className="input min-h-28" value={body} onChange={(e) => setBody(e.target.value)} />
-        </label>
-        <PhotoPicker
-          existing={mine ? data.photos.filter((p) => p.review_id === mine.id) : []}
-          pending={pending}
-          onChange={setPending}
-          onDeleteExisting={removePhoto}
-        />
-      </section>
+        {error && <p role="alert" className="font-semibold text-red-600">{error}</p>}
 
-      {error && <p role="alert" className="text-red-600">{error}</p>}
+        {failedReviewId ? (
+          <div className="flex gap-2">
+            <button type="button" className="btn btn-primary flex-1" disabled={saving} onClick={() => retryUploads(failedReviewId)}>Tentar de novo</button>
+            <button type="button" className="btn flex-1" onClick={afterSave}>Continuar sem elas</button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <button className="btn btn-primary min-h-12 flex-1 text-lg" disabled={saving}>{saving ? 'Salvando…' : 'Salvar'}</button>
+            {!existing && <button type="button" className="btn min-h-12 flex-1" disabled={saving} onClick={() => submit(false)}>Pular resenha</button>}
+            {mine && <button type="button" className="btn btn-danger min-h-12 flex-1" onClick={removeMine}>Apagar minha resenha</button>}
+          </div>
+        )}
 
-      {failedReviewId ? (
-        <div className="flex gap-2">
-          <button type="button" className="btn btn-primary flex-1" disabled={saving} onClick={() => retryUploads(failedReviewId)}>Tentar de novo</button>
-          <button type="button" className="btn flex-1" onClick={afterSave}>Continuar sem elas</button>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <button className="btn btn-primary flex-1" disabled={saving}>{saving ? 'Salvando…' : 'Salvar'}</button>
-          {!existing && <button type="button" className="btn flex-1" disabled={saving} onClick={() => submit(false)}>Pular resenha</button>}
-          {mine && <button type="button" className="btn btn-danger flex-1" onClick={removeMine}>Apagar minha resenha</button>}
-        </div>
-      )}
-
-      {celebrate && <Celebration achievements={celebrate} onClose={back} />}
-    </form>
+        {celebrate && <Celebration achievements={celebrate} onClose={back} />}
+      </form>
+    </>
   )
 }
