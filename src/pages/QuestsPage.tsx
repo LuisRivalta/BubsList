@@ -31,7 +31,15 @@ export default function QuestsPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Quests</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold">Quests</h1>
+        <Link
+          to="/quests/nova"
+          className="fab relative inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-4 text-lg font-semibold text-white md:w-auto"
+        >
+          <Sparkles aria-hidden className="size-6" /> Nova quest
+        </Link>
+      </div>
 
       {pending.length > 0 && (
         <details className="card p-3">
@@ -105,13 +113,6 @@ export default function QuestsPage() {
           ))}
         </div>
       )}
-
-      <Link
-        to="/quests/nova"
-        className="fab fixed bottom-20 right-4 z-20 inline-flex items-center gap-2 rounded-full px-5 py-3.5 font-semibold text-white md:bottom-8 md:right-8"
-      >
-        <Sparkles aria-hidden className="size-5" /> Nova quest
-      </Link>
     </div>
   )
 }
