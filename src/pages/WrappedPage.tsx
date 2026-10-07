@@ -1,5 +1,5 @@
-import { Share2, Star, X } from 'lucide-react'
-import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
+import { ChevronLeft, ChevronRight, Share2, Star, X } from 'lucide-react'
+import { lazy, Suspense, useEffect, useState, type MouseEvent, type ReactNode } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router'
 import Bubble from '../components/Bubble'
 import CountUp from '../components/CountUp'
@@ -12,10 +12,12 @@ import { useAppData, useSignedUrls } from '../data/hooks'
 import { useUserId } from '../data/session'
 import { formatDate } from '../lib/dates'
 import { prefersReducedMotion } from '../lib/motion'
-import { drawStory, shareOrDownload, type ImageRef } from '../lib/story'
+import { drawStory, loadImage, shareOrDownload, type ImageRef } from '../lib/story'
 import { buildWrapped, storyCard, type Slide } from '../lib/wrapped'
 
 const SkyScene = lazy(() => import('../components/SkyScene'))
+// Hidden until focused with the keyboard (taps go to the slide itself).
+const navButton = 'sr-only focus-visible:not-sr-only focus-visible:absolute focus-visible:bottom-2 focus-visible:grid focus-visible:size-11 focus-visible:place-items-center focus-visible:rounded-full focus-visible:bg-white/15'
 const SLIDE_MS = 6000 // same as the .story-fill animation in index.css
 
 export default function WrappedPage() {
@@ -41,7 +43,9 @@ const pathsOf = (s: Slide): string[] => {
   return []
 }
 
-function Stories({ year, slides }: { year: number; slides: Slide[] }) {
+function Stories({ year, slides: initial }: { year: number; slides: Slide[] }) {
+  // Frozen on open: a live-sync reload could otherwise remove the slide being watched.
+  const [slides] = useState(initial)
   const navigate = useNavigate()
   const [index, setIndex] = useState(0)
   const [sharing, setSharing] = useState(false)
@@ -70,12 +74,32 @@ function Stories({ year, slides }: { year: number; slides: Slide[] }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
+  // #3 preload the slide's story image while it is on screen; sharing then only draws and calls navigator.share.
+  const imageUrl = src(storyCard(slide).image)
+  const [preloaded, setPreloaded] = useState<{ url: string; image: HTMLImageElement | null } | null>(null)
+  useEffect(() => {
+    if (!imageUrl) return
+    let alive = true
+    loadImage(imageUrl).then((image) => alive && setPreloaded({ url: imageUrl, image }))
+    return () => {
+      alive = false
+    }
+  }, [imageUrl])
+  const ready = !imageUrl || preloaded?.url === imageUrl
+
+  // Tapping the slide navigates; a scroll gesture is not a click, so tall slides can still scroll.
+  const tap = (e: MouseEvent<HTMLElement>) => {
+    const box = e.currentTarget.getBoundingClientRect()
+    go(e.clientX - box.left < box.width / 3 ? -1 : 1)
+  }
+
   async function share() {
     setSharing(true)
     setFailed(false)
     try {
       const card = storyCard(slide)
-      await shareOrDownload(await drawStory(card, year, src(card.image)), `bubs2do-${year}-${slide.kind}.png`)
+      const image = imageUrl && preloaded?.url === imageUrl ? preloaded.image : null
+      await shareOrDownload(await drawStory(card, year, image), `bubs2do-${year}-${slide.kind}.png`)
     } catch {
       setFailed(true)
     } finally {
@@ -106,15 +130,19 @@ function Stories({ year, slides }: { year: number; slides: Slide[] }) {
           </button>
         </div>
         <div className="relative min-h-0 flex-1">
-          <section key={index} aria-roledescription="slide" aria-label={`${index + 1} de ${slides.length}`} className="absolute inset-0 overflow-y-auto">
+          <section key={index} aria-roledescription="slide" aria-label={`${index + 1} de ${slides.length}`} onClick={tap} className="absolute inset-0 overflow-y-auto">
             <SlideView slide={slide} cover={'image' in slide ? src(slide.image) : null} urls={urls} />
           </section>
-          <button type="button" aria-label="Anterior" disabled={index === 0} onClick={() => go(-1)} className="absolute inset-y-0 left-0 w-1/3 cursor-default" />
-          <button type="button" aria-label="Próxima" disabled={index === last} onClick={() => go(1)} className="absolute inset-y-0 right-0 w-2/3 cursor-default" />
+          <button type="button" aria-label="Anterior" disabled={index === 0} onClick={() => go(-1)} className={`${navButton} focus-visible:left-2`}>
+            <ChevronLeft aria-hidden className="size-6" />
+          </button>
+          <button type="button" aria-label="Próxima" disabled={index === last} onClick={() => go(1)} className={`${navButton} focus-visible:right-2`}>
+            <ChevronRight aria-hidden className="size-6" />
+          </button>
         </div>
         {failed && <p role="alert" className="text-center text-sm font-semibold text-rose-200">Não deu para gerar a imagem.</p>}
-        <button type="button" className="btn btn-primary min-h-12" disabled={sharing} onClick={share}>
-          <Share2 aria-hidden className="size-5" /> {sharing ? 'Gerando…' : 'Compartilhar'}
+        <button type="button" className="btn btn-primary min-h-12" disabled={sharing || !ready} onClick={share}>
+          <Share2 aria-hidden className="size-5" /> {sharing ? 'Gerando…' : ready ? 'Compartilhar' : 'Preparando…'}
         </button>
       </div>
     </div>

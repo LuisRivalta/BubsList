@@ -57,9 +57,9 @@ function drawStars(ctx: CanvasRenderingContext2D) {
 }
 
 // Canvas is not available in jsdom: this is verified by the PNG print in Task 5.
-export async function drawStory(card: StoryCard, year: number, imageUrl: string | null): Promise<Blob> {
+// `image` is preloaded by the caller: loading it here would push navigator.share past the tap's user activation.
+export async function drawStory(card: StoryCard, year: number, image: HTMLImageElement | null): Promise<Blob> {
   await Promise.all(['700 150px Fredoka', '600 44px Fredoka', '800 40px Nunito', '600 46px Nunito'].map((f) => document.fonts.load(f)))
-  const image = imageUrl ? await loadImage(imageUrl) : null
   const canvas = document.createElement('canvas')
   canvas.width = W
   canvas.height = H
@@ -140,7 +140,8 @@ export async function drawStory(card: StoryCard, year: number, imageUrl: string 
 
 export async function shareOrDownload(blob: Blob, filename: string) {
   const file = new File([blob], filename, { type: 'image/png' })
-  if (navigator.canShare?.({ files: [file] })) {
+  // Desktop share dialogs (e.g. Windows) can't save a file: share only on touch devices, download elsewhere.
+  if (window.matchMedia?.('(pointer: coarse)').matches && navigator.canShare?.({ files: [file] })) {
     try {
       await navigator.share({ files: [file] })
       return

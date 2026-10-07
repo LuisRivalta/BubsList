@@ -1,3 +1,4 @@
+import { focusManager } from '@tanstack/react-query'
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
@@ -12,6 +13,7 @@ vi.mock('../components/SkyScene', () => ({ default: () => null }))
 vi.mock('../lib/story', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../lib/story')>()),
   drawStory: vi.fn(),
+  loadImage: vi.fn(),
   shareOrDownload: vi.fn(),
 }))
 
@@ -35,6 +37,7 @@ beforeEach(() => {
     }),
   )
   vi.mocked(story.drawStory).mockResolvedValue(new Blob(['png']))
+  vi.mocked(story.loadImage).mockResolvedValue(null)
   vi.mocked(story.shareOrDownload).mockResolvedValue()
 })
 afterEach(() => {
@@ -129,4 +132,48 @@ it('an invalid year or a year without completions goes back to the report', asyn
   await waitFor(() => expect(router.state.location.pathname).toBe('/relatorio'))
   const other = open('abc')
   await waitFor(() => expect(other.state.location.pathname).toBe('/relatorio'))
+})
+
+it('loads the story image when the slide appears, so sharing right after the tap is fast', async () => {
+  const img = new Image()
+  vi.mocked(story.loadImage).mockResolvedValue(img)
+  const user = userEvent.setup()
+  open()
+  await intro()
+  for (let i = 0; i < 3; i++) await user.click(screen.getByRole('button', { name: 'Próxima' }))
+  expect(story.loadImage).toHaveBeenCalledWith('https://image.tmdb.org/batata.jpg')
+  await user.click(await screen.findByRole('button', { name: 'Compartilhar' }))
+  expect(story.drawStory).toHaveBeenCalledWith(expect.objectContaining({ eyebrow: 'A mais difícil' }), 2026, img)
+})
+
+it('keeps the slides steady when the data reloads while watching (live sync)', async () => {
+  const user = userEvent.setup()
+  open()
+  await intro()
+  for (let i = 0; i < 6; i++) await user.click(screen.getByRole('button', { name: 'Próxima' }))
+  expect(screen.getByText('Bora pra 2027')).toBeInTheDocument()
+  vi.mocked(api.loadAll).mockResolvedValue(
+    appData({ categories: allCats(), quests: [batata], completions: [completion({ id: 'c1', quest_id: 'batata', done_on: '2026-03-10' })] }),
+  )
+  act(() => {
+    focusManager.setFocused(false)
+    focusManager.setFocused(true)
+  })
+  await waitFor(() => expect(api.loadAll).toHaveBeenCalledTimes(2))
+  expect(await screen.findByText('Bora pra 2027')).toBeInTheDocument()
+  focusManager.setFocused(undefined)
+})
+
+it('tapping the slide navigates (left third back, the rest forward), so tall content can still scroll', async () => {
+  open()
+  await intro()
+  const tapAt = (name: string, x: number) => {
+    const slide = screen.getByRole('region', { name })
+    vi.spyOn(slide, 'getBoundingClientRect').mockReturnValue({ left: 0, width: 300 } as DOMRect)
+    fireEvent.click(slide, { clientX: x })
+  }
+  tapAt('1 de 7', 250)
+  expect(screen.getByText('No ano, vocês concluíram')).toBeInTheDocument()
+  tapAt('2 de 7', 50)
+  expect(screen.getByRole('heading', { level: 2, name: '2026' })).toBeInTheDocument()
 })

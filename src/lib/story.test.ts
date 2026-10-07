@@ -47,6 +47,7 @@ describe('shareOrDownload', () => {
 
   it('opens the native share sheet when the device can share files', async () => {
     const share = vi.fn().mockResolvedValue(undefined)
+    vi.stubGlobal('matchMedia', () => ({ matches: true }))
     vi.stubGlobal('navigator', { canShare: () => true, share })
     const names = downloads()
     await shareOrDownload(blob, 'bubs2do-2026-intro.png')
@@ -55,6 +56,7 @@ describe('shareOrDownload', () => {
   })
 
   it('does nothing else when the person cancels the share sheet', async () => {
+    vi.stubGlobal('matchMedia', () => ({ matches: true }))
     vi.stubGlobal('navigator', { canShare: () => true, share: vi.fn().mockRejectedValue(new DOMException('cancel', 'AbortError')) })
     const names = downloads()
     await shareOrDownload(blob, 'x.png')
@@ -65,8 +67,19 @@ describe('shareOrDownload', () => {
     vi.stubGlobal('navigator', {})
     const names = downloads()
     await shareOrDownload(blob, 'bubs2do-2026-total.png')
+    vi.stubGlobal('matchMedia', () => ({ matches: true }))
     vi.stubGlobal('navigator', { canShare: () => true, share: vi.fn().mockRejectedValue(new Error('NotAllowed')) })
     await shareOrDownload(blob, 'bubs2do-2026-best.png')
     expect(names).toEqual(['bubs2do-2026-total.png', 'bubs2do-2026-best.png'])
+  })
+
+  it('on a computer it downloads even when the browser offers a share dialog', async () => {
+    const share = vi.fn()
+    vi.stubGlobal('matchMedia', () => ({ matches: false }))
+    vi.stubGlobal('navigator', { canShare: () => true, share })
+    const names = downloads()
+    await shareOrDownload(blob, 'bubs2do-2026-intro.png')
+    expect(share).not.toHaveBeenCalled()
+    expect(names).toEqual(['bubs2do-2026-intro.png'])
   })
 })
