@@ -136,53 +136,12 @@ function Categories({ data, onChange }: { data: AppData; onChange: () => void })
     }
   }
 
-  async function saveType(input: { id?: string; category_id: string; name: string }): Promise<boolean> {
-    const name = input.name.trim()
-    if (!name) {
-      setMessage('Dê um nome ao tipo.')
-      return false
-    }
-    if (data.questTypes.some((t) => t.category_id === input.category_id && t.id !== input.id && sameText(t.name, name))) {
-      setMessage('Esse tipo já existe.')
-      return false
-    }
-    try {
-      await saveQuestType({ ...input, name })
-      setMessage(null)
-      onChange()
-      return true
-    } catch {
-      setMessage('Não foi possível salvar.')
-      return false
-    }
-  }
-
-  async function removeType(t: QuestType) {
-    const n = data.quests.filter((q) => q.type_id === t.id).length
-    const question = n ? `${n} quest(s) usam esse tipo; elas ficam sem tipo. Excluir "${t.name}"?` : `Excluir o tipo "${t.name}"?`
-    if (!window.confirm(question)) return
-    try {
-      await deleteQuestType(t.id)
-      onChange()
-    } catch {
-      setMessage('Não foi possível excluir.')
-    }
-  }
-
   return (
     <section className="space-y-3">
       <h2 className="font-semibold">Categorias</h2>
       <ul className="space-y-2">
         {data.categories.map((c) => (
-          <CategoryRow
-            key={c.id}
-            category={c}
-            types={data.questTypes.filter((t) => t.category_id === c.id).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))}
-            onSave={save}
-            onDelete={remove}
-            onSaveType={saveType}
-            onDeleteType={removeType}
-          />
+          <CategoryRow key={c.id} data={data} category={c} onSave={save} onDelete={remove} onChange={onChange} />
         ))}
       </ul>
       <CategoryFields initial={{ name: '', icon: 'sparkles', color: '#64748b' }} submitLabel="Adicionar" onSubmit={save} />
@@ -192,15 +151,14 @@ function Categories({ data, onChange }: { data: AppData; onChange: () => void })
 }
 
 interface RowProps {
+  data: AppData
   category: Category
-  types: QuestType[]
   onSave: (c: CategoryInput & { id?: string }) => Promise<boolean>
   onDelete: (c: Category) => void
-  onSaveType: (t: { id?: string; category_id: string; name: string }) => Promise<boolean>
-  onDeleteType: (t: QuestType) => void
+  onChange: () => void
 }
 
-function CategoryRow({ category: c, types, onSave, onDelete, onSaveType, onDeleteType }: RowProps) {
+function CategoryRow({ data, category: c, onSave, onDelete, onChange }: RowProps) {
   const [editing, setEditing] = useState(false)
   if (editing) {
     return (
@@ -234,29 +192,50 @@ function CategoryRow({ category: c, types, onSave, onDelete, onSaveType, onDelet
           </>
         )}
       </div>
-      <TypeChips category={c} types={types} onSave={onSaveType} onDelete={onDeleteType} />
+      <TypeChips data={data} category={c} onChange={onChange} />
     </li>
   )
 }
 
-// A category's types: tap one to rename or delete it, "+ Tipo" to add.
-function TypeChips({ category, types, onSave, onDelete }: {
-  category: Category
-  types: QuestType[]
-  onSave: (t: { id?: string; category_id: string; name: string }) => Promise<boolean>
-  onDelete: (t: QuestType) => void
-}) {
+// A category's types: tap one to rename or delete it, "+ Tipo" to add. Errors show inside the editor, next to the field.
+function TypeChips({ data, category, onChange }: { data: AppData; category: Category; onChange: () => void }) {
+  const types = data.questTypes.filter((t) => t.category_id === category.id).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
   const [editing, setEditing] = useState<string | null>(null) // a type id, 'new', or closed
   const [name, setName] = useState('')
+  const [error, setError] = useState<string | null>(null)
   const current = types.find((t) => t.id === editing)
   const open = (id: string, initial: string) => {
     setEditing(id)
     setName(initial)
+    setError(null)
   }
+
   async function submit(e: FormEvent) {
     e.preventDefault()
-    if (await onSave({ id: current?.id, category_id: category.id, name })) setEditing(null)
+    const clean = name.trim()
+    if (!clean) return setError('Dê um nome ao tipo.')
+    if (types.some((t) => t.id !== current?.id && sameText(t.name, clean))) return setError('Esse tipo já existe.')
+    try {
+      await saveQuestType({ id: current?.id, category_id: category.id, name: clean })
+      setEditing(null)
+      onChange()
+    } catch {
+      setError('Não foi possível salvar.')
+    }
   }
+
+  async function remove(t: QuestType) {
+    const n = data.quests.filter((q) => q.type_id === t.id).length
+    if (!window.confirm(n ? `${n} quest(s) usam esse tipo; elas ficam sem tipo. Excluir "${t.name}"?` : `Excluir o tipo "${t.name}"?`)) return
+    try {
+      await deleteQuestType(t.id)
+      setEditing(null)
+      onChange()
+    } catch {
+      setError('Não foi possível excluir.')
+    }
+  }
+
   return (
     <div className="flex flex-wrap items-center gap-2 pl-12">
       {types.map((t) => (
@@ -265,10 +244,11 @@ function TypeChips({ category, types, onSave, onDelete }: {
       <button type="button" className="chip pl-3" aria-label={`Adicionar tipo em ${category.name}`} onClick={() => open('new', '')}>+ Tipo</button>
       {editing && (
         <form onSubmit={submit} className="flex w-full flex-wrap gap-2">
-          <input aria-label={`Nome do tipo em ${category.name}`} className="input min-w-0 flex-1" value={name} maxLength={40} autoFocus onChange={(e) => setName(e.target.value)} />
+          <input aria-label={`Nome do tipo em ${category.name}`} className="input min-w-0 basis-full" value={name} maxLength={40} autoFocus onChange={(e) => setName(e.target.value)} />
           <button className="btn btn-primary">Salvar</button>
-          {current && <button type="button" className="btn btn-danger" onClick={() => onDelete(current)}>Excluir</button>}
+          {current && <button type="button" className="btn btn-danger" onClick={() => remove(current)}>Excluir</button>}
           <button type="button" className="btn" onClick={() => setEditing(null)}>Cancelar</button>
+          {error && <p role="alert" className="basis-full text-sm text-red-600">{error}</p>}
         </form>
       )}
     </div>

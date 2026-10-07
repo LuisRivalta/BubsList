@@ -67,9 +67,14 @@ describe('normalizeAniList', () => {
   it('prefers the english title, strips html and builds one season', () => {
     expect(normalizeAniList(frieren)).toEqual({
       source: 'anilist', external_id: '154587', title: "Frieren: Beyond Journey's End", year: 2023,
-      poster_url: 'https://img/f.jpg', synopsis: 'Elf mage\nstory', genres: ['Adventure'],
+      poster_url: 'https://img/f.jpg', synopsis: 'Elf mage\nstory', genres: ['Aventura'],
       runtime_minutes: 24, seasons: [{ season: 1, episodes: 28 }],
     })
+  })
+
+  it('translates AniList genres to the Portuguese names TMDB uses', () => {
+    expect(normalizeAniList({ ...frieren, genres: ['Action', 'Sci-Fi', 'Slice of Life', 'Horror', 'Unknown'] }).genres)
+      .toEqual(['Ação', 'Ficção científica', 'Cotidiano', 'Terror', 'Unknown'])
   })
 
   it('falls back to romaji and 24 minutes', () => {

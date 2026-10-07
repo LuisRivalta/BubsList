@@ -78,6 +78,14 @@ export function normalizeAniListHit(m: Raw): CatalogHit {
   }
 }
 
+// AniList only speaks English; TMDB is fetched in pt-BR, so the same genre becomes the same type.
+const ANILIST_GENRES: Record<string, string> = {
+  Action: 'Ação', Adventure: 'Aventura', Comedy: 'Comédia', Drama: 'Drama', Ecchi: 'Ecchi', Fantasy: 'Fantasia',
+  Hentai: 'Hentai', Horror: 'Terror', 'Mahou Shoujo': 'Mahou shoujo', Mecha: 'Mecha', Music: 'Música', Mystery: 'Mistério',
+  Psychological: 'Psicológico', Romance: 'Romance', 'Sci-Fi': 'Ficção científica', 'Slice of Life': 'Cotidiano',
+  Sports: 'Esportes', Supernatural: 'Sobrenatural', Thriller: 'Thriller',
+}
+
 export function normalizeAniList(m: Raw): NormalizedMedia {
   const total: number | null = m.episodes ?? (m.nextAiringEpisode ? m.nextAiringEpisode.episode - 1 : null)
   const synopsis = m.description
@@ -86,7 +94,7 @@ export function normalizeAniList(m: Raw): NormalizedMedia {
   return {
     ...normalizeAniListHit(m),
     synopsis: synopsis || null,
-    genres: m.genres ?? [],
+    genres: ((m.genres ?? []) as string[]).map((g) => ANILIST_GENRES[g] ?? g),
     runtime_minutes: m.duration || DEFAULT_RUNTIME.anilist,
     seasons: total && total > 0 ? [{ season: 1, episodes: total }] : [],
   }

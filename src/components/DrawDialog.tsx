@@ -3,12 +3,12 @@ import { X } from 'lucide-react'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { pickStars } from '../lib/constellation'
-import { DIFFICULTIES, DIFFICULTY_LABEL } from '../lib/difficulty'
+import { DIFFICULTIES } from '../lib/difficulty'
 import { cityOptions, drawPool, sameText, type DrawFilter } from '../lib/filters'
 import { prefersReducedMotion } from '../lib/motion'
 import { count } from '../lib/text'
 import { doneQuestIds, pathLabel, questMeta } from '../lib/tree'
-import type { AppData, Quest } from '../lib/types'
+import type { AppData, Quest, QuestType } from '../lib/types'
 import Bubble from './Bubble'
 import Gems from './Gems'
 import { useHideSky } from './Layout'
@@ -30,7 +30,27 @@ export default function DrawDialog({ data, categoryId, onClose }: { data: AppDat
   const [stars, setStars] = useState<Quest[]>([])
   const [animated] = useState(() => !prefersReducedMotion())
   const done = useMemo(() => doneQuestIds(data.completions), [data.completions])
-  const pool = drawPool(data.quests, done, filter)
+  const types = filter.categoryId
+    ? data.questTypes.filter((t) => t.category_id === filter.categoryId).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+    : []
+  const cities = cityOptions(data.quests, drawPool(data.quests, done, { categoryId: filter.categoryId, typeIds: [], difficulties: [], cities: [] }))
+  // Selections whose chip is not on screen (a city of another category, a type deleted meanwhile) are ignored, never silently applied.
+  const active: DrawFilter = {
+    ...filter,
+    typeIds: filter.typeIds.filter((id) => types.some((t) => t.id === id)),
+    cities: filter.cities.filter((c) => cities.some((o) => sameText(o, c))),
+  }
+  const pool = drawPool(data.quests, done, active)
+  const closeRef = useRef(onClose)
+  closeRef.current = onClose
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeRef.current()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   function draw() {
     const options = winner && pool.length > 1 ? pool.filter((q) => q.id !== winner.id) : pool
@@ -53,14 +73,16 @@ export default function DrawDialog({ data, categoryId, onClose }: { data: AppDat
         <X aria-hidden className="size-6" />
       </button>
 
-      {step === 'filters' && <Filters data={data} done={done} filter={filter} onChange={setFilter} poolSize={pool.length} onDraw={draw} />}
+      <p aria-live="polite" className="sr-only">{step === 'result' && winner ? `Sorteada: ${winner.title}` : ''}</p>
+
+      {step === 'filters' && <Filters data={data} filter={active} types={types} cities={cities} onChange={setFilter} poolSize={pool.length} onDraw={draw} />}
 
       {step === 'rolling' && winner && (
         <div className="fixed inset-0 z-10" onClick={() => setStep('result')}>
           <Suspense fallback={null}>
             <DrawConstellation titles={stars.map((s) => s.title)} winner={stars.indexOf(winner)} onDone={() => setStep('result')} />
           </Suspense>
-          <button type="button" className="absolute inset-x-0 bottom-[max(1.5rem,env(safe-area-inset-bottom))] mx-auto w-fit rounded-full px-5 py-2 text-sm font-bold text-white/80 hover:bg-white/10">
+          <button type="button" autoFocus className="absolute inset-x-0 bottom-[max(1.5rem,env(safe-area-inset-bottom))] mx-auto w-fit rounded-full px-5 py-2 text-sm font-bold text-white/80 hover:bg-white/10">
             Pular
           </button>
         </div>
@@ -82,19 +104,15 @@ function Group({ id, title, children }: { id: string; title: string; children: R
   )
 }
 
-function Filters({ data, done, filter, onChange, poolSize, onDraw }: {
+function Filters({ data, filter, types, cities, onChange, poolSize, onDraw }: {
   data: AppData
-  done: Set<string>
   filter: DrawFilter
+  types: QuestType[]
+  cities: string[]
   onChange: (f: DrawFilter) => void
   poolSize: number
   onDraw: () => void
 }) {
-  const types = filter.categoryId
-    ? data.questTypes.filter((t) => t.category_id === filter.categoryId).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
-    : []
-  const inCategory = drawPool(data.quests, done, { categoryId: filter.categoryId, typeIds: [], difficulties: [], cities: [] })
-  const cities = cityOptions(data.quests, inCategory)
   const pickCategory = (categoryId: string | null) => onChange({ ...filter, categoryId, typeIds: [] })
 
   return (
@@ -119,7 +137,7 @@ function Filters({ data, done, filter, onChange, poolSize, onDraw }: {
       <Group id="draw-difficulty" title="Dificuldade">
         {DIFFICULTIES.map((d) => (
           <button key={d} type="button" className={`${CHIP} pl-3`} aria-pressed={filter.difficulties.includes(d)} onClick={() => onChange({ ...filter, difficulties: toggle(filter.difficulties, d) })}>
-            {DIFFICULTY_LABEL[d]}
+            <Gems difficulty={d} />
           </button>
         ))}
       </Group>
@@ -156,10 +174,13 @@ function Result({ data, quest, canRedraw, onRedraw, onFilters }: {
   onFilters: () => void
 }) {
   const box = useRef<HTMLDivElement>(null)
+  const bora = useRef<HTMLAnchorElement>(null)
   const category = data.categories.find((c) => c.id === quest.category_id)
   const poster = quest.media_id ? data.media.find((m) => m.id === quest.media_id)?.poster_url : null
   const meta = questMeta(data, quest)
   const path = pathLabel(data.quests, quest.id)
+
+  useEffect(() => bora.current?.focus(), [quest.id])
 
   useEffect(() => {
     if (prefersReducedMotion()) return
@@ -196,7 +217,7 @@ function Result({ data, quest, canRedraw, onRedraw, onFilters }: {
         {meta && <p className="text-sm text-ink/60">{meta}</p>}
         <div className="flex justify-center"><Gems difficulty={quest.difficulty} /></div>
         <div className="grid gap-2 pt-2">
-          <Link to={`/quests/${quest.id}`} className="btn btn-primary min-h-12">Bora!</Link>
+          <Link ref={bora} to={`/quests/${quest.id}`} className="btn btn-primary min-h-12">Bora!</Link>
           {canRedraw && <button type="button" className="btn min-h-12" onClick={onRedraw}>Sortear outra</button>}
           <button type="button" className="btn min-h-12" onClick={onFilters}>Filtros</button>
         </div>

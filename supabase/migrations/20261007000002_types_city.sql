@@ -11,6 +11,7 @@ alter table public.quests
   add column type_id uuid references public.quest_types on delete set null,
   add column city text check (city is null or length(trim(city)) between 1 and 80);
 
+grant select, insert, update, delete on public.quest_types to authenticated;
 alter table public.quest_types enable row level security;
 create policy "couple reads quest types" on public.quest_types for select to authenticated using (true);
 create policy "couple adds quest types" on public.quest_types for insert to authenticated with check (true);

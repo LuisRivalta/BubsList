@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { expect, it, vi } from 'vitest'
 import * as api from '../data/api'
@@ -102,4 +102,26 @@ it('deleting a type in use warns how many quests lose it', async () => {
   await user.click(screen.getByRole('button', { name: 'Excluir' }))
   expect(confirm).toHaveBeenCalledWith('2 quest(s) usam esse tipo; elas ficam sem tipo. Excluir "Hamburgueria"?')
   await waitFor(() => expect(api.deleteQuestType).toHaveBeenCalledWith('t-burger'))
+})
+
+it('the type editor gives the name its own full row and shows its errors right there', async () => {
+  open({ questTypes: [burger, pizza] })
+  const user = userEvent.setup()
+  await user.click(await screen.findByRole('button', { name: 'Editar tipo Pizzaria' }))
+  const name = screen.getByLabelText('Nome do tipo em Restaurante')
+  expect(name).toHaveClass('basis-full')
+  await user.clear(name)
+  await user.type(name, 'Hamburgueria')
+  await user.click(screen.getByRole('button', { name: 'Salvar' }))
+  expect(within(name.closest('form')!).getByRole('alert')).toHaveTextContent('Esse tipo já existe.')
+})
+
+it('the type editor closes after deleting the type', async () => {
+  vi.spyOn(window, 'confirm').mockReturnValue(true)
+  vi.mocked(api.deleteQuestType).mockResolvedValue()
+  open({ questTypes: [burger] })
+  const user = userEvent.setup()
+  await user.click(await screen.findByRole('button', { name: 'Editar tipo Hamburgueria' }))
+  await user.click(screen.getByRole('button', { name: 'Excluir' }))
+  await waitFor(() => expect(screen.queryByLabelText('Nome do tipo em Restaurante')).not.toBeInTheDocument())
 })

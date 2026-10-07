@@ -104,3 +104,40 @@ it('filter chips keep dark text on their light background over the night sky', (
     for (const chip of within(group).getAllByRole('button')) expect(chip).toHaveClass('text-ink')
   }
 })
+
+it('a city picked in another category never hides the quests of the new one', async () => {
+  const user = userEvent.setup()
+  open()
+  await user.click(button('Ribeirão Preto'))
+  await user.click(button('Filme'))
+  expect(screen.getByText('1 quest no sorteio')).toBeInTheDocument()
+  expect(draw()).toBeEnabled()
+})
+
+it('Escape closes the draw', async () => {
+  const onClose = vi.fn()
+  render(<MemoryRouter><DrawDialog data={data} categoryId={null} onClose={onClose} /></MemoryRouter>)
+  await userEvent.setup().keyboard('{Escape}')
+  expect(onClose).toHaveBeenCalled()
+})
+
+it('the result takes the focus and is announced', async () => {
+  const user = userEvent.setup()
+  open(CATS.filme.id)
+  await user.click(draw())
+  expect(screen.getByRole('link', { name: 'Bora!' })).toHaveFocus()
+  expect(screen.getByText('Sorteada: Interstellar')).toHaveAttribute('aria-live', 'polite')
+})
+
+it('Pular has the focus while the constellation plays', async () => {
+  withMotion()
+  const user = userEvent.setup()
+  open(CATS.filme.id)
+  await user.click(draw())
+  expect(await screen.findByRole('button', { name: 'Pular' })).toHaveFocus()
+})
+
+it('difficulty chips show their gems', () => {
+  open()
+  expect(button('Fácil').querySelectorAll('.gem')).toHaveLength(4)
+})
