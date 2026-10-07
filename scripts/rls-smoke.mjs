@@ -20,8 +20,11 @@ const { data: files } = await anon.storage.from('photos').list('', { limit: 1 })
 if (files && files.length > 0) fail('storage: anon listed photos')
 
 const authed = createClient(url, key, { auth: { persistSession: false } })
-const { error: loginError } = await authed.auth.signInWithPassword({ email: process.env.BUBS_EMAIL, password: process.env.BUBS_PASSWORD })
-if (loginError) fail(`login: ${loginError.message}`)
+const { error: loginError } = process.env.BUBS_EMAIL
+  ? await authed.auth.signInWithPassword({ email: process.env.BUBS_EMAIL, password: process.env.BUBS_PASSWORD })
+  : { error: null }
+if (!process.env.BUBS_EMAIL) console.log('skip logged-in check (BUBS_EMAIL not set)')
+else if (loginError) fail(`login: ${loginError.message}`)
 else {
   const { data: cats, error } = await authed.from('categories').select('name').eq('builtin', true)
   if (error || cats.length !== 7) fail(`categories: expected 7 builtin, got ${cats?.length} ${error?.message ?? ''}`)
