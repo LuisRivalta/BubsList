@@ -2,9 +2,9 @@ import { act, render, screen } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, expect, it, vi } from 'vitest'
 import { BeforePaint } from '../test/render'
-import Layout from './Layout'
+import Layout, { useHideSky } from './Layout'
 
-vi.mock('./SkyScene', () => ({ default: () => null }))
+vi.mock('./SkyScene', () => ({ default: () => <div data-testid="sky" /> }))
 
 const router = () => createMemoryRouter([{ element: <Layout />, children: [{ path: '/', element: <p>conteúdo</p> }] }])
 const renderLayout = () => render(<RouterProvider router={router()} />)
@@ -61,4 +61,19 @@ it('tells the user when a save fails instead of failing silently', () => {
 it('Quests stays highlighted on a category page', () => {
   render(<RouterProvider router={createMemoryRouter([{ element: <Layout />, children: [{ path: '/categoria/:id', element: <p>categoria</p> }] }], { initialEntries: ['/categoria/cat-viagem'] })} />)
   expect(screen.getByRole('link', { name: 'Quests' })).toHaveAttribute('aria-current', 'page')
+})
+
+it('a full-screen draw hides the page sky while it is open', async () => {
+  withMotion()
+  function Draw() {
+    useHideSky()
+    return <p>sorteio</p>
+  }
+  const r = createMemoryRouter([{ element: <Layout />, children: [{ path: '/', element: <p>conteúdo</p> }, { path: '/sorteio', element: <Draw /> }] }])
+  render(<RouterProvider router={r} />)
+  expect(await screen.findByTestId('sky')).toBeInTheDocument()
+  await act(() => r.navigate('/sorteio'))
+  expect(screen.queryByTestId('sky')).not.toBeInTheDocument()
+  await act(() => r.navigate('/'))
+  expect(await screen.findByTestId('sky')).toBeInTheDocument()
 })
