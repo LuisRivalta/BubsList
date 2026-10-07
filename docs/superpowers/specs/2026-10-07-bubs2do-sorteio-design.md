@@ -68,7 +68,7 @@ Uma migração para rodar no SQL Editor: `supabase/migrations/20261007000002_typ
 
 ## 5. Onde aparece
 
-- **QuestCard** e **hero da quest:** uma linha discreta com `tipo · cidade efetiva`, mostrando só o que existir. No card fica na mesma linha das gemas; no hero, no eyebrow.
+- **QuestCard** e **hero da quest:** uma linha discreta com `tipo · cidade efetiva`, mostrando só o que existir. No card e no hero fica ao lado das gemas (o eyebrow do hero já mostra o caminho).
 
 ## 6. Sorteio
 
@@ -108,7 +108,7 @@ Uma quest entra se:
    - uma estrela por quest candidata, até **40**. Com mais, entram 40 escolhidas ao acaso, sempre incluindo a vencedora;
    - as estrelas ficam espalhadas num disco, giram devagar e cintilam.
 2. **Pulos:**
-   - o brilho pula de estrela em estrela (cerca de 14 pulos), cada vez mais devagar;
+   - o brilho pula de estrela em estrela (12 pulos, cerca de 2 s no total), cada vez mais devagar;
    - cada pulo desenha uma linha fina da estrela anterior até a nova (a constelação);
    - embaixo, o título da quest da estrela acesa troca a cada pulo.
 3. **Final:**
