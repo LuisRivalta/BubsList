@@ -22,7 +22,7 @@ createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={client}>
       <SessionIdProvider value={ME}>
         <RouterProvider router={router} />
-        {params.get('celebrate') && <Celebration achievements={sampleData.achievements.slice(6, 8)} onClose={() => {}} />}
+        {params.get('celebrate') && <Celebration achievements={sampleData.achievements.slice(0, Number(params.get('celebrate')))} onClose={() => {}} />}
       </SessionIdProvider>
     </QueryClientProvider>
   </StrictMode>,

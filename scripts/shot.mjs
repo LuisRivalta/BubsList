@@ -1,5 +1,5 @@
 // Dev tool: screenshot a page in headless Chrome with a real mobile/desktop viewport.
-// Usage: node scripts/shot.mjs <url> <out.png> [width=390] [height=844] [waitMs=4000] [--reduce] [--bottom]
+// Usage: node scripts/shot.mjs <url> <out.png> [width=390] [height=844] [waitMs=4000] [--reduce] [--bottom] [--offline]
 import { spawn } from 'node:child_process'
 import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -37,6 +37,10 @@ await call('Emulation.setDeviceMetricsOverride', { width: +w, height: +h, device
 if (flags.has('--reduce')) await call('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
 await call('Page.navigate', { url })
 await sleep(+wait)
+if (flags.has('--offline')) {
+  await call('Runtime.evaluate', { expression: "Object.defineProperty(navigator, 'onLine', { get: () => false }); dispatchEvent(new Event('offline'))" })
+  await sleep(600)
+}
 if (flags.has('--bottom')) {
   await call('Runtime.evaluate', { expression: 'window.scrollTo(0, document.documentElement.scrollHeight)' })
   await sleep(1200)
