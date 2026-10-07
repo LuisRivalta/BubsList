@@ -52,3 +52,17 @@ it('shows the empty message', async () => {
   open()
   expect(await screen.findByText('Nada por aqui ainda. Bora completar uma quest?')).toBeInTheDocument()
 })
+
+it('offers the year retrospective only for a year with completions', async () => {
+  vi.mocked(api.loadAll).mockResolvedValue(
+    appData({ categories: allCats(), quests: [batata], completions: [completion({ quest_id: 'batata', done_on: '2026-03-02' })] }),
+  )
+  const user = userEvent.setup()
+  open()
+  await screen.findByRole('tab', { name: 'Ano' })
+  expect(screen.queryByRole('link', { name: /Retrospectiva/ })).not.toBeInTheDocument()
+  await user.click(screen.getByRole('tab', { name: 'Ano' }))
+  expect(screen.getByRole('link', { name: 'Retrospectiva 2026' })).toHaveAttribute('href', '/retrospectiva/2026')
+  await user.click(screen.getByRole('button', { name: 'Período anterior' }))
+  expect(screen.queryByRole('link', { name: /Retrospectiva/ })).not.toBeInTheDocument()
+})

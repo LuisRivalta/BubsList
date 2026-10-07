@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Star } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Sparkles, Star } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import Bubble from '../components/Bubble'
@@ -33,7 +33,16 @@ export default function ReportPage() {
 
   return (
     <>
-      <PageHero title="Relatório">
+      <PageHero
+        title="Relatório"
+        actions={
+          period.kind === 'year' && report.total > 0 ? (
+            <Link to={`/retrospectiva/${period.year}`} className="btn btn-primary">
+              <Sparkles aria-hidden className="size-5" /> Retrospectiva {period.year}
+            </Link>
+          ) : undefined
+        }
+      >
         <div className="max-w-md space-y-3">
           <SegmentedControl
             label="Período"
