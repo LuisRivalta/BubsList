@@ -1,0 +1,103 @@
+{
+  "hash": "a47b725c",
+  "configHash": "4f44a490",
+  "lockfileHash": "e1a48e13",
+  "browserHash": "78379505",
+  "optimized": {
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "608a1383",
+      "needsInterop": true
+    },
+    "@tanstack/react-query": {
+      "src": "../../node_modules/@tanstack/react-query/build/modern/index.js",
+      "file": "@tanstack_react-query.js",
+      "fileHash": "8cefe582",
+      "needsInterop": false
+    },
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "1b68b434",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "c264e842",
+      "needsInterop": true
+    },
+    "react-router": {
+      "src": "../../node_modules/react-router/dist/development/index.mjs",
+      "file": "react-router.js",
+      "fileHash": "caaa07e2",
+      "needsInterop": false
+    },
+    "lenis": {
+      "src": "../../node_modules/lenis/dist/lenis.mjs",
+      "file": "lenis.js",
+      "fileHash": "4eca217b",
+      "needsInterop": false
+    },
+    "lucide-react": {
+      "src": "../../node_modules/lucide-react/dist/esm/lucide-react.mjs",
+      "file": "lucide-react.js",
+      "fileHash": "a29e8c8d",
+      "needsInterop": false
+    },
+    "@supabase/supabase-js": {
+      "src": "../../node_modules/@supabase/supabase-js/dist/index.mjs",
+      "file": "@supabase_supabase-js.js",
+      "fileHash": "337266da",
+      "needsInterop": false
+    },
+    "animejs": {
+      "src": "../../node_modules/animejs/dist/modules/index.js",
+      "file": "animejs.js",
+      "fileHash": "446dba11",
+      "needsInterop": false
+    },
+    "three": {
+      "src": "../../node_modules/three/build/three.module.js",
+      "file": "three.js",
+      "fileHash": "07fc43cb",
+      "needsInterop": false
+    },
+    "three/addons/lines/Line2.js": {
+      "src": "../../node_modules/three/examples/jsm/lines/Line2.js",
+      "file": "three_addons_lines_Line2__js.js",
+      "fileHash": "29cb1b6e",
+      "needsInterop": false
+    },
+    "three/addons/lines/LineGeometry.js": {
+      "src": "../../node_modules/three/examples/jsm/lines/LineGeometry.js",
+      "file": "three_addons_lines_LineGeometry__js.js",
+      "fileHash": "efdc609f",
+      "needsInterop": false
+    },
+    "three/addons/lines/LineMaterial.js": {
+      "src": "../../node_modules/three/examples/jsm/lines/LineMaterial.js",
+      "file": "three_addons_lines_LineMaterial__js.js",
+      "fileHash": "9814ce1d",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-NQ3FUWOG": {
+      "file": "chunk-NQ3FUWOG.js"
+    },
+    "chunk-KHNKCMW5": {
+      "file": "chunk-KHNKCMW5.js"
+    },
+    "chunk-OWWQZT3Q": {
+      "file": "chunk-OWWQZT3Q.js"
+    },
+    "chunk-DQXLTQXY": {
+      "file": "chunk-DQXLTQXY.js"
+    },
+    "chunk-PX6F3LHL": {
+      "file": "chunk-PX6F3LHL.js"
+    }
+  }
+}

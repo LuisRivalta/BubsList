@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase'
 
 const TITLE = 'BubsList'
 
-export default function LoginPage() {
+export default function LoginPage({ leaving = false, onLeft }: { leaving?: boolean; onLeft?: () => void }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState<string | null>(null)
@@ -58,8 +58,8 @@ export default function LoginPage() {
   }
 
   return (
-    <AuthBackdrop flashSignal={flash}>
-      <form ref={card} onSubmit={login} data-animating={animated || undefined} className="glass-card w-full max-w-sm space-y-4 p-6">
+    <AuthBackdrop flashSignal={flash} leaving={leaving} onLeft={onLeft}>
+      <form ref={card} onSubmit={login} data-card data-animating={animated || undefined} className="glass-card w-full max-w-sm space-y-4 p-6">
         <h1 aria-label={TITLE} className="text-center text-4xl font-bold text-accent">
           {[...TITLE].map((ch, i) => (
             <span key={i} data-letter aria-hidden className="inline-block">{ch}</span>

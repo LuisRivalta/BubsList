@@ -7,11 +7,49 @@ const LoginScene = lazy(() => import('./LoginScene'))
 const SKY = 'radial-gradient(ellipse at 70% 12%, #553548 0%, #2c1b25 48%, #1a1115 100%)'
 const depth = (px: number) => ({ '--depth': px }) as CSSProperties
 
+interface Props {
+  children: ReactNode
+  flashSignal?: number
+  leaving?: boolean
+  onLeft?: () => void
+}
+
+const EXIT_MS = 750
+
 // Login / new-password background: three.js sky + Killua (left) and Serena (right) around the card.
-export default function AuthBackdrop({ children, flashSignal = 0 }: { children: ReactNode; flashSignal?: number }) {
+export default function AuthBackdrop({ children, flashSignal = 0, leaving = false, onLeft }: Props) {
   const [animated] = useState(() => !prefersReducedMotion())
   const [entranceFlash, setEntranceFlash] = useState(0)
   const root = useRef<HTMLDivElement>(null)
+  const left = useRef(onLeft)
+  left.current = onLeft
+
+  // Exit: big bolt, Killua dashes off left, Serena leaves right, the card shrinks away, a blush flash covers the screen.
+  useEffect(() => {
+    if (!leaving) return
+    let done = false
+    const finish = () => {
+      if (!done) {
+        done = true
+        left.current?.()
+      }
+    }
+    if (!animated) return finish()
+    const el = root.current!
+    setEntranceFlash((n) => n + 1)
+    const exits = [
+      animate(el.querySelector('[data-char="killua"]')!, { translateX: '-160%', skewX: 25, opacity: 0, duration: 450, ease: 'inExpo' }),
+      animate(el.querySelector('[data-char="usagi"]')!, { translateX: '150%', opacity: 0, duration: 500, ease: 'inQuad' }),
+      animate(el.querySelectorAll('[data-card]'), { scale: 0.85, opacity: 0, filter: { from: 'blur(0px)', to: 'blur(8px)' }, duration: 400, delay: 80, ease: 'inQuad' }),
+      animate(el.querySelector('[data-curtain]')!, { opacity: 1, duration: 300, delay: EXIT_MS - 300, ease: 'outQuad', onComplete: finish }),
+    ]
+    // rAF stops in background tabs, so never let the login get stuck waiting for onComplete.
+    const fallback = setTimeout(finish, EXIT_MS + 700)
+    return () => {
+      clearTimeout(fallback)
+      exits.forEach((a) => a.pause())
+    }
+  }, [leaving, animated])
 
   useEffect(() => {
     if (!animated) return
@@ -67,6 +105,7 @@ export default function AuthBackdrop({ children, flashSignal = 0 }: { children: 
         </div>
       </div>
       <div className="relative z-10 grid min-h-dvh place-items-center p-4 pb-[30vh] md:pb-4">{children}</div>
+      <div data-curtain aria-hidden className="pointer-events-none fixed inset-0 z-50 bg-blush" style={{ opacity: 0 }} />
     </div>
   )
 }
