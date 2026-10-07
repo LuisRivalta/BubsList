@@ -1,5 +1,7 @@
+import { PenLine, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
+import Icon from '../components/Icon'
 import QuestCard from '../components/QuestCard'
 import { LoadError, Loading } from '../components/Status'
 import { useAppData, useSignedUrls } from '../data/hooks'
@@ -34,7 +36,7 @@ export default function QuestsPage() {
       {pending.length > 0 && (
         <details className="card p-3">
           <summary className="cursor-pointer font-medium">
-            <span aria-hidden>✍️</span> Você tem {pending.length} {pending.length === 1 ? 'resenha pendente' : 'resenhas pendentes'}
+            <PenLine aria-hidden className="mr-1 inline size-4" /> Você tem {pending.length} {pending.length === 1 ? 'resenha pendente' : 'resenhas pendentes'}
           </summary>
           <ul className="mt-2 space-y-1">
             {pending.map((c) => (
@@ -87,7 +89,7 @@ export default function QuestsPage() {
             onClick={() => set({ categoryId: filter.categoryId === c.id ? null : c.id })}
             className={`btn shrink-0 ${filter.categoryId === c.id ? 'btn-primary' : ''}`}
           >
-            <span aria-hidden>{c.icon}</span> {c.name}
+            <Icon name={c.icon} className="size-4" /> {c.name}
           </button>
         ))}
       </div>
@@ -107,9 +109,9 @@ export default function QuestsPage() {
       <Link
         to="/quests/nova"
         aria-label="Nova quest"
-        className="fixed bottom-20 right-4 z-20 grid size-14 place-items-center rounded-full bg-brand text-3xl text-white shadow-lg md:bottom-8 md:right-8"
+        className="fixed bottom-20 right-4 z-20 grid size-14 place-items-center rounded-full bg-brand text-white shadow-lg md:bottom-8 md:right-8"
       >
-        +
+        <Plus aria-hidden className="size-7" />
       </Link>
     </div>
   )

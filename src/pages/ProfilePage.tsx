@@ -1,4 +1,6 @@
+import { Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
+import Icon, { IconPicker } from '../components/Icon'
 import { LoadError, Loading } from '../components/Status'
 import { deleteCategory, saveCategory, signOut, updateProfile, uploadAvatar, type CategoryInput } from '../data/api'
 import { useAppData, useRefresh, useSignedUrls } from '../data/hooks'
@@ -101,12 +103,12 @@ function Categories({ data, onChange }: { data: AppData; onChange: () => void })
   const [message, setMessage] = useState<string | null>(null)
 
   async function save(input: CategoryInput & { id?: string }): Promise<boolean> {
-    if (!input.name.trim() || !input.icon.trim()) {
-      setMessage('Preencha nome e ícone.')
+    if (!input.name.trim()) {
+      setMessage('Dê um nome à categoria.')
       return false
     }
     try {
-      await saveCategory({ ...input, name: input.name.trim(), icon: input.icon.trim() })
+      await saveCategory({ ...input, name: input.name.trim() })
       setMessage(null)
       onChange()
       return true
@@ -135,7 +137,7 @@ function Categories({ data, onChange }: { data: AppData; onChange: () => void })
       <ul className="space-y-2">
         {data.categories.map((c) => <CategoryRow key={c.id} category={c} onSave={save} onDelete={remove} />)}
       </ul>
-      <CategoryFields initial={{ name: '', icon: '', color: '#64748b' }} submitLabel="Adicionar" onSubmit={save} />
+      <CategoryFields initial={{ name: '', icon: 'sparkles', color: '#64748b' }} submitLabel="Adicionar" onSubmit={save} />
       {message && <p role="alert" className="text-sm text-red-600">{message}</p>}
     </section>
   )
@@ -167,15 +169,16 @@ function CategoryRow({ category: c, onSave, onDelete }: RowProps) {
   }
   return (
     <li className="card flex items-center gap-3 p-3">
-      <span className="size-3 rounded-full" style={{ background: c.color }} />
-      <span aria-hidden>{c.icon}</span>
+      <span style={{ color: c.color }}><Icon name={c.icon} /></span>
       <span className="flex-1">{c.name}</span>
       {c.builtin ? (
         <span className="text-xs text-gray-500">padrão</span>
       ) : (
         <>
           <button type="button" className="btn" onClick={() => setEditing(true)}>Editar</button>
-          <button type="button" className="btn btn-danger" aria-label={`Excluir ${c.name}`} onClick={() => onDelete(c)}>🗑</button>
+          <button type="button" className="btn btn-danger" aria-label={`Excluir ${c.name}`} onClick={() => onDelete(c)}>
+            <Trash2 aria-hidden className="size-4" />
+          </button>
         </>
       )}
     </li>
@@ -193,17 +196,19 @@ function CategoryFields({ initial, submitLabel, onSubmit, onCancel }: FieldsProp
   const [c, setC] = useState(initial)
   return (
     <form
-      className="flex flex-wrap items-center gap-2"
+      className="space-y-2"
       onSubmit={async (e) => {
         e.preventDefault()
         if ((await onSubmit(c)) && !onCancel) setC(initial)
       }}
     >
-      <input aria-label="Ícone" className="input w-16 text-center" value={c.icon} maxLength={8} onChange={(e) => setC({ ...c, icon: e.target.value })} />
-      <input aria-label="Nome da categoria" className="input min-w-0 flex-1" value={c.name} onChange={(e) => setC({ ...c, name: e.target.value })} />
-      <input aria-label="Cor" type="color" className="h-11 w-14 rounded" value={c.color} onChange={(e) => setC({ ...c, color: e.target.value })} />
-      <button className="btn btn-primary">{submitLabel}</button>
-      {onCancel && <button type="button" className="btn" onClick={onCancel}>Cancelar</button>}
+      <div className="flex flex-wrap items-center gap-2">
+        <input aria-label="Nome da categoria" className="input min-w-0 flex-1" value={c.name} onChange={(e) => setC({ ...c, name: e.target.value })} />
+        <input aria-label="Cor" type="color" className="h-11 w-14 rounded" value={c.color} onChange={(e) => setC({ ...c, color: e.target.value })} />
+        <button className="btn btn-primary">{submitLabel}</button>
+        {onCancel && <button type="button" className="btn" onClick={onCancel}>Cancelar</button>}
+      </div>
+      <IconPicker value={c.icon} onChange={(icon) => setC({ ...c, icon })} />
     </form>
   )
 }

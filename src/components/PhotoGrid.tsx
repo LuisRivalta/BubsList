@@ -1,3 +1,4 @@
+import { X } from 'lucide-react'
 import { useSignedUrls } from '../data/hooks'
 import type { Photo } from '../lib/types'
 
@@ -12,8 +13,8 @@ export default function PhotoGrid({ photos, onDelete }: { photos: Photo[]; onDel
             <img src={urls[p.storage_path]} alt="" loading="lazy" className="aspect-square w-full rounded-lg bg-gray-100 object-cover" />
           </a>
           {onDelete && (
-            <button type="button" aria-label="Remover foto" onClick={() => onDelete(p)} className="absolute right-1 top-1 size-8 rounded-full bg-black/60 text-white">
-              ✕
+            <button type="button" aria-label="Remover foto" onClick={() => onDelete(p)} className="absolute right-1 top-1 grid size-8 place-items-center rounded-full bg-black/60 text-white">
+              <X aria-hidden className="size-4" />
             </button>
           )}
         </div>

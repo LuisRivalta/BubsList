@@ -8,7 +8,7 @@ let seq = 0
 const nextId = (prefix: string) => `${prefix}-${++seq}`
 
 export const category = (o: Partial<Category> = {}): Category => ({
-  id: nextId('cat'), name: 'Viagem', icon: '✈️', color: '#0ea5e9', kind: 'general', builtin: true, created_at: T, ...o,
+  id: nextId('cat'), name: 'Viagem', icon: 'plane', color: '#0ea5e9', kind: 'general', builtin: true, created_at: T, ...o,
 })
 
 export const quest = (o: Partial<Quest> = {}): Quest => ({
@@ -29,7 +29,7 @@ export const photo = (o: Partial<Photo> = {}): Photo => ({
 })
 
 export const achievement = (o: Partial<Achievement> = {}): Achievement => ({
-  id: nextId('a'), name: 'Conquista', description: '', icon: '⭐', rarity: 'bronze', kind: 'auto',
+  id: nextId('a'), name: 'Conquista', description: '', icon: 'star', rarity: 'bronze', kind: 'auto',
   rule_category_id: null, rule_min_difficulty: null, rule_count: 1, manual_unlocked_on: null, created_at: T, ...o,
 })
 
@@ -39,12 +39,12 @@ export const media = (o: Partial<Media> = {}): Media => ({
 })
 
 export const CATS = {
-  viagem: category({ id: 'cat-viagem', name: 'Viagem', icon: '✈️', color: '#0ea5e9' }),
-  restaurante: category({ id: 'cat-rest', name: 'Restaurante', icon: '🍽️', color: '#f97316' }),
-  atividade: category({ id: 'cat-ativ', name: 'Atividade', icon: '🎯', color: '#22c55e' }),
-  filme: category({ id: 'cat-filme', name: 'Filme', icon: '🎬', color: '#ef4444', kind: 'movie' }),
-  serie: category({ id: 'cat-serie', name: 'Série', icon: '📺', color: '#8b5cf6', kind: 'series' }),
-  anime: category({ id: 'cat-anime', name: 'Anime', icon: '🍥', color: '#ec4899', kind: 'anime' }),
+  viagem: category({ id: 'cat-viagem', name: 'Viagem', icon: 'plane', color: '#0ea5e9' }),
+  restaurante: category({ id: 'cat-rest', name: 'Restaurante', icon: 'utensils', color: '#f97316' }),
+  atividade: category({ id: 'cat-ativ', name: 'Atividade', icon: 'target', color: '#22c55e' }),
+  filme: category({ id: 'cat-filme', name: 'Filme', icon: 'clapperboard', color: '#ef4444', kind: 'movie' }),
+  serie: category({ id: 'cat-serie', name: 'Série', icon: 'tv', color: '#8b5cf6', kind: 'series' }),
+  anime: category({ id: 'cat-anime', name: 'Anime', icon: 'swords', color: '#ec4899', kind: 'anime' }),
 }
 
 export const allCats = () => Object.values(CATS)

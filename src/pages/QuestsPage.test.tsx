@@ -25,7 +25,7 @@ const open = () => renderRoute([{ path: '/', element: <QuestsPage /> }], '/')
 it('shows pending top-level quests with subquest progress', async () => {
   open()
   expect(await screen.findByText('Japão')).toBeInTheDocument()
-  expect(screen.getByText('☑ 1/2')).toBeInTheDocument()
+  expect(screen.getByText('1/2')).toBeInTheDocument()
   expect(screen.queryByText('Matrix')).not.toBeInTheDocument()
   expect(screen.queryByText('Monte Fuji')).not.toBeInTheDocument()
 })

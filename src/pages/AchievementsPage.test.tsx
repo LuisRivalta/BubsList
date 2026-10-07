@@ -59,7 +59,7 @@ it('creates an automatic achievement', async () => {
   await user.click(screen.getByRole('button', { name: 'Salvar' }))
   await waitFor(() => expect(router.state.location.pathname).toBe('/conquistas'))
   expect(api.saveAchievement).toHaveBeenCalledWith({
-    id: undefined, name: 'Rodízio', description: '', icon: '🏆', rarity: 'gold', kind: 'auto',
+    id: undefined, name: 'Rodízio', description: '', icon: 'trophy', rarity: 'gold', kind: 'auto',
     rule_category_id: CATS.restaurante.id, rule_min_difficulty: null, rule_count: 10, manual_unlocked_on: null,
   })
 })

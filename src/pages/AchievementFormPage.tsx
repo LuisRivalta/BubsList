@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router'
+import { IconPicker } from '../components/Icon'
 import { LoadError, Loading } from '../components/Status'
 import { deleteAchievement, saveAchievement, type AchievementInput } from '../data/api'
 import { useAppData, useRefresh } from '../data/hooks'
@@ -22,7 +23,7 @@ function AchievementForm({ data, existing }: { data: AppData; existing?: Achieve
   const refresh = useRefresh()
   const [name, setName] = useState(existing?.name ?? '')
   const [description, setDescription] = useState(existing?.description ?? '')
-  const [icon, setIcon] = useState(existing?.icon ?? '🏆')
+  const [icon, setIcon] = useState(existing?.icon ?? 'trophy')
   const [rarity, setRarity] = useState<Rarity>(existing?.rarity ?? 'bronze')
   const [kind, setKind] = useState<'auto' | 'manual'>(existing?.kind ?? 'auto')
   const [categoryId, setCategoryId] = useState(existing?.rule_category_id ?? '')
@@ -34,9 +35,8 @@ function AchievementForm({ data, existing }: { data: AppData; existing?: Achieve
     e.preventDefault()
     const n = Number(count)
     if (!name.trim()) return setError('Dê um nome à conquista.')
-    if (!icon.trim()) return setError('Escolha um ícone.')
     if (kind === 'auto' && (!Number.isInteger(n) || n < 1)) return setError('A quantidade precisa ser um número inteiro maior que zero.')
-    const base = { name: name.trim(), description: description.trim(), icon: icon.trim(), rarity, kind }
+    const base = { name: name.trim(), description: description.trim(), icon, rarity, kind }
     const row: AchievementInput =
       kind === 'auto'
         ? { ...base, rule_category_id: categoryId || null, rule_min_difficulty: minDifficulty || null, rule_count: n, manual_unlocked_on: null }
@@ -60,16 +60,11 @@ function AchievementForm({ data, existing }: { data: AppData; existing?: Achieve
   return (
     <form onSubmit={save} className="mx-auto max-w-xl space-y-4">
       <h1 className="text-2xl font-bold">{existing ? 'Editar conquista' : 'Nova conquista'}</h1>
-      <div className="flex gap-2">
-        <label className="w-20">
-          <span className="mb-1 block font-medium">Ícone</span>
-          <input className="input text-center text-2xl" value={icon} maxLength={8} onChange={(e) => setIcon(e.target.value)} />
-        </label>
-        <label className="flex-1">
-          <span className="mb-1 block font-medium">Nome</span>
-          <input className="input" value={name} onChange={(e) => setName(e.target.value)} />
-        </label>
-      </div>
+      <label className="block">
+        <span className="mb-1 block font-medium">Nome</span>
+        <input className="input" value={name} onChange={(e) => setName(e.target.value)} />
+      </label>
+      <IconPicker value={icon} onChange={setIcon} />
       <label className="block">
         <span className="mb-1 block font-medium">Descrição</span>
         <input className="input" value={description} onChange={(e) => setDescription(e.target.value)} />
@@ -96,7 +91,7 @@ function AchievementForm({ data, existing }: { data: AppData; existing?: Achieve
             <span className="mb-1 block font-medium">Categoria</span>
             <select className="input" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
               <option value="">Qualquer categoria</option>
-              {data.categories.map((c) => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
+              {data.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </label>
           <label className="block">

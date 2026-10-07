@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { expect, it, vi } from 'vitest'
 import * as api from '../data/api'
@@ -8,7 +8,7 @@ import ProfilePage from './ProfilePage'
 
 vi.mock('../data/api')
 
-const shows = category({ id: 'cat-shows', name: 'Shows', icon: '🎤', builtin: false })
+const shows = category({ id: 'cat-shows', name: 'Shows', icon: 'mic', builtin: false })
 const open = (o: Parameters<typeof appData>[0] = {}) => {
   vi.mocked(api.loadAll).mockResolvedValue(appData({ categories: [...allCats(), shows], ...o }))
   return renderRoute([{ path: '/perfil', element: <ProfilePage /> }], '/perfil')
@@ -39,18 +39,17 @@ it('deletes an unused custom category after confirming', async () => {
 it('adds a category', async () => {
   open()
   const user = userEvent.setup()
-  fireEvent.change(await screen.findByLabelText('Ícone'), { target: { value: '📚' } })
+  await user.click(await screen.findByRole('radio', { name: 'Livro' }))
   await user.type(screen.getByLabelText('Nome da categoria'), 'Livros')
   await user.click(screen.getByRole('button', { name: 'Adicionar' }))
-  expect(api.saveCategory).toHaveBeenCalledWith({ name: 'Livros', icon: '📚', color: '#64748b' })
+  expect(api.saveCategory).toHaveBeenCalledWith({ name: 'Livros', icon: 'book-open', color: '#64748b' })
 })
 
 it('explains a duplicated category name', async () => {
   vi.mocked(api.saveCategory).mockRejectedValue({ code: '23505' })
   open()
   const user = userEvent.setup()
-  fireEvent.change(await screen.findByLabelText('Ícone'), { target: { value: '✈️' } })
-  await user.type(screen.getByLabelText('Nome da categoria'), 'Viagem')
+  await user.type(await screen.findByLabelText('Nome da categoria'), 'Viagem')
   await user.click(screen.getByRole('button', { name: 'Adicionar' }))
   expect(await screen.findByRole('alert')).toHaveTextContent('Já existe uma categoria com esse nome.')
 })

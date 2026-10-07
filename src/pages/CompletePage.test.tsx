@@ -64,7 +64,7 @@ it('asks for a rating when there is text', async () => {
 })
 
 it('celebrates newly unlocked achievements', async () => {
-  load({ achievements: [achievement({ name: 'Primeira quest', icon: '⭐', rule_count: 1 })] })
+  load({ achievements: [achievement({ name: 'Primeira quest', icon: 'star', rule_count: 1 })] })
   const user = userEvent.setup()
   const router = renderRoute(routes, '/quests/japao/concluir')
   await user.click(await screen.findByRole('button', { name: 'Pular resenha' }))

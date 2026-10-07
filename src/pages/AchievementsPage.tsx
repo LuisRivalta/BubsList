@@ -1,5 +1,7 @@
+import { Pencil } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
+import Icon from '../components/Icon'
 import RarityBadge from '../components/RarityBadge'
 import { LoadError, Loading } from '../components/Status'
 import { setManualUnlock } from '../data/api'
@@ -59,11 +61,13 @@ function AchievementCard({ status, categories, onChange }: { status: Achievement
 
   return (
     <div className={`card flex gap-3 p-3 ${unlockedOn ? '' : 'opacity-75'}`}>
-      <span aria-hidden className={`text-4xl ${unlockedOn ? '' : 'grayscale'}`}>{a.icon}</span>
+      <Icon name={a.icon} className={`size-9 shrink-0 ${unlockedOn ? 'text-accent' : 'text-gray-400'}`} />
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex items-start justify-between gap-2">
           <p className="font-semibold">{a.name}</p>
-          <Link to={`/conquistas/${a.id}/editar`} aria-label={`Editar ${a.name}`} className="px-2 text-gray-400">✎</Link>
+          <Link to={`/conquistas/${a.id}/editar`} aria-label={`Editar ${a.name}`} className="grid size-8 place-items-center text-gray-400">
+            <Pencil aria-hidden className="size-4" />
+          </Link>
         </div>
         {a.description && <p className="text-sm text-gray-600">{a.description}</p>}
         {a.kind === 'auto' && <p className="text-xs text-gray-500">{describeRule(a, categories)}</p>}

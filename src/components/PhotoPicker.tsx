@@ -1,3 +1,4 @@
+import { Camera, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { uploadPhoto } from '../data/api'
 import { MAX_PHOTOS, UnsupportedImageError, compressImage } from '../lib/image'
@@ -46,16 +47,16 @@ export default function PhotoPicker({ existing, pending, onChange, onDeleteExist
                 type="button"
                 aria-label="Remover foto"
                 onClick={() => onChange(pending.filter((_, j) => j !== i))}
-                className="absolute right-1 top-1 size-8 rounded-full bg-black/60 text-white"
+                className="absolute right-1 top-1 grid size-8 place-items-center rounded-full bg-black/60 text-white"
               >
-                ✕
+                <X aria-hidden className="size-4" />
               </button>
             </div>
           ))}
         </div>
       )}
       <label className="btn cursor-pointer">
-        <span aria-hidden>📷</span> {busy ? 'Processando…' : 'Adicionar fotos'}
+        <Camera aria-hidden className="size-5" /> {busy ? 'Processando…' : 'Adicionar fotos'}
         <input
           type="file"
           accept="image/*"

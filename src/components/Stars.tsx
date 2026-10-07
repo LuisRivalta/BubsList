@@ -1,9 +1,12 @@
+import { Star } from 'lucide-react'
+
+const tone = (on: boolean) => (on ? 'fill-current text-accent' : 'text-gray-300')
+
 export default function Stars({ value, onChange }: { value: number; onChange?: (v: number) => void }) {
   if (!onChange) {
     return (
-      <span aria-label={`${value} de 5 estrelas`} className="text-lg text-yellow-500">
-        {'★'.repeat(value)}
-        <span className="text-gray-300">{'★'.repeat(5 - value)}</span>
+      <span role="img" aria-label={`${value} de 5 estrelas`} className="inline-flex gap-0.5">
+        {[1, 2, 3, 4, 5].map((n) => <Star key={n} aria-hidden className={`size-4 ${tone(n <= value)}`} />)}
       </span>
     )
   }
@@ -17,9 +20,9 @@ export default function Stars({ value, onChange }: { value: number; onChange?: (
           aria-checked={value === n}
           aria-label={n === 1 ? '1 estrela' : `${n} estrelas`}
           onClick={() => onChange(n)}
-          className={`min-h-11 min-w-11 text-3xl ${n <= value ? 'text-yellow-500' : 'text-gray-300'}`}
+          className="grid min-h-11 min-w-11 place-items-center"
         >
-          ★
+          <Star aria-hidden className={`size-8 ${tone(n <= value)}`} />
         </button>
       ))}
     </div>

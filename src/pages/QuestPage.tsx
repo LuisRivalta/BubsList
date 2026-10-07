@@ -1,6 +1,8 @@
+import { CalendarDays, Check, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import DifficultyBadge from '../components/DifficultyBadge'
+import Icon from '../components/Icon'
 import PhotoGrid from '../components/PhotoGrid'
 import QuestCard from '../components/QuestCard'
 import Stars from '../components/Stars'
@@ -84,11 +86,11 @@ export default function QuestPage() {
         <div className="space-y-2">
           <h1 className="text-2xl font-bold">{quest.title}</h1>
           <div className="flex flex-wrap items-center gap-2 text-sm">
-            <span style={{ color: category?.color }}>
-              <span aria-hidden>{category?.icon}</span> {category?.name}
+            <span className="inline-flex items-center gap-1" style={{ color: category?.color }}>
+              <Icon name={category?.icon ?? ''} className="size-4" /> {category?.name}
             </span>
             <DifficultyBadge difficulty={quest.difficulty} />
-            {done.has(quest.id) && <span className="text-green-700">✔ Feita</span>}
+            {done.has(quest.id) && <span className="inline-flex items-center gap-1 text-green-700"><Check aria-hidden className="size-4" /> Feita</span>}
           </div>
           {media?.synopsis && <p className="text-sm text-gray-600">{media.synopsis}</p>}
           {quest.notes && <p className="whitespace-pre-wrap">{quest.notes}</p>}
@@ -175,10 +177,10 @@ function CompletionEntry({ completion, data, me, questId, onDelete }: EntryProps
   return (
     <div className="card space-y-3 p-4">
       <div className="flex items-center justify-between gap-2">
-        <span className="font-medium"><span aria-hidden>📅</span> {formatDate(completion.done_on)}</span>
+        <span className="inline-flex items-center gap-1.5 font-medium"><CalendarDays aria-hidden className="size-4" /> {formatDate(completion.done_on)}</span>
         <div className="flex gap-2">
           <Link to={`/quests/${questId}/concluir?completion=${completion.id}`} className="btn">{mine ? 'Editar' : 'Escrever minha resenha'}</Link>
-          <button type="button" className="btn btn-danger" aria-label="Excluir conclusão" onClick={onDelete}>🗑</button>
+          <button type="button" className="btn btn-danger" aria-label="Excluir conclusão" onClick={onDelete}><Trash2 aria-hidden className="size-4" /></button>
         </div>
       </div>
       {data.profiles.map((p) => {

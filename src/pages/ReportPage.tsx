@@ -1,6 +1,8 @@
+import { ChevronLeft, ChevronRight, Star } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import DifficultyBadge from '../components/DifficultyBadge'
+import Icon from '../components/Icon'
 import PhotoGrid from '../components/PhotoGrid'
 import RarityBadge from '../components/RarityBadge'
 import { LoadError, Loading } from '../components/Status'
@@ -40,9 +42,13 @@ export default function ReportPage() {
       </div>
 
       <div className="flex items-center justify-between">
-        {period.kind !== 'last3' ? <button type="button" className="btn" aria-label="Período anterior" onClick={() => setPeriod(shiftPeriod(period, -1))}>‹</button> : <span />}
+        {period.kind !== 'last3' ? (
+          <button type="button" className="btn" aria-label="Período anterior" onClick={() => setPeriod(shiftPeriod(period, -1))}><ChevronLeft aria-hidden className="size-5" /></button>
+        ) : <span />}
         <h2 className="text-lg font-semibold capitalize">{period.label}</h2>
-        {period.kind !== 'last3' ? <button type="button" className="btn" aria-label="Próximo período" onClick={() => setPeriod(shiftPeriod(period, 1))}>›</button> : <span />}
+        {period.kind !== 'last3' ? (
+          <button type="button" className="btn" aria-label="Próximo período" onClick={() => setPeriod(shiftPeriod(period, 1))}><ChevronRight aria-hidden className="size-5" /></button>
+        ) : <span />}
       </div>
 
       {empty ? (
@@ -54,8 +60,8 @@ export default function ReportPage() {
             <p className="text-gray-600">{report.total === 1 ? 'quest concluída' : 'quests concluídas'}</p>
             <ul className="mt-3 flex flex-wrap gap-2">
               {report.byCategory.map(({ category, count }) => (
-                <li key={category.id} className="rounded-full bg-gray-100 px-3 py-1 text-sm">
-                  <span aria-hidden>{category.icon}</span> {category.name}: {count}
+                <li key={category.id} className="inline-flex items-center gap-1.5 rounded-full bg-blush/40 px-3 py-1 text-sm">
+                  <Icon name={category.icon} className="size-4" /> {category.name}: {count}
                 </li>
               ))}
             </ul>
@@ -79,7 +85,7 @@ export default function ReportPage() {
               <ul className="space-y-2">
                 {report.unlocked.map((s) => (
                   <li key={s.achievement.id} className="card flex items-center gap-3 p-3">
-                    <span aria-hidden className="text-3xl">{s.achievement.icon}</span>
+                    <Icon name={s.achievement.icon} className="size-8 text-accent" />
                     <span className="flex-1">{s.achievement.name}</span>
                     <RarityBadge rarity={s.achievement.rarity} />
                   </li>
@@ -95,7 +101,9 @@ export default function ReportPage() {
                 {report.best.map((i) => (
                   <Link key={i.completion.id} to={`/quests/${i.quest.id}`} className="card block p-3">
                     <p className="font-medium">{i.quest.title}</p>
-                    <p className="text-sm text-yellow-600">★ {i.average!.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}</p>
+                    <p className="inline-flex items-center gap-1 text-sm text-accent">
+                      <Star aria-hidden className="size-4 fill-current" /> {i.average!.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}
+                    </p>
                   </Link>
                 ))}
               </div>
@@ -115,11 +123,11 @@ export default function ReportPage() {
               {report.timeline.map((i) => (
                 <li key={i.completion.id} className="card p-3">
                   <p className="text-xs text-gray-500">{formatDate(i.completion.done_on)}{i.path ? ` · ${i.path}` : ''}</p>
-                  <Link to={`/quests/${i.quest.id}`} className="font-medium">
-                    <span aria-hidden>{i.category?.icon}</span> {i.quest.title}
+                  <Link to={`/quests/${i.quest.id}`} className="inline-flex items-center gap-1.5 font-medium">
+                    <Icon name={i.category?.icon ?? ''} className="size-4" /> {i.quest.title}
                   </Link>
                   {i.ratings.length > 0 && (
-                    <p className="text-sm text-gray-600">{i.ratings.map((r) => `${nameOf(r.user_id)}: ${'★'.repeat(r.rating)}`).join(' · ')}</p>
+                    <p className="text-sm text-gray-600">{i.ratings.map((r) => `${nameOf(r.user_id)}: ${r.rating}/5`).join(' · ')}</p>
                   )}
                 </li>
               ))}

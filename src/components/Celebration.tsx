@@ -1,4 +1,5 @@
 import type { Achievement } from '../lib/types'
+import Icon from './Icon'
 import RarityBadge from './RarityBadge'
 
 export default function Celebration({ achievements, onClose }: { achievements: Achievement[]; onClose: () => void }) {
@@ -9,7 +10,7 @@ export default function Celebration({ achievements, onClose }: { achievements: A
         <ul className="space-y-4">
           {achievements.map((a) => (
             <li key={a.id} className="space-y-1">
-              <span aria-hidden className="block text-5xl">{a.icon}</span>
+              <Icon name={a.icon} className="mx-auto size-12 text-accent" />
               <p className="font-semibold">{a.name}</p>
               <RarityBadge rarity={a.rarity} />
             </li>

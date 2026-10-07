@@ -55,7 +55,7 @@ Identificadores no código e no banco em inglês; textos da interface em pt-BR. 
 
 **`profiles`** — `id uuid pk references auth.users on delete cascade`, `display_name text not null`, `avatar_path text null`. Criado por trigger ao inserir em `auth.users` (`display_name` = parte do e-mail antes do `@`).
 
-**`categories`** — `name text not null unique`, `icon text not null` (emoji), `color text not null` (hex `#rrggbb`), `kind text not null check (kind in ('general','movie','series','anime'))`, `builtin boolean not null default false`.
+**`categories`** — `name text not null unique`, `icon text not null` (nome de ícone Lucide, ex.: `plane`), `color text not null` (hex `#rrggbb`), `kind text not null check (kind in ('general','movie','series','anime'))`, `builtin boolean not null default false`.
 
 Lista base (`builtin = true`), semeada na migração:
 
@@ -81,7 +81,7 @@ Categorias criadas pelo casal têm sempre `kind = 'general'`.
 
 **`photos`** — `quest_id uuid null references quests on delete cascade`, `review_id uuid null references reviews on delete cascade`, `storage_path text not null`, `created_by uuid not null references profiles`. `check (num_nonnulls(quest_id, review_id) = 1)`. Foto com `quest_id` = referência (antes); com `review_id` = da resenha (depois).
 
-**`achievements`** — `name text not null`, `description text not null`, `icon text not null` (emoji), `rarity text not null check (rarity in ('bronze','silver','gold','platinum'))`, `kind text not null check (kind in ('auto','manual'))`, `rule_category_id uuid null references categories on delete restrict`, `rule_min_difficulty text null` (mesmos valores de `quests.difficulty`), `rule_count int null check (rule_count >= 1)`, `manual_unlocked_on date null`. Restrições: `kind = 'auto'` ⇒ `rule_count is not null and manual_unlocked_on is null`; `kind = 'manual'` ⇒ `rule_category_id`, `rule_min_difficulty` e `rule_count` nulos.
+**`achievements`** — `name text not null`, `description text not null`, `icon text not null` (nome de ícone Lucide, ex.: `plane`), `rarity text not null check (rarity in ('bronze','silver','gold','platinum'))`, `kind text not null check (kind in ('auto','manual'))`, `rule_category_id uuid null references categories on delete restrict`, `rule_min_difficulty text null` (mesmos valores de `quests.difficulty`), `rule_count int null check (rule_count >= 1)`, `manual_unlocked_on date null`. Restrições: `kind = 'auto'` ⇒ `rule_count is not null and manual_unlocked_on is null`; `kind = 'manual'` ⇒ `rule_category_id`, `rule_min_difficulty` e `rule_count` nulos.
 
 **Storage:** bucket privado `photos`. Caminhos: `quests/{quest_id}/{uuid}.jpg` (referência), `reviews/{review_id}/{uuid}.jpg` (resenha), `avatars/{user_id}.jpg`. Exibição por URL assinada (validade 1 h).
 
@@ -165,6 +165,8 @@ Se o total de episódios é desconhecido (`seasons = []` em série/anime), não 
 - Categorias base não podem ser excluídas (RLS impede) nem editadas (a interface não oferece edição — o padrão "Atividade" das subquests depende do nome). Categoria criada só pode ser excluída se nenhuma quest e nenhuma conquista a usam; senão: "Categoria em uso por N quests/conquistas".
 
 ## 8. Telas
+
+**Sem emojis no site:** ícones de traço da biblioteca Lucide (categorias, conquistas, menu e botões); as tabelas de ícones em §6 e §14 viram nomes Lucide no seed.
 
 **Paleta ("agejo 2"):** fundo `#efeced`; texto `#1a1115`; ações/botões principais ameixa `#553548` (texto branco); destaques rosa queimado `#b3607e`; preenchimentos suaves `#e3b4cf`. Cores de raridade e de dificuldade continuam próprias (carregam significado).
 

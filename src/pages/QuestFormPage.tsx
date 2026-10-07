@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
 import CatalogSearch from '../components/CatalogSearch'
+import Icon from '../components/Icon'
 import PhotoPicker, { uploadPending } from '../components/PhotoPicker'
 import { LoadError, Loading } from '../components/Status'
 import { createQuest, deletePhoto, updateQuest, upsertMedia, type QuestInput } from '../data/api'
@@ -110,7 +111,7 @@ function QuestForm({ data, existing, parentId }: { data: AppData; existing?: Que
         <div className="flex flex-wrap gap-2">
           {data.categories.map((c) => (
             <button key={c.id} type="button" aria-pressed={c.id === categoryId} onClick={() => setCategoryId(c.id)} className={`btn ${c.id === categoryId ? 'btn-primary' : ''}`}>
-              <span aria-hidden>{c.icon}</span> {c.name}
+              <Icon name={c.icon} className="size-4" /> {c.name}
             </button>
           ))}
         </div>

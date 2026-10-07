@@ -1,11 +1,12 @@
+import { ChartColumn, Map as MapIcon, Trophy, User } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router'
 
 const NAV = [
-  { to: '/', label: 'Quests', icon: '🗺️' },
-  { to: '/conquistas', label: 'Conquistas', icon: '🏆' },
-  { to: '/relatorio', label: 'Relatório', icon: '📊' },
-  { to: '/perfil', label: 'Perfil', icon: '👤' },
+  { to: '/', label: 'Quests', Icon: MapIcon },
+  { to: '/conquistas', label: 'Conquistas', Icon: Trophy },
+  { to: '/relatorio', label: 'Relatório', Icon: ChartColumn },
+  { to: '/perfil', label: 'Perfil', Icon: User },
 ]
 
 function useOnline() {
@@ -42,7 +43,7 @@ export default function Layout() {
               }`
             }
           >
-            <span aria-hidden className="text-xl">{n.icon}</span>
+            <n.Icon aria-hidden className="size-6" strokeWidth={1.75} />
             {n.label}
           </NavLink>
         ))}
