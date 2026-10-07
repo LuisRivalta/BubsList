@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import AuthBackdrop from '../components/AuthBackdrop'
 import { supabase } from '../lib/supabase'
 
 export default function NewPasswordPage({ onDone }: { onDone: () => void }) {
@@ -14,8 +15,8 @@ export default function NewPasswordPage({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <main className="grid min-h-dvh place-items-center p-4">
-      <form onSubmit={save} className="card w-full max-w-sm space-y-4 p-6">
+    <AuthBackdrop>
+      <form onSubmit={save} className="glass-card w-full max-w-sm space-y-4 p-6">
         <h1 className="text-xl font-bold">Nova senha</h1>
         <label className="block">
           <span className="mb-1 block text-sm font-medium">Nova senha</span>
@@ -24,6 +25,6 @@ export default function NewPasswordPage({ onDone }: { onDone: () => void }) {
         {message && <p role="status" className="text-sm text-gray-700">{message}</p>}
         <button className="btn btn-primary w-full">Salvar senha</button>
       </form>
-    </main>
+    </AuthBackdrop>
   )
 }

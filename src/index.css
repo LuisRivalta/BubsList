@@ -46,4 +46,31 @@
     padding: 0.5rem 0.75rem;
   }
   .card { border-radius: 1rem; background: #fff; box-shadow: 0 1px 3px rgb(0 0 0 / 0.08); }
+  .glass-card {
+    border-radius: 1.5rem;
+    border: 1px solid rgb(255 255 255 / 0.35);
+    background: rgb(255 255 255 / 0.82);
+    box-shadow: 0 25px 60px rgb(26 17 21 / 0.45);
+    backdrop-filter: blur(14px);
+  }
+}
+
+/* Login motion: hidden until anime.js reveals them (only when animating). */
+[data-animating] [data-letter],
+[data-animating] [data-reveal] { opacity: 0; }
+
+/* Characters follow the pointer by --depth px (variables set by AuthBackdrop). */
+.parallax {
+  transform: translate3d(calc(var(--px, 0) * var(--depth, 0) * 1px), calc(var(--py, 0) * var(--depth, 0) * 1px), 0);
+  transition: transform 0.4s ease-out;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+.float { animation: float 6s ease-in-out infinite; }
+.float-late { animation-delay: -3s; }
+@media (prefers-reduced-motion: reduce) {
+  .float { animation: none; }
+  .parallax { transition: none; }
 }

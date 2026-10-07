@@ -37,3 +37,10 @@ it('sends the reset link back to this site', async () => {
   expect(await screen.findByText('Enviamos um link para redefinir a senha.')).toBeInTheDocument()
   expect(supabase.auth.resetPasswordForEmail).toHaveBeenCalledWith('luis@x.com', { redirectTo: window.location.origin })
 })
+
+it('shows Killua and Serena around the login card', () => {
+  const { container } = render(<LoginPage />)
+  expect(container.querySelector('img[src="/login/killua.webp"]')).not.toBeNull()
+  expect(container.querySelector('img[src="/login/usagi.webp"]')).not.toBeNull()
+  expect(screen.getByRole('heading', { name: 'BubsList' })).toBeInTheDocument()
+})
