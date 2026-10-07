@@ -103,3 +103,14 @@ it('the progress editor shows the latest progress after +1', async () => {
   expect(screen.getByLabelText('Temporada')).toHaveValue(2)
   expect(screen.getByLabelText('Episódio')).toHaveValue(1)
 })
+
+it('deleting leaves the page without waiting for the reload (no "Quest não encontrada" flash)', async () => {
+  load({ quests: [japao] })
+  vi.spyOn(window, 'confirm').mockReturnValue(true)
+  const user = userEvent.setup()
+  const router = renderRoute(routes, '/quests/japao')
+  const excluir = await screen.findByRole('button', { name: 'Excluir' })
+  vi.mocked(api.loadAll).mockReturnValue(new Promise(() => {}))
+  await user.click(excluir)
+  await waitFor(() => expect(router.state.location.pathname).toBe('/'))
+})

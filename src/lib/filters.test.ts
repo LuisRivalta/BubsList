@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ME, PARTNER, completion, quest, review } from '../test/fixtures'
-import { filterQuests, pendingReviews, type QuestFilter } from './filters'
+import { drawPool, filterQuests, pendingReviews, type QuestFilter } from './filters'
 
 const japao = quest({ id: 'japao', title: 'Japão', category_id: 'viagem', difficulty: 'epic', created_at: '2026-01-01T00:00:00Z' })
 const fuji = quest({ id: 'fuji', parent_id: 'japao', title: 'Monte Fuji', category_id: 'ativ' })
@@ -42,5 +42,25 @@ describe('pendingReviews', () => {
     const mine = completion({ id: 'mine', done_on: '2026-09-01' })
     const reviews = [review({ completion_id: 'mine', user_id: ME }), review({ completion_id: 'recent', user_id: PARTNER })]
     expect(pendingReviews([old, recent, mine], reviews, ME).map((c) => c.id)).toEqual(['recent', 'old'])
+  })
+})
+
+describe('drawPool', () => {
+  const toquio = quest({ id: 'toquio', parent_id: 'japao', title: 'Tóquio', category_id: 'viagem' })
+  const all = [...quests, toquio]
+  const pool = (doneIds: string[], o: Partial<QuestFilter> = {}) =>
+    drawPool(all, new Set(doneIds), { categoryId: null, difficulty: null, ...o }).map((q) => q.id).sort()
+
+  it('draws pending quests that have no pending subquests', () => {
+    expect(pool(['matrix'])).toEqual(['acai', 'fuji', 'toquio'])
+  })
+
+  it('a quest whose subquests are all done can be drawn itself', () => {
+    expect(pool(['matrix', 'fuji', 'toquio'])).toEqual(['acai', 'japao'])
+  })
+
+  it('honors the category and difficulty filters', () => {
+    expect(pool(['matrix'], { categoryId: 'viagem' })).toEqual(['toquio'])
+    expect(pool(['matrix'], { difficulty: 'epic' })).toEqual([])
   })
 })

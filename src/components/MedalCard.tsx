@@ -49,7 +49,7 @@ export default function MedalCard({ status, categories, onChange }: { status: Ac
           ) : unlocking ? (
             <div className="flex flex-wrap gap-2">
               <input type="date" aria-label="Data do desbloqueio" className="input" value={date} max={todayISO()} onChange={(e) => setDate(e.target.value)} />
-              <button type="button" className="btn btn-primary" onClick={unlock}>Confirmar</button>
+              <button type="button" className="btn btn-primary" disabled={!date || date > todayISO()} onClick={unlock}>Confirmar</button>
             </div>
           ) : (
             <button type="button" className="btn" onClick={() => setUnlocking(true)}>Desbloquear</button>

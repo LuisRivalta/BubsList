@@ -1,7 +1,8 @@
-import { PenLine, Sparkles } from 'lucide-react'
+import { Dices, PenLine, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import Bubble from '../components/Bubble'
+import DrawDialog from '../components/DrawDialog'
 import EmptyState from '../components/EmptyState'
 import PageHero from '../components/PageHero'
 import QuestCard from '../components/QuestCard'
@@ -13,7 +14,7 @@ import { useUserId } from '../data/session'
 import { evaluateAchievements } from '../lib/achievements'
 import { formatDate, todayISO } from '../lib/dates'
 import { DIFFICULTIES, DIFFICULTY_LABEL } from '../lib/difficulty'
-import { filterQuests, pendingReviews, type QuestFilter } from '../lib/filters'
+import { drawPool, filterQuests, pendingReviews, type QuestFilter } from '../lib/filters'
 import { doneQuestIds } from '../lib/tree'
 import type { Difficulty } from '../lib/types'
 
@@ -21,6 +22,7 @@ export default function QuestsPage() {
   const q = useAppData()
   const me = useUserId()
   const [filter, setFilter] = useState<QuestFilter>({ tab: 'pending', categoryId: null, difficulty: null, search: '' })
+  const [drawing, setDrawing] = useState(false)
   const data = q.data
   const done = doneQuestIds(data?.completions ?? [])
   const list = data ? filterQuests(data.quests, done, filter) : []
@@ -36,6 +38,7 @@ export default function QuestsPage() {
   const month = todayISO().slice(0, 7)
   const openCount = data.quests.filter((x) => x.parent_id === null && !done.has(x.id)).length
   const doneThisMonth = data.completions.filter((c) => c.done_on.startsWith(month)).length
+  const pool = drawPool(data.quests, done, filter)
   const unlocked = evaluateAchievements(data.achievements, data.quests, data.completions).filter((s) => s.unlockedOn).length
 
   return (
@@ -52,9 +55,14 @@ export default function QuestsPage() {
           </>
         }
         actions={
-          <Link to="/quests/nova" className="fab relative inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-4 text-lg font-semibold text-white md:w-auto">
-            <Sparkles aria-hidden className="size-6" /> Nova quest
-          </Link>
+          <>
+            <Link to="/quests/nova" className="fab relative inline-flex flex-1 items-center justify-center gap-2 rounded-full px-6 py-4 text-lg font-semibold text-white md:flex-none">
+              <Sparkles aria-hidden className="size-6" /> Nova quest
+            </Link>
+            <button type="button" className="btn btn-ghost shrink-0 rounded-full px-5 text-base" disabled={pool.length === 0} onClick={() => setDrawing(true)}>
+              <Dices aria-hidden className="size-5" /> Sortear
+            </button>
+          </>
         }
       />
       <div className="space-y-4">
@@ -108,6 +116,7 @@ export default function QuestsPage() {
           </Stagger>
         )}
       </div>
+      {drawing && <DrawDialog pool={pool} quests={data.quests} categories={data.categories} onClose={() => setDrawing(false)} />}
     </>
   )
 }

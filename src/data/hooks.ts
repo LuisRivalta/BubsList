@@ -1,12 +1,27 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { fetchCatalogDetails } from '../lib/catalog'
+import { supabase } from '../lib/supabase'
 import type { Media } from '../lib/types'
 import { loadAll, signedUrls, upsertMedia } from './api'
 
 const ALL = ['all']
 
 export const useAppData = () => useQuery({ queryKey: ALL, queryFn: loadAll })
+
+// Any change in the database (usually made by the other person) reloads everything; RLS still filters what arrives.
+export function useLiveSync() {
+  const client = useQueryClient()
+  useEffect(() => {
+    const channel = supabase
+      .channel('live')
+      .on('postgres_changes', { event: '*', schema: 'public' }, () => client.invalidateQueries({ queryKey: ALL }))
+      .subscribe()
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [client])
+}
 
 export function useRefresh() {
   const client = useQueryClient()

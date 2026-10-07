@@ -14,7 +14,7 @@ export function fitWithin(width: number, height: number, max = 1600) {
 export async function compressImage(file: Blob): Promise<Blob> {
   let bitmap: ImageBitmap
   try {
-    bitmap = await createImageBitmap(file)
+    bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' })
   } catch {
     throw new UnsupportedImageError()
   }

@@ -71,3 +71,14 @@ it('category chips wrap on wide screens instead of hiding behind a scrollbar-les
   const chip = await screen.findByRole('button', { name: 'Viagem', pressed: false })
   expect(chip.parentElement).toHaveClass('md:flex-wrap')
 })
+
+it('draws a pending quest you can actually do and opens it', async () => {
+  const user = userEvent.setup()
+  open()
+  await user.click(await screen.findByRole('button', { name: 'Sortear' }))
+  const dialog = screen.getByRole('dialog', { name: 'Sorteio' })
+  expect(dialog).toHaveTextContent('Tóquio')
+  expect(screen.getByRole('link', { name: 'Bora!' })).toHaveAttribute('href', '/quests/toquio')
+  await user.click(screen.getByRole('button', { name: 'Fechar' }))
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+})

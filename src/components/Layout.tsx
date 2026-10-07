@@ -29,6 +29,22 @@ function useOnline() {
   return online
 }
 
+// Async click handlers that fail without their own try/catch end up here, so a failed save never goes unnoticed.
+function useSaveFailed() {
+  const [failed, setFailed] = useState(false)
+  useEffect(() => {
+    const show = () => setFailed(true)
+    window.addEventListener('unhandledrejection', show)
+    return () => window.removeEventListener('unhandledrejection', show)
+  }, [])
+  useEffect(() => {
+    if (!failed) return
+    const timer = setTimeout(() => setFailed(false), 6000)
+    return () => clearTimeout(timer)
+  }, [failed])
+  return failed
+}
+
 // New page content rises in; the inline transform is removed afterwards so fixed overlays inside keep covering the screen.
 function PageEnter({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -44,6 +60,7 @@ function PageEnter({ children }: { children: ReactNode }) {
 
 export default function Layout() {
   const online = useOnline()
+  const saveFailed = useSaveFailed()
   const { pathname } = useLocation()
   const [animated] = useState(() => !prefersReducedMotion())
   const nav = useRef<HTMLElement>(null)
@@ -115,11 +132,18 @@ export default function Layout() {
           </PageEnter>
         </div>
       </main>
-      {!online && (
-        <p role="alert" className="fixed inset-x-3 top-[max(0.75rem,env(safe-area-inset-top))] z-40 rounded-xl bg-yellow-100 p-3 text-sm text-yellow-900 shadow-lg md:left-auto md:right-6 md:max-w-md">
-          Sem conexão. O que você digitar continua aqui — tente salvar quando a internet voltar.
-        </p>
-      )}
+      <div className="fixed inset-x-3 top-[max(0.75rem,env(safe-area-inset-top))] z-40 space-y-2 md:left-auto md:right-6 md:max-w-md">
+        {!online && (
+          <p role="alert" className="rounded-xl bg-yellow-100 p-3 text-sm text-yellow-900 shadow-lg">
+            Sem conexão. O que você digitar continua aqui — tente salvar quando a internet voltar.
+          </p>
+        )}
+        {saveFailed && (
+          <p role="alert" className="rounded-xl bg-rose-100 p-3 text-sm font-semibold text-rose-900 shadow-lg">
+            Não deu para salvar. Confira a internet e tente de novo.
+          </p>
+        )}
+      </div>
     </div>
   )
 }

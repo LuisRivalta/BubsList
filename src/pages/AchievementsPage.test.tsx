@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { expect, it, vi } from 'vitest'
 import * as api from '../data/api'
@@ -90,4 +90,17 @@ it('the manual unlock row wraps instead of being clipped by the medal frame', as
   renderRoute(routes, '/conquistas')
   await user.click(await screen.findByRole('button', { name: 'Desbloquear' }))
   expect(screen.getByRole('button', { name: 'Confirmar' }).parentElement).toHaveClass('flex-wrap')
+})
+
+it('a manual unlock cannot be confirmed with an empty or future date', async () => {
+  const aurora = achievement({ id: 'aurora', name: 'Aurora boreal', kind: 'manual', rule_count: null })
+  vi.mocked(api.loadAll).mockResolvedValue(appData({ categories: allCats(), achievements: [aurora] }))
+  const user = userEvent.setup()
+  renderRoute(routes, '/conquistas')
+  await user.click(await screen.findByRole('button', { name: 'Desbloquear' }))
+  const date = screen.getByLabelText('Data do desbloqueio')
+  fireEvent.change(date, { target: { value: '2999-01-01' } })
+  expect(screen.getByRole('button', { name: 'Confirmar' })).toBeDisabled()
+  fireEvent.change(date, { target: { value: '' } })
+  expect(screen.getByRole('button', { name: 'Confirmar' })).toBeDisabled()
 })

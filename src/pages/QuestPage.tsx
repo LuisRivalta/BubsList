@@ -63,8 +63,8 @@ export default function QuestPage() {
     const n = descendantIds(data!.quests, quest!.id).length
     if (!window.confirm(n ? `Excluir "${quest!.title}" e ${n} subquest(s)?` : `Excluir "${quest!.title}"?`)) return
     await deleteQuest(quest!.id, data!)
-    await refresh()
     navigate(quest!.parent_id ? `/quests/${quest!.parent_id}` : '/', { replace: true })
+    await refresh()
   }
 
   async function removeCompletion(c: Completion) {

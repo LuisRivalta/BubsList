@@ -14,3 +14,10 @@ it('rejects images the browser cannot decode (e.g. HEIC on desktop Chrome)', asy
   vi.stubGlobal('createImageBitmap', vi.fn().mockRejectedValue(new Error('decode')))
   await expect(compressImage(new Blob(['x']))).rejects.toBeInstanceOf(UnsupportedImageError)
 })
+
+it('keeps phone photos upright by applying their EXIF orientation', async () => {
+  const decode = vi.fn().mockRejectedValue(new Error('stop'))
+  vi.stubGlobal('createImageBitmap', decode)
+  await compressImage(new Blob(['x'])).catch(() => {})
+  expect(decode).toHaveBeenCalledWith(expect.any(Blob), { imageOrientation: 'from-image' })
+})
