@@ -96,7 +96,7 @@ export default function Layout() {
         className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 flex rounded-full border border-white/70 bg-white/80 p-1.5 shadow-[0_12px_30px_-10px_rgb(26_17_21/0.4)] backdrop-blur-xl md:sticky md:inset-auto md:top-0 md:h-dvh md:w-60 md:shrink-0 md:flex-col md:gap-1 md:rounded-none md:border-0 md:bg-night md:p-4 md:shadow-none"
       >
         <span ref={pill} aria-hidden className="absolute rounded-full bg-linear-to-r from-brand to-accent md:rounded-xl md:bg-none md:bg-white/12" style={{ opacity: 0 }} />
-        <span className="hidden px-3 pb-6 pt-2 font-display text-2xl font-bold text-blush md:block">BubsList</span>
+        <span className="hidden px-3 pb-6 pt-2 font-display text-2xl font-bold text-blush md:block">Bubs2Do</span>
         {NAV.map((n) => {
           const active = isActive(n.to, pathname)
           return (

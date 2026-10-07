@@ -4,7 +4,7 @@ import AuthBackdrop from '../components/AuthBackdrop'
 import { prefersReducedMotion } from '../lib/motion'
 import { supabase } from '../lib/supabase'
 
-const TITLE = 'BubsList'
+const TITLE = 'Bubs2Do'
 
 export default function LoginPage({ leaving = false, onLeft }: { leaving?: boolean; onLeft?: () => void }) {
   const [email, setEmail] = useState('')

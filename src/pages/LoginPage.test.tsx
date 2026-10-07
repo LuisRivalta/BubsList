@@ -42,5 +42,5 @@ it('shows Killua and Serena around the login card', () => {
   const { container } = render(<LoginPage />)
   expect(container.querySelector('img[src="/login/killua.webp"]')).not.toBeNull()
   expect(container.querySelector('img[src="/login/usagi.webp"]')).not.toBeNull()
-  expect(screen.getByRole('heading', { name: 'BubsList' })).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Bubs2Do' })).toBeInTheDocument()
 })

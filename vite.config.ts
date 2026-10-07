@@ -13,8 +13,8 @@ export default defineConfig({
       includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png', 'logo.svg', 'tmdb.svg'],
       workbox: { globPatterns: ['**/*.{js,css,html,woff2,png,svg,webp,ico}'] },
       manifest: {
-        name: 'BubsList',
-        short_name: 'BubsList',
+        name: 'Bubs2Do',
+        short_name: 'Bubs2Do',
         description: 'Nossa lista de quests',
         lang: 'pt-BR',
         start_url: '/',

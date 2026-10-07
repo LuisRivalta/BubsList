@@ -1,4 +1,4 @@
-# BubsList
+# Bubs2Do
 
 Wishlist de quests do casal. Spec: `docs/superpowers/specs/2026-10-06-bubslist-design.md`.
 
