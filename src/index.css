@@ -269,3 +269,14 @@
   .float { animation: none; }
   .parallax, .sky-host { transition: none; }
 }
+
+/* Retrospectiva: story progress (6s = SLIDE_MS in WrappedPage), category bars, medals */
+@keyframes story-fill { from { width: 0; } to { width: 100%; } }
+.story-fill { width: 100%; animation: story-fill 6s linear both; }
+@keyframes bar-grow { from { transform: scaleX(0); } }
+.bar-grow { transform-origin: left; animation: bar-grow 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s both; }
+@keyframes medal-spin { from { transform: rotateY(180deg) scale(0.4); } }
+.medal-spin { animation: medal-spin 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both; }
+@media (prefers-reduced-motion: reduce) {
+  .story-fill, .bar-grow, .medal-spin { animation: none; }
+}

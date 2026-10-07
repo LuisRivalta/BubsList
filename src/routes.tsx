@@ -9,6 +9,7 @@ import QuestFormPage from './pages/QuestFormPage'
 import QuestPage from './pages/QuestPage'
 import QuestsPage from './pages/QuestsPage'
 import ReportPage from './pages/ReportPage'
+import WrappedPage from './pages/WrappedPage'
 
 export const routes: RouteObject[] = [
   {
@@ -27,4 +28,5 @@ export const routes: RouteObject[] = [
       { path: '*', element: <NotFound title="Página não encontrada" /> },
     ],
   },
+  { path: '/retrospectiva/:year', element: <WrappedPage /> },
 ]
