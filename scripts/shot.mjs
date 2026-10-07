@@ -1,5 +1,5 @@
 // Dev tool: screenshot a page in headless Chrome with a real mobile/desktop viewport.
-// Usage: node scripts/shot.mjs <url> <out.png> [width=390] [height=844] [waitMs=4000] [--reduce] [--bottom] [--offline] [--eval=<js>] [--click=<label>[*N][,<label>[*N]…]] [--downloads=<dir>]
+// Usage: node scripts/shot.mjs <url> <out.png> [width=390] [height=844] [waitMs=4000] [--reduce] [--bottom] [--offline] [--eval=<js>] [--click=<label>[*N][,<label>[*N]…]] [--downloads=<dir>] [--after=<ms>]
 import { spawn } from 'node:child_process'
 import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -62,6 +62,8 @@ if (flags.has('--bottom')) {
   await call('Runtime.evaluate', { expression: 'window.scrollTo(0, document.documentElement.scrollHeight)' })
   await sleep(1200)
 }
+const after = [...flags].find((f) => f.startsWith('--after='))?.slice(8)
+if (after) await sleep(+after)
 const { data } = await call('Page.captureScreenshot', { format: 'png' })
 writeFileSync(out, Buffer.from(data, 'base64'))
 ws.close()

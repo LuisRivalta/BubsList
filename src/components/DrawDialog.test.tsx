@@ -97,3 +97,10 @@ it('when the constellation ends, the result appears', async () => {
   await user.click(await screen.findByRole('button', { name: 'constelação' }))
   expect(screen.getByRole('link', { name: 'Bora!' })).toBeInTheDocument()
 })
+
+it('filter chips keep dark text on their light background over the night sky', () => {
+  open(CATS.restaurante.id)
+  for (const group of screen.getAllByRole('group')) {
+    for (const chip of within(group).getAllByRole('button')) expect(chip).toHaveClass('text-ink')
+  }
+})

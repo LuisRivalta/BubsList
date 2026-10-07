@@ -15,6 +15,8 @@ import { useHideSky } from './Layout'
 
 const DrawConstellation = lazy(() => import('./DrawConstellation'))
 const SPARKS = 14
+// .chip has a white background but no text color of its own: over the night sky it needs ink text and an opaque pressed state.
+const CHIP = 'chip text-ink aria-pressed:bg-blush'
 const toggle = <T,>(list: T[], item: T) => (list.includes(item) ? list.filter((x) => x !== item) : [...list, item])
 
 type Step = 'filters' | 'rolling' | 'result'
@@ -98,9 +100,9 @@ function Filters({ data, done, filter, onChange, poolSize, onDraw }: {
   return (
     <div className="relative mx-auto flex min-h-full max-w-md flex-col gap-5 px-4 pb-8 pt-20">
       <Group id="draw-category" title="Categoria">
-        <button type="button" className="chip pl-3" aria-pressed={filter.categoryId === null} onClick={() => pickCategory(null)}>Todas</button>
+        <button type="button" className={`${CHIP} pl-3`} aria-pressed={filter.categoryId === null} onClick={() => pickCategory(null)}>Todas</button>
         {data.categories.map((c) => (
-          <button key={c.id} type="button" className="chip" aria-pressed={filter.categoryId === c.id} onClick={() => pickCategory(c.id)}>
+          <button key={c.id} type="button" className={CHIP} aria-pressed={filter.categoryId === c.id} onClick={() => pickCategory(c.id)}>
             <Bubble icon={c.icon} color={c.color} size="sm" /> {c.name}
           </button>
         ))}
@@ -108,7 +110,7 @@ function Filters({ data, done, filter, onChange, poolSize, onDraw }: {
       {types.length > 0 && (
         <Group id="draw-type" title="Tipo">
           {types.map((t) => (
-            <button key={t.id} type="button" className="chip pl-3" aria-pressed={filter.typeIds.includes(t.id)} onClick={() => onChange({ ...filter, typeIds: toggle(filter.typeIds, t.id) })}>
+            <button key={t.id} type="button" className={`${CHIP} pl-3`} aria-pressed={filter.typeIds.includes(t.id)} onClick={() => onChange({ ...filter, typeIds: toggle(filter.typeIds, t.id) })}>
               {t.name}
             </button>
           ))}
@@ -116,7 +118,7 @@ function Filters({ data, done, filter, onChange, poolSize, onDraw }: {
       )}
       <Group id="draw-difficulty" title="Dificuldade">
         {DIFFICULTIES.map((d) => (
-          <button key={d} type="button" className="chip pl-3" aria-pressed={filter.difficulties.includes(d)} onClick={() => onChange({ ...filter, difficulties: toggle(filter.difficulties, d) })}>
+          <button key={d} type="button" className={`${CHIP} pl-3`} aria-pressed={filter.difficulties.includes(d)} onClick={() => onChange({ ...filter, difficulties: toggle(filter.difficulties, d) })}>
             {DIFFICULTY_LABEL[d]}
           </button>
         ))}
@@ -127,7 +129,7 @@ function Filters({ data, done, filter, onChange, poolSize, onDraw }: {
             <button
               key={c}
               type="button"
-              className="chip pl-3"
+              className={`${CHIP} pl-3`}
               aria-pressed={filter.cities.some((x) => sameText(x, c))}
               onClick={() => onChange({ ...filter, cities: filter.cities.some((x) => sameText(x, c)) ? filter.cities.filter((x) => !sameText(x, c)) : [...filter.cities, c] })}
             >

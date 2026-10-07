@@ -44,6 +44,7 @@ export default function DrawConstellation({ titles, winner, onDone }: { titles: 
     camera.position.z = 10
     const texture = glowTexture()
     const group = new THREE.Group()
+    group.position.y = 0.9 // keep the stars above the title shown at the bottom
     scene.add(group)
 
     const points = titles.map(() => {
