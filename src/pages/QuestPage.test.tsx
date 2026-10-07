@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { expect, it, vi } from 'vitest'
 import * as api from '../data/api'
 import * as catalog from '../lib/catalog'
-import { CATS, PARTNER, allCats, appData, completion, media, quest, review } from '../test/fixtures'
+import { CATS, PARTNER, allCats, appData, completion, media, quest, questType, review } from '../test/fixtures'
 import { renderRoute } from '../test/render'
 import QuestPage from './QuestPage'
 
@@ -113,4 +113,13 @@ it('deleting leaves the page without waiting for the reload (no "Quest não enco
   vi.mocked(api.loadAll).mockReturnValue(new Promise(() => {}))
   await user.click(excluir)
   await waitFor(() => expect(router.state.location.pathname).toBe('/'))
+})
+
+it('the hero shows the type and the city', async () => {
+  load({
+    questTypes: [questType({ id: 't-roteiro', category_id: CATS.viagem.id, name: 'Roteiro' })],
+    quests: [quest({ id: 'japao', title: 'Japão', category_id: CATS.viagem.id, type_id: 't-roteiro', city: 'Tóquio' })],
+  })
+  renderRoute(routes, '/quests/japao')
+  expect(await screen.findByText('Roteiro · Tóquio')).toBeInTheDocument()
 })

@@ -1,7 +1,7 @@
 import { Check, ListChecks, Play } from 'lucide-react'
 import { Link } from 'react-router'
 import { episodesWatched, formatProgress, progressOf } from '../lib/progress'
-import { pathLabel, subquestProgress } from '../lib/tree'
+import { pathLabel, questMeta, subquestProgress } from '../lib/tree'
 import type { AppData, Quest } from '../lib/types'
 import Bubble from './Bubble'
 import Gems from './Gems'
@@ -20,6 +20,7 @@ export default function QuestCard({ quest, data, done, photoUrl, showPath = fals
   const media = quest.media_id ? data.media.find((m) => m.id === quest.media_id) : undefined
   const sub = subquestProgress(data.quests, done, quest.id)
   const path = showPath ? pathLabel(data.quests, quest.id) : ''
+  const meta = questMeta(data, quest)
   const image = media?.poster_url ?? photoUrl
   const series = media && media.source !== 'tmdb_movie' ? media : undefined
   const episodes = series ? episodesWatched(series.seasons, progressOf(quest)) : null
@@ -35,6 +36,7 @@ export default function QuestCard({ quest, data, done, photoUrl, showPath = fals
         <p className="break-words font-display text-lg font-semibold leading-snug">{quest.title}</p>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
           <Gems difficulty={quest.difficulty} />
+          {meta && <span className="text-ink/60">{meta}</span>}
           {done.has(quest.id) && (
             <span className="inline-flex items-center gap-1 font-bold text-emerald-700">
               <Check aria-hidden className="size-3.5" /> Feita

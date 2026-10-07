@@ -17,7 +17,7 @@ import { useUserId } from '../data/session'
 import { formatDate } from '../lib/dates'
 import { prefersReducedMotion } from '../lib/motion'
 import { episodesWatched, formatProgress, nextEpisode, progressOf } from '../lib/progress'
-import { ancestors, childrenOf, descendantIds, doneQuestIds } from '../lib/tree'
+import { ancestors, childrenOf, descendantIds, doneQuestIds, questMeta } from '../lib/tree'
 import type { AppData, Completion, Quest } from '../lib/types'
 
 export default function QuestPage() {
@@ -40,6 +40,7 @@ export default function QuestPage() {
 
   const category = data.categories.find((c) => c.id === quest.category_id)
   const path = ancestors(data.quests, quest.id)
+  const meta = questMeta(data, quest)
   const done = doneQuestIds(data.completions)
   const isDone = done.has(quest.id)
   const children = childrenOf(data.quests, quest.id)
@@ -95,6 +96,7 @@ export default function QuestPage() {
               <Bubble icon={category?.icon ?? ''} color={category?.color ?? '#e3b4cf'} size="sm" /> {category?.name}
             </span>
             <Gems difficulty={quest.difficulty} onDark />
+            {meta && <span>{meta}</span>}
             {isDone && (
               <span className="inline-flex items-center gap-1 font-bold text-emerald-300">
                 <Check aria-hidden className="size-4" /> Feita

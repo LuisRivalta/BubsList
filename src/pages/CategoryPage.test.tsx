@@ -2,7 +2,7 @@ import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, expect, it, vi } from 'vitest'
 import * as api from '../data/api'
-import { CATS, allCats, appData, completion, quest } from '../test/fixtures'
+import { CATS, allCats, appData, completion, quest, questType } from '../test/fixtures'
 import { renderRoute } from '../test/render'
 import CategoryPage from './CategoryPage'
 
@@ -66,4 +66,17 @@ it('the hero counts use singular and plural correctly', async () => {
   expect(hero).toHaveTextContent('1 pendente')
   expect(hero).not.toHaveTextContent('1 pendentes')
   expect(hero).toHaveTextContent('0 feitas')
+})
+
+it('cards show the type and the city, and nothing extra when there is none', async () => {
+  vi.mocked(api.loadAll).mockResolvedValue(
+    appData({
+      categories: allCats(),
+      questTypes: [questType({ id: 't-roteiro', category_id: CATS.viagem.id, name: 'Roteiro' })],
+      quests: [quest({ id: 'japao', title: 'Japão', category_id: CATS.viagem.id, type_id: 't-roteiro', city: 'Tóquio' }), quest({ id: 'praia', title: 'Praia', category_id: CATS.viagem.id })],
+    }),
+  )
+  open('cat-viagem')
+  expect(await screen.findByText('Roteiro · Tóquio')).toBeInTheDocument()
+  expect(screen.getByText('Praia').closest('a')).not.toHaveTextContent('·')
 })
