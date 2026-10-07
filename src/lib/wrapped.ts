@@ -3,6 +3,7 @@ import { formatDate } from './dates'
 import { DIFFICULTIES, DIFFICULTY_LABEL } from './difficulty'
 import { buildReport, yearPeriod, type TimelineItem } from './report'
 import type { ImageRef, StoryCard } from './story'
+import { count } from './text'
 import { doneQuestIds } from './tree'
 import type { AppData, Category, Photo } from './types'
 
@@ -20,7 +21,6 @@ export type Slide =
 const MONTH = new Intl.DateTimeFormat('pt-BR', { month: 'long', timeZone: 'UTC' })
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 const rank = (i: TimelineItem) => DIFFICULTIES.indexOf(i.quest.difficulty)
-const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 
 // The year's slides in order; slides without data are left out. Empty when the year has no completions.
 export function buildWrapped(year: number, data: AppData, me: string): Slide[] {

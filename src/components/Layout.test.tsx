@@ -57,3 +57,8 @@ it('tells the user when a save fails instead of failing silently', () => {
   })
   expect(screen.getByRole('alert')).toHaveTextContent('Não deu para salvar')
 })
+
+it('Quests stays highlighted on a category page', () => {
+  render(<RouterProvider router={createMemoryRouter([{ element: <Layout />, children: [{ path: '/categoria/:id', element: <p>categoria</p> }] }], { initialEntries: ['/categoria/cat-viagem'] })} />)
+  expect(screen.getByRole('link', { name: 'Quests' })).toHaveAttribute('aria-current', 'page')
+})

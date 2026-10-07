@@ -13,7 +13,7 @@ const NAV = [
   { to: '/perfil', label: 'Perfil', Icon: User },
 ]
 
-const isActive = (to: string, pathname: string) => (to === '/' ? pathname === '/' || pathname.startsWith('/quests') : pathname.startsWith(to))
+const isActive = (to: string, pathname: string) => (to === '/' ? pathname === '/' || pathname.startsWith('/quests') || pathname.startsWith('/categoria') : pathname.startsWith(to))
 
 function useOnline() {
   const [online, setOnline] = useState(navigator.onLine)

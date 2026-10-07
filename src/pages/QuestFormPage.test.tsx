@@ -82,3 +82,8 @@ it('editing a quest that no longer exists shows a readable not-found hero', asyn
   expect(await screen.findByRole('heading', { level: 1, name: 'Quest não encontrada' })).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Voltar para as quests' })).toHaveAttribute('href', '/')
 })
+
+it('a link from a category page preselects that category', async () => {
+  renderRoute(routes, `/quests/nova?categoria=${CATS.restaurante.id}`)
+  expect(await screen.findByRole('button', { name: 'Restaurante' })).toHaveAttribute('aria-pressed', 'true')
+})

@@ -20,15 +20,17 @@ export default function QuestFormPage() {
   if (!q.data) return <PageLoading />
   const existing = id ? q.data.quests.find((x) => x.id === id) : undefined
   if (id && !existing) return <NotFound title="Quest não encontrada" />
-  return <QuestForm key={id ?? 'new'} data={q.data} existing={existing} parentId={existing ? existing.parent_id : params.get('parent')} />
+  const linked = params.get('categoria')
+  const initialCategory = q.data.categories.some((c) => c.id === linked) ? linked : null
+  return <QuestForm key={id ?? 'new'} data={q.data} existing={existing} parentId={existing ? existing.parent_id : params.get('parent')} initialCategory={initialCategory} />
 }
 
-function QuestForm({ data, existing, parentId }: { data: AppData; existing?: Quest; parentId: string | null }) {
+function QuestForm({ data, existing, parentId, initialCategory }: { data: AppData; existing?: Quest; parentId: string | null; initialCategory: string | null }) {
   const navigate = useNavigate()
   const refresh = useRefresh()
   const parent = parentId ? data.quests.find((x) => x.id === parentId) : undefined
   const atividade = data.categories.find((c) => c.builtin && c.name === 'Atividade')
-  const [categoryId, setCategoryId] = useState(existing?.category_id ?? (parentId ? atividade?.id ?? '' : ''))
+  const [categoryId, setCategoryId] = useState(existing?.category_id ?? initialCategory ?? (parentId ? atividade?.id ?? '' : ''))
   const [title, setTitle] = useState(existing?.title ?? '')
   const [notes, setNotes] = useState(existing?.notes ?? '')
   const [difficulty, setDifficulty] = useState<Difficulty | null>(existing?.difficulty ?? null)

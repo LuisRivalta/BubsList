@@ -24,20 +24,25 @@ beforeEach(() => {
 })
 const open = () => renderRoute([{ path: '/', element: <QuestsPage /> }], '/')
 
-it('shows pending top-level quests with subquest progress', async () => {
+it('shows a card per category with its counts, plus Todas', async () => {
   open()
-  expect(await screen.findByText('Japão')).toBeInTheDocument()
-  expect(screen.getByText('1/2')).toBeInTheDocument()
-  expect(screen.queryByText('Matrix')).not.toBeInTheDocument()
-  expect(screen.queryByText('Monte Fuji')).not.toBeInTheDocument()
+  const viagem = await screen.findByRole('link', { name: /^Viagem/ })
+  expect(viagem).toHaveAttribute('href', '/categoria/cat-viagem')
+  expect(viagem).toHaveTextContent('1 pendente · 0 feitas')
+  expect(screen.getByRole('link', { name: /^Filme/ })).toHaveTextContent('0 pendentes · 1 feita')
+  expect(screen.getByRole('link', { name: /^Restaurante/ })).toHaveTextContent('Nenhuma ainda')
+  const todas = screen.getByRole('link', { name: /^Todas/ })
+  expect(todas).toHaveAttribute('href', '/categoria/todas')
+  expect(todas).toHaveTextContent('1 pendente · 1 feita')
+  expect(screen.queryByText('Japão')).not.toBeInTheDocument()
 })
 
-it('switches to the done tab', async () => {
+it('searching replaces the grid with matches from every category, done ones included', async () => {
   const user = userEvent.setup()
   open()
-  await user.click(await screen.findByRole('tab', { name: 'Feitas' }))
+  await user.type(await screen.findByLabelText('Buscar quests'), 'matrix')
   expect(screen.getByText('Matrix')).toBeInTheDocument()
-  expect(screen.queryByText('Japão')).not.toBeInTheDocument()
+  expect(screen.queryByRole('link', { name: /^Viagem/ })).not.toBeInTheDocument()
 })
 
 it('search ignores accents and finds subquests with their path', async () => {
@@ -66,11 +71,6 @@ it('loading shows a readable hero heading', async () => {
   expect(await screen.findByRole('heading', { level: 1, name: 'Carregando…' })).toBeInTheDocument()
 })
 
-it('category chips wrap on wide screens instead of hiding behind a scrollbar-less scroll', async () => {
-  open()
-  const chip = await screen.findByRole('button', { name: 'Viagem', pressed: false })
-  expect(chip.parentElement).toHaveClass('md:flex-wrap')
-})
 
 it('draws a pending quest you can actually do and opens it', async () => {
   const user = userEvent.setup()

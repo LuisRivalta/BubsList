@@ -1,45 +1,41 @@
-import { Dices, PenLine, Sparkles } from 'lucide-react'
+import { PenLine } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import Bubble from '../components/Bubble'
-import DrawDialog from '../components/DrawDialog'
 import EmptyState from '../components/EmptyState'
 import PageHero from '../components/PageHero'
-import QuestCard from '../components/QuestCard'
-import SegmentedControl from '../components/SegmentedControl'
+import QuestActions from '../components/QuestActions'
+import { QuestCards } from '../components/QuestList'
 import Stagger from '../components/Stagger'
 import { LoadError, PageLoading } from '../components/Status'
-import { useAppData, useSignedUrls } from '../data/hooks'
+import { useAppData } from '../data/hooks'
 import { useUserId } from '../data/session'
 import { evaluateAchievements } from '../lib/achievements'
 import { formatDate, todayISO } from '../lib/dates'
-import { DIFFICULTIES, DIFFICULTY_LABEL } from '../lib/difficulty'
-import { drawPool, filterQuests, pendingReviews, type QuestFilter } from '../lib/filters'
+import { filterQuests, pendingReviews } from '../lib/filters'
+import { count } from '../lib/text'
 import { doneQuestIds } from '../lib/tree'
-import type { Difficulty } from '../lib/types'
+import type { AppData } from '../lib/types'
 
 export default function QuestsPage() {
   const q = useAppData()
   const me = useUserId()
-  const [filter, setFilter] = useState<QuestFilter>({ tab: 'pending', categoryId: null, difficulty: null, search: '' })
-  const [drawing, setDrawing] = useState(false)
-  const data = q.data
-  const done = doneQuestIds(data?.completions ?? [])
-  const list = data ? filterQuests(data.quests, done, filter) : []
-  const coverOf = (questId: string) => data?.photos.find((p) => p.quest_id === questId)?.storage_path
-  const coverPaths = list.filter((x) => !x.media_id).flatMap((x) => coverOf(x.id) ?? [])
-  const urls = useSignedUrls(coverPaths).data ?? {}
+  const [search, setSearch] = useState('')
 
   if (q.error) return <LoadError retry={() => q.refetch()} />
-  if (!data) return <PageLoading />
+  if (!q.data) return <PageLoading />
 
+  const data = q.data
+  const done = doneQuestIds(data.completions)
   const pending = pendingReviews(data.completions, data.reviews, me)
-  const set = (patch: Partial<QuestFilter>) => setFilter((f) => ({ ...f, ...patch }))
   const month = todayISO().slice(0, 7)
   const openCount = data.quests.filter((x) => x.parent_id === null && !done.has(x.id)).length
   const doneThisMonth = data.completions.filter((c) => c.done_on.startsWith(month)).length
-  const pool = drawPool(data.quests, done, filter)
   const unlocked = evaluateAchievements(data.achievements, data.quests, data.completions).filter((s) => s.unlockedOn).length
+  // Search looks everywhere: every category, subquests included, pending and done.
+  const found = search.trim()
+    ? (['pending', 'done'] as const).flatMap((tab) => filterQuests(data.quests, done, { tab, categoryId: null, difficulty: null, search }))
+    : []
 
   return (
     <>
@@ -54,16 +50,7 @@ export default function QuestsPage() {
             <span><strong className="text-white">{unlocked}</strong> conquistas</span>
           </>
         }
-        actions={
-          <>
-            <Link to="/quests/nova" className="fab relative inline-flex flex-1 items-center justify-center gap-2 rounded-full px-6 py-4 text-lg font-semibold text-white md:flex-none">
-              <Sparkles aria-hidden className="size-6" /> Nova quest
-            </Link>
-            <button type="button" className="btn btn-ghost shrink-0 rounded-full px-5 text-base" disabled={pool.length === 0} onClick={() => setDrawing(true)}>
-              <Dices aria-hidden className="size-5" /> Sortear
-            </button>
-          </>
-        }
+        actions={<QuestActions data={data} categoryId={null} />}
       />
       <div className="space-y-4">
         {pending.length > 0 && (
@@ -83,40 +70,40 @@ export default function QuestsPage() {
           </details>
         )}
 
-        <SegmentedControl
-          label="Situação"
-          value={filter.tab}
-          onChange={(tab) => set({ tab })}
-          options={[{ value: 'pending', label: 'Pendentes' }, { value: 'done', label: 'Feitas' }]}
-        />
+        <input type="search" aria-label="Buscar quests" placeholder="Buscar quests…" className="input w-full" value={search} onChange={(e) => setSearch(e.target.value)} />
 
-        <div className="flex gap-2">
-          <input type="search" aria-label="Buscar quests" placeholder="Buscar…" className="input flex-1" value={filter.search} onChange={(e) => set({ search: e.target.value })} />
-          <select aria-label="Dificuldade" className="input w-36" value={filter.difficulty ?? ''} onChange={(e) => set({ difficulty: (e.target.value || null) as Difficulty | null })}>
-            <option value="">Todas</option>
-            {DIFFICULTIES.map((d) => <option key={d} value={d}>{DIFFICULTY_LABEL[d]}</option>)}
-          </select>
-        </div>
-
-        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden">
-          {data.categories.map((c) => (
-            <button key={c.id} type="button" aria-pressed={filter.categoryId === c.id} onClick={() => set({ categoryId: filter.categoryId === c.id ? null : c.id })} className="chip">
-              <Bubble icon={c.icon} color={c.color} size="sm" /> {c.name}
-            </button>
-          ))}
-        </div>
-
-        {list.length === 0 ? (
-          <EmptyState>{filter.tab === 'pending' ? 'Nenhuma quest pendente por aqui. Que tal criar uma?' : 'Nenhuma quest feita ainda.'}</EmptyState>
+        {!search.trim() ? (
+          <CategoryGrid data={data} done={done} />
+        ) : found.length === 0 ? (
+          <EmptyState>Nenhuma quest encontrada.</EmptyState>
         ) : (
-          <Stagger key={`${filter.tab}-${filter.categoryId}-${filter.difficulty}`} className="grid gap-3 md:grid-cols-2">
-            {list.map((x) => (
-              <QuestCard key={x.id} quest={x} data={data} done={done} showPath photoUrl={urls[coverOf(x.id) ?? '']} />
-            ))}
-          </Stagger>
+          <QuestCards quests={found} data={data} done={done} />
         )}
       </div>
-      {drawing && <DrawDialog pool={pool} quests={data.quests} categories={data.categories} onClose={() => setDrawing(false)} />}
     </>
+  )
+}
+
+function CategoryGrid({ data, done }: { data: AppData; done: Set<string> }) {
+  const topLevel = data.quests.filter((x) => x.parent_id === null)
+  const cards = [
+    ...data.categories.map((c) => ({ to: `/categoria/${c.id}`, name: c.name, icon: c.icon, color: c.color, quests: topLevel.filter((x) => x.category_id === c.id) })),
+    { to: '/categoria/todas', name: 'Todas', icon: 'map', color: '#b3607e', quests: topLevel },
+  ]
+  return (
+    <Stagger className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+      {cards.map(({ to, name, icon, color, quests }) => {
+        const doneCount = quests.filter((x) => done.has(x.id)).length
+        return (
+          <Link key={to} to={to} className="card card-hover flex flex-col items-start gap-3 p-4">
+            <Bubble icon={icon} color={color} size="lg" />
+            <span className="break-words font-display text-lg font-semibold leading-tight">{name}</span>
+            <span className="text-sm text-ink/60">
+              {quests.length ? `${count(quests.length - doneCount, 'pendente', 'pendentes')} · ${count(doneCount, 'feita', 'feitas')}` : 'Nenhuma ainda'}
+            </span>
+          </Link>
+        )
+      })}
+    </Stagger>
   )
 }
