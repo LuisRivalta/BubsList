@@ -70,6 +70,34 @@
 }
 .float { animation: float 6s ease-in-out infinite; }
 .float-late { animation-delay: -3s; }
+/* "Nova quest" floating button: plum→rose gradient, breathing glow, a shine sweeping across every few seconds. */
+.fab {
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--color-brand) 0%, #844a64 55%, var(--color-accent) 100%);
+  box-shadow: 0 10px 24px -6px rgb(85 53 72 / 0.6), inset 0 0 0 1px rgb(255 255 255 / 0.18);
+  transition: transform 0.2s ease;
+  animation: fab-glow 3s ease-in-out infinite;
+}
+.fab:hover { transform: translateY(-2px); }
+.fab:active { transform: scale(0.97); }
+.fab::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(110deg, transparent 35%, rgb(255 255 255 / 0.4) 50%, transparent 65%);
+  transform: translateX(-120%);
+  animation: fab-shine 4s ease-in-out 1.5s infinite;
+}
+@keyframes fab-glow {
+  0%, 100% { box-shadow: 0 10px 24px -6px rgb(85 53 72 / 0.6), inset 0 0 0 1px rgb(255 255 255 / 0.18); }
+  50% { box-shadow: 0 10px 30px -4px rgb(179 96 126 / 0.75), inset 0 0 0 1px rgb(255 255 255 / 0.25); }
+}
+@keyframes fab-shine {
+  0%, 70% { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
+}
+
 /* Entering the app after login: the blush flash opens in a circle from the center, content rises, nav slides in. */
 @property --reveal {
   syntax: '<length>';
@@ -97,6 +125,7 @@
 @keyframes nav-left { from { transform: translateX(-100%); } to { transform: none; } }
 
 @media (prefers-reduced-motion: reduce) {
+  .fab, .fab::after { animation: none; }
   .float { animation: none; }
   .parallax { transition: none; }
 }

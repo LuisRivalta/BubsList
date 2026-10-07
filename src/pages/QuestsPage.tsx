@@ -1,4 +1,4 @@
-import { PenLine, Plus } from 'lucide-react'
+import { PenLine, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import Icon from '../components/Icon'
@@ -108,10 +108,9 @@ export default function QuestsPage() {
 
       <Link
         to="/quests/nova"
-        aria-label="Nova quest"
-        className="fixed bottom-20 right-4 z-20 grid size-14 place-items-center rounded-full bg-brand text-white shadow-lg md:bottom-8 md:right-8"
+        className="fab fixed bottom-20 right-4 z-20 inline-flex items-center gap-2 rounded-full px-5 py-3.5 font-semibold text-white md:bottom-8 md:right-8"
       >
-        <Plus aria-hidden className="size-7" />
+        <Sparkles aria-hidden className="size-5" /> Nova quest
       </Link>
     </div>
   )

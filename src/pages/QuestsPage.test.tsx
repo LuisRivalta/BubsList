@@ -50,3 +50,10 @@ it('warns about my pending reviews', async () => {
   open()
   expect(await screen.findByText('Você tem 1 resenha pendente')).toBeInTheDocument()
 })
+
+it('the new-quest button shows its label', async () => {
+  open()
+  const button = await screen.findByRole('link', { name: 'Nova quest' })
+  expect(button).toHaveAttribute('href', '/quests/nova')
+  expect(button).toHaveTextContent('Nova quest')
+})
