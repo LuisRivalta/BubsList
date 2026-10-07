@@ -25,7 +25,7 @@ export default function LoginPage() {
   return (
     <main className="grid min-h-dvh place-items-center p-4">
       <form onSubmit={login} className="card w-full max-w-sm space-y-4 p-6">
-        <h1 className="text-center text-3xl font-bold text-brand">BubsList</h1>
+        <h1 className="text-center text-3xl font-bold text-accent">BubsList</h1>
         <label className="block">
           <span className="mb-1 block text-sm font-medium">E-mail</span>
           <input className="input" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />

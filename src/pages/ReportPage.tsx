@@ -50,7 +50,7 @@ export default function ReportPage() {
       ) : (
         <>
           <section className="card p-4">
-            <p className="text-4xl font-bold text-brand">{report.total}</p>
+            <p className="text-4xl font-bold text-accent">{report.total}</p>
             <p className="text-gray-600">{report.total === 1 ? 'quest concluída' : 'quests concluídas'}</p>
             <ul className="mt-3 flex flex-wrap gap-2">
               {report.byCategory.map(({ category, count }) => (

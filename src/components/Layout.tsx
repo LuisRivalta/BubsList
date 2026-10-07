@@ -30,7 +30,7 @@ export default function Layout() {
         aria-label="Principal"
         className="fixed inset-x-0 bottom-0 z-10 flex border-t border-gray-200 bg-white pb-[env(safe-area-inset-bottom)] md:sticky md:top-0 md:h-dvh md:w-56 md:flex-col md:border-r md:border-t-0 md:pb-0"
       >
-        <span className="hidden p-4 text-xl font-bold text-brand md:block">BubsList</span>
+        <span className="hidden p-4 text-xl font-bold text-accent md:block">BubsList</span>
         {NAV.map((n) => (
           <NavLink
             key={n.to}

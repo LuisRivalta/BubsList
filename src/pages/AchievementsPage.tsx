@@ -72,7 +72,7 @@ function AchievementCard({ status, categories, onChange }: { status: Achievement
         ) : a.kind === 'auto' ? (
           <div>
             <div className="h-2 rounded bg-gray-200">
-              <div className="h-2 rounded bg-brand" style={{ width: `${(current / target) * 100}%` }} />
+              <div className="h-2 rounded bg-accent" style={{ width: `${(current / target) * 100}%` }} />
             </div>
             <p className="text-xs">{current}/{target}</p>
           </div>

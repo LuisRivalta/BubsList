@@ -1,7 +1,12 @@
 @import "tailwindcss";
 
+/* Palette "agejo 2": plum for actions (white text 10.5:1), dusty rose for accents, blush for soft fills. */
 @theme {
-  --color-brand: #7c3aed;
+  --color-brand: #553548;
+  --color-accent: #b3607e;
+  --color-blush: #e3b4cf;
+  --color-paper: #efeced;
+  --color-ink: #1a1115;
   --color-bronze: #b0743c;
   --color-silver: #9ca3af;
   --color-gold: #eab308;
@@ -10,8 +15,8 @@
 
 @layer base {
   body {
-    background: #faf7ff;
-    color: #1f1b2e;
+    background: var(--color-paper);
+    color: var(--color-ink);
     -webkit-tap-highlight-color: transparent;
   }
 }
@@ -24,7 +29,7 @@
     justify-content: center;
     gap: 0.5rem;
     border-radius: 0.75rem;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--color-blush);
     background: #fff;
     padding: 0 1rem;
     font-weight: 500;

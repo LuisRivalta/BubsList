@@ -166,6 +166,8 @@ Se o total de episódios é desconhecido (`seasons = []` em série/anime), não 
 
 ## 8. Telas
 
+**Paleta ("agejo 2"):** fundo `#efeced`; texto `#1a1115`; ações/botões principais ameixa `#553548` (texto branco); destaques rosa queimado `#b3607e`; preenchimentos suaves `#e3b4cf`. Cores de raridade e de dificuldade continuam próprias (carregam significado).
+
 Navegação: celular (< 768 px) → barra inferior; PC (≥ 768 px) → menu lateral. Itens: **Quests · Conquistas · Relatório · Perfil** (a Fase 2 adiciona **Mapa**). Alvos de toque ≥ 44 px; foco visível; campos com rótulo.
 
 1. **Login** — e-mail, senha, "esqueci a senha".
