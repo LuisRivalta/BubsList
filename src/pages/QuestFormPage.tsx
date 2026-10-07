@@ -5,7 +5,7 @@ import Bubble from '../components/Bubble'
 import Gems from '../components/Gems'
 import PageHero from '../components/PageHero'
 import PhotoPicker, { uploadPending } from '../components/PhotoPicker'
-import { LoadError, PageLoading } from '../components/Status'
+import { LoadError, NotFound, PageLoading } from '../components/Status'
 import { createQuest, deletePhoto, updateQuest, upsertMedia, type QuestInput } from '../data/api'
 import { useAppData, useRefresh } from '../data/hooks'
 import { KIND_SOURCE } from '../lib/catalog'
@@ -19,7 +19,7 @@ export default function QuestFormPage() {
   if (q.error) return <LoadError retry={() => q.refetch()} />
   if (!q.data) return <PageLoading />
   const existing = id ? q.data.quests.find((x) => x.id === id) : undefined
-  if (id && !existing) return <p>Quest não encontrada.</p>
+  if (id && !existing) return <NotFound title="Quest não encontrada" />
   return <QuestForm key={id ?? 'new'} data={q.data} existing={existing} parentId={existing ? existing.parent_id : params.get('parent')} />
 }
 

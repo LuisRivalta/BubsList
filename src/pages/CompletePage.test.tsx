@@ -105,3 +105,15 @@ it('retrying after the review failed reuses the completion it already created', 
   expect(api.createCompletion).toHaveBeenCalledTimes(1)
   expect(api.saveReview).toHaveBeenLastCalledWith({ id: undefined, completion_id: 'c-new', rating: 5, body: null })
 })
+
+it('completing a quest that no longer exists shows a readable not-found hero', async () => {
+  load()
+  renderRoute(routes, '/quests/sumiu/concluir')
+  expect(await screen.findByRole('heading', { level: 1, name: 'Quest não encontrada' })).toBeInTheDocument()
+})
+
+it('editing a completion that no longer exists shows a readable not-found hero', async () => {
+  load()
+  renderRoute(routes, '/quests/japao/concluir?completion=sumiu')
+  expect(await screen.findByRole('heading', { level: 1, name: 'Conclusão não encontrada' })).toBeInTheDocument()
+})

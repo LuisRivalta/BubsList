@@ -34,12 +34,12 @@ export default function MedalCard({ status, categories, onChange }: { status: Ac
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex items-start justify-between gap-2">
             <h3 className={`text-lg font-semibold leading-tight ${unlockedOn ? '' : 'text-ink/60'}`}>{a.name}</h3>
-            <Link to={`/conquistas/${a.id}/editar`} aria-label={`Editar ${a.name}`} className="grid size-8 shrink-0 place-items-center rounded-full text-ink/40 hover:bg-blush/40">
+            <Link to={`/conquistas/${a.id}/editar`} aria-label={`Editar ${a.name}`} className="grid size-8 shrink-0 place-items-center rounded-full text-ink/60 hover:bg-blush/40">
               <Pencil aria-hidden className="size-4" />
             </Link>
           </div>
           {a.description && <p className="text-sm text-ink/60">{a.description}</p>}
-          {a.kind === 'auto' && <p className="text-xs font-semibold text-ink/45">{describeRule(a, categories)}</p>}
+          {a.kind === 'auto' && <p className="text-xs font-semibold text-ink/60">{describeRule(a, categories)}</p>}
           {unlockedOn ? (
             <p className="text-sm font-bold text-emerald-700">Desbloqueada em {formatDate(unlockedOn)}</p>
           ) : a.kind === 'auto' ? (
@@ -47,7 +47,7 @@ export default function MedalCard({ status, categories, onChange }: { status: Ac
               <span className="font-bold">{current}/{target}</span>
             </ProgressBar>
           ) : unlocking ? (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <input type="date" aria-label="Data do desbloqueio" className="input" value={date} max={todayISO()} onChange={(e) => setDate(e.target.value)} />
               <button type="button" className="btn btn-primary" onClick={unlock}>Confirmar</button>
             </div>
@@ -55,7 +55,7 @@ export default function MedalCard({ status, categories, onChange }: { status: Ac
             <button type="button" className="btn" onClick={() => setUnlocking(true)}>Desbloquear</button>
           )}
           {a.kind === 'manual' && unlockedOn && (
-            <button type="button" className="text-xs font-semibold text-ink/50 underline" onClick={relock}>Bloquear de novo</button>
+            <button type="button" className="text-xs font-semibold text-ink/60 underline" onClick={relock}>Bloquear de novo</button>
           )}
         </div>
       </div>

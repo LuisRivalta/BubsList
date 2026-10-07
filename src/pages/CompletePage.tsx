@@ -4,7 +4,7 @@ import Celebration from '../components/Celebration'
 import PageHero from '../components/PageHero'
 import PhotoPicker, { uploadPending } from '../components/PhotoPicker'
 import Stars from '../components/Stars'
-import { LoadError, PageLoading } from '../components/Status'
+import { LoadError, NotFound, PageLoading } from '../components/Status'
 import { createCompletion, deletePhoto, deleteReview, saveReview, updateCompletion } from '../data/api'
 import { useAppData, useRefresh } from '../data/hooks'
 import { useUserId } from '../data/session'
@@ -19,10 +19,10 @@ export default function CompletePage() {
   if (q.error) return <LoadError retry={() => q.refetch()} />
   if (!q.data) return <PageLoading />
   const quest = q.data.quests.find((x) => x.id === id)
-  if (!quest) return <p>Quest não encontrada.</p>
+  if (!quest) return <NotFound title="Quest não encontrada" />
   const completionId = params.get('completion')
   const existing = completionId ? q.data.completions.find((c) => c.id === completionId) : undefined
-  if (completionId && !existing) return <p>Conclusão não encontrada.</p>
+  if (completionId && !existing) return <NotFound title="Conclusão não encontrada" />
   return <CompleteForm key={completionId ?? 'new'} data={q.data} quest={quest} existing={existing} />
 }
 

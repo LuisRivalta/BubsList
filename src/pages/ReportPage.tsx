@@ -138,7 +138,7 @@ export default function ReportPage() {
               {report.timeline.map((i) => (
                 <li key={i.completion.id}>
                   <div className="card space-y-1 p-4">
-                    <p className="text-xs font-semibold text-ink/50">{formatDate(i.completion.done_on)}{i.path ? ` · ${i.path}` : ''}</p>
+                    <p className="text-xs font-semibold text-ink/60">{formatDate(i.completion.done_on)}{i.path ? ` · ${i.path}` : ''}</p>
                     <Link to={`/quests/${i.quest.id}`} className="inline-flex items-center gap-2 font-display text-lg font-semibold">
                       <Bubble icon={i.category?.icon ?? ''} color={i.category?.color ?? '#b3607e'} size="sm" /> {i.quest.title}
                     </Link>

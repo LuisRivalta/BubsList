@@ -31,7 +31,7 @@ export default function QuestCard({ quest, data, done, photoUrl, showPath = fals
         <Bubble icon={category?.icon ?? ''} color={category?.color ?? '#b3607e'} size="lg" />
       )}
       <div className="min-w-0 flex-1 space-y-1.5 py-0.5">
-        {path && <p className="truncate text-xs text-ink/50">{path} ›</p>}
+        {path && <p className="truncate text-xs text-ink/60">{path} ›</p>}
         <p className="break-words font-display text-lg font-semibold leading-snug">{quest.title}</p>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
           <Gems difficulty={quest.difficulty} />

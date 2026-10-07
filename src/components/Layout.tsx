@@ -32,7 +32,7 @@ function useOnline() {
 // New page content rises in; the inline transform is removed afterwards so fixed overlays inside keep covering the screen.
 function PageEnter({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null)
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (prefersReducedMotion()) return
     const a = animate(ref.current!, { opacity: { from: 0 }, translateY: { from: 16 }, duration: 350, ease: 'outQuad', onComplete: (self) => self.revert() })
     return () => {
@@ -88,7 +88,7 @@ export default function Layout() {
               to={n.to}
               aria-current={active ? 'page' : undefined}
               className={`relative z-10 flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 rounded-full text-[11px] font-bold transition-colors md:min-h-11 md:flex-none md:flex-row md:justify-start md:gap-3 md:rounded-xl md:px-3 md:text-sm ${
-                active ? 'text-white' : 'text-ink/55 md:text-white/60 md:hover:text-white'
+                active ? 'text-white' : 'text-ink/70 md:text-white/60 md:hover:text-white'
               }`}
             >
               <n.Icon aria-hidden className="size-5" strokeWidth={1.9} />
@@ -110,16 +110,16 @@ export default function Layout() {
           </svg>
         </div>
         <div className="relative mx-auto max-w-5xl px-4 md:px-8">
-          {!online && (
-            <p role="alert" className="mt-4 rounded-xl bg-yellow-100 p-3 text-sm text-yellow-900">
-              Sem conexão. O que você digitar continua aqui — tente salvar quando a internet voltar.
-            </p>
-          )}
           <PageEnter key={pathname}>
             <Outlet />
           </PageEnter>
         </div>
       </main>
+      {!online && (
+        <p role="alert" className="fixed inset-x-3 top-[max(0.75rem,env(safe-area-inset-top))] z-40 rounded-xl bg-yellow-100 p-3 text-sm text-yellow-900 shadow-lg md:left-auto md:right-6 md:max-w-md">
+          Sem conexão. O que você digitar continua aqui — tente salvar quando a internet voltar.
+        </p>
+      )}
     </div>
   )
 }

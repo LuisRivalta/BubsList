@@ -1,3 +1,4 @@
+import { Link } from 'react-router'
 import PageHero from './PageHero'
 
 // Before login / outside the layout (light background).
@@ -8,6 +9,10 @@ export function Loading() {
 // Inside the layout, over the dark sky.
 export function PageLoading() {
   return <PageHero title="Carregando…" />
+}
+
+export function NotFound({ title }: { title: string }) {
+  return <PageHero title={title} actions={<Link to="/" className="btn btn-ghost">Voltar para as quests</Link>} />
 }
 
 export function LoadError({ retry }: { retry: () => void }) {

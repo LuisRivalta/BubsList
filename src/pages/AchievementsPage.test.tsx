@@ -76,3 +76,18 @@ it('a manual achievement has no rule', async () => {
     expect(api.saveAchievement).toHaveBeenCalledWith(expect.objectContaining({ kind: 'manual', rule_category_id: null, rule_min_difficulty: null, rule_count: null })),
   )
 })
+
+it('editing an achievement that no longer exists shows a readable not-found hero', async () => {
+  vi.mocked(api.loadAll).mockResolvedValue(appData({ categories: allCats() }))
+  renderRoute([{ path: '/conquistas/:id/editar', element: <AchievementFormPage /> }], '/conquistas/sumiu/editar')
+  expect(await screen.findByRole('heading', { level: 1, name: 'Conquista não encontrada' })).toBeInTheDocument()
+})
+
+it('the manual unlock row wraps instead of being clipped by the medal frame', async () => {
+  const aurora = achievement({ id: 'aurora', name: 'Aurora boreal', kind: 'manual', rule_count: null })
+  vi.mocked(api.loadAll).mockResolvedValue(appData({ categories: allCats(), achievements: [aurora] }))
+  const user = userEvent.setup()
+  renderRoute(routes, '/conquistas')
+  await user.click(await screen.findByRole('button', { name: 'Desbloquear' }))
+  expect(screen.getByRole('button', { name: 'Confirmar' }).parentElement).toHaveClass('flex-wrap')
+})

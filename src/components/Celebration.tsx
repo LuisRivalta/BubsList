@@ -29,8 +29,8 @@ export default function Celebration({ achievements, onClose }: { achievements: A
   }, [])
 
   return (
-    <div role="dialog" aria-modal="true" aria-labelledby="celebration-title" className="fixed inset-0 z-50 grid place-items-center bg-night/70 p-4 backdrop-blur-sm">
-      <div ref={box} className="card relative w-full max-w-sm space-y-5 overflow-hidden p-6 text-center">
+    <div role="dialog" aria-modal="true" aria-labelledby="celebration-title" className="fixed inset-0 z-50 flex overflow-y-auto bg-night/70 p-4 backdrop-blur-sm">
+      <div ref={box} className="card relative m-auto w-full max-w-sm space-y-5 overflow-hidden p-6 text-center">
         <div aria-hidden className="pointer-events-none absolute left-1/2 top-28">
           {Array.from({ length: SPARKS }, (_, i) => <span key={i} data-spark className="spark" />)}
         </div>

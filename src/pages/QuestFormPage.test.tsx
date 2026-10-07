@@ -76,3 +76,9 @@ it('picking One Piece fills the title and suggests Épica', async () => {
   await waitFor(() => expect(api.createQuest).toHaveBeenCalledWith(expect.objectContaining({ media_id: 'm-op', difficulty: 'epic', category_id: CATS.anime.id })))
   expect(api.upsertMedia).toHaveBeenCalledWith(onePiece)
 })
+
+it('editing a quest that no longer exists shows a readable not-found hero', async () => {
+  renderRoute([{ path: '/quests/:id/editar', element: <QuestFormPage /> }], '/quests/sumiu/editar')
+  expect(await screen.findByRole('heading', { level: 1, name: 'Quest não encontrada' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Voltar para as quests' })).toHaveAttribute('href', '/')
+})

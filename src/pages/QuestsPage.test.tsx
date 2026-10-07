@@ -65,3 +65,9 @@ it('loading shows a readable hero heading', async () => {
   open()
   expect(await screen.findByRole('heading', { level: 1, name: 'Carregando…' })).toBeInTheDocument()
 })
+
+it('category chips wrap on wide screens instead of hiding behind a scrollbar-less scroll', async () => {
+  open()
+  const chip = await screen.findByRole('button', { name: 'Viagem', pressed: false })
+  expect(chip.parentElement).toHaveClass('md:flex-wrap')
+})

@@ -1,6 +1,6 @@
-import { Link, type RouteObject } from 'react-router'
+import type { RouteObject } from 'react-router'
 import Layout from './components/Layout'
-import PageHero from './components/PageHero'
+import { NotFound } from './components/Status'
 import AchievementFormPage from './pages/AchievementFormPage'
 import AchievementsPage from './pages/AchievementsPage'
 import CompletePage from './pages/CompletePage'
@@ -24,7 +24,7 @@ export const routes: RouteObject[] = [
       { path: '/conquistas/:id/editar', element: <AchievementFormPage /> },
       { path: '/relatorio', element: <ReportPage /> },
       { path: '/perfil', element: <ProfilePage /> },
-      { path: '*', element: <PageHero title="Página não encontrada" actions={<Link to="/" className="btn btn-ghost">Voltar para as quests</Link>} /> },
+      { path: '*', element: <NotFound title="Página não encontrada" /> },
     ],
   },
 ]

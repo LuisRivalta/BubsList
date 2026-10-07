@@ -90,7 +90,7 @@ export default function QuestsPage() {
           </select>
         </div>
 
-        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden">
           {data.categories.map((c) => (
             <button key={c.id} type="button" aria-pressed={filter.categoryId === c.id} onClick={() => set({ categoryId: filter.categoryId === c.id ? null : c.id })} className="chip">
               <Bubble icon={c.icon} color={c.color} size="sm" /> {c.name}

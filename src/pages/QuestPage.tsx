@@ -10,7 +10,7 @@ import PhotoGrid from '../components/PhotoGrid'
 import ProgressBar from '../components/ProgressBar'
 import QuestCard from '../components/QuestCard'
 import Stars from '../components/Stars'
-import { LoadError, PageLoading } from '../components/Status'
+import { LoadError, NotFound, PageLoading } from '../components/Status'
 import { deleteCompletion, deleteQuest, setProgress } from '../data/api'
 import { useAppData, useMediaRefresh, useRefresh, useSignedUrls } from '../data/hooks'
 import { useUserId } from '../data/session'
@@ -36,9 +36,7 @@ export default function QuestPage() {
 
   if (q.error) return <LoadError retry={() => q.refetch()} />
   if (!data) return <PageLoading />
-  if (!quest) {
-    return <PageHero title="Quest não encontrada" actions={<Link to="/" className="btn btn-ghost">Voltar</Link>} />
-  }
+  if (!quest) return <NotFound title="Quest não encontrada" />
 
   const category = data.categories.find((c) => c.id === quest.category_id)
   const path = ancestors(data.quests, quest.id)
@@ -126,7 +124,7 @@ export default function QuestPage() {
           <section className="card space-y-4 p-5">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-ink/50">Progresso</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-ink/60">Progresso</p>
                 <span className="font-display text-3xl font-bold text-brand">{formatProgress(media.source, media.seasons, progress)}</span>
               </div>
               <button ref={plusButton} type="button" className="btn btn-primary" onClick={plusOne}>+1 episódio</button>
@@ -155,7 +153,7 @@ export default function QuestPage() {
         <section className="space-y-3">
           <h2 className="text-xl font-semibold">Histórico</h2>
           {history.length === 0 ? (
-            <p className="text-ink/50">Ainda não fizeram essa.</p>
+            <p className="text-ink/60">Ainda não fizeram essa.</p>
           ) : (
             <ol className="timeline">
               {history.map((c) => (
@@ -192,7 +190,7 @@ function ProgressEditor({ quest, onSaved }: { quest: Quest; onSaved: () => void 
         </label>
         <button type="button" className="btn" onClick={save}>Salvar</button>
       </div>
-      <p className="mt-1 text-xs text-ink/50">Episódio 0 = não começou.</p>
+      <p className="mt-1 text-xs text-ink/60">Episódio 0 = não começou.</p>
     </details>
   )
 }
@@ -231,7 +229,7 @@ function CompletionEntry({ completion, data, me, questId, onDelete }: EntryProps
                   <Avatar profile={p} />
                   <div>
                     <p className="text-sm font-bold">{p.display_name}</p>
-                    {r ? <Stars value={r.rating} /> : <p className="text-xs text-ink/50">Aguardando resenha</p>}
+                    {r ? <Stars value={r.rating} /> : <p className="text-xs text-ink/60">Aguardando resenha</p>}
                   </div>
                 </div>
                 {r?.body && <p className="whitespace-pre-wrap text-sm">{r.body}</p>}
