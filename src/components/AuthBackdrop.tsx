@@ -2,7 +2,7 @@ import { animate } from 'animejs'
 import { lazy, Suspense, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { prefersReducedMotion } from '../lib/motion'
 
-const LoginScene = lazy(() => import('./LoginScene'))
+const SkyScene = lazy(() => import('./SkyScene'))
 
 const SKY = 'radial-gradient(ellipse at 70% 12%, #553548 0%, #2c1b25 48%, #1a1115 100%)'
 const depth = (px: number) => ({ '--depth': px }) as CSSProperties
@@ -89,7 +89,7 @@ export default function AuthBackdrop({ children, flashSignal = 0, leaving = fals
     <div ref={root} className="relative min-h-dvh overflow-hidden" style={{ background: SKY }}>
       {animated && (
         <Suspense fallback={null}>
-          <LoginScene flashSignal={flashSignal + entranceFlash} />
+          <SkyScene flashSignal={flashSignal + entranceFlash} />
         </Suspense>
       )}
       <div aria-hidden className="pointer-events-none absolute inset-0">

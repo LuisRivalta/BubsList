@@ -19,7 +19,9 @@ const data = appData({
   reviews: [review({ completion_id: 'cf', user_id: ME })],
 })
 
-beforeEach(() => vi.mocked(api.loadAll).mockResolvedValue(data))
+beforeEach(() => {
+  vi.mocked(api.loadAll).mockResolvedValue(data)
+})
 const open = () => renderRoute([{ path: '/', element: <QuestsPage /> }], '/')
 
 it('shows pending top-level quests with subquest progress', async () => {
@@ -56,4 +58,10 @@ it('the new-quest button shows its label', async () => {
   const button = await screen.findByRole('link', { name: 'Nova quest' })
   expect(button).toHaveAttribute('href', '/quests/nova')
   expect(button).toHaveTextContent('Nova quest')
+})
+
+it('loading shows a readable hero heading', async () => {
+  vi.mocked(api.loadAll).mockReturnValue(new Promise(() => {}))
+  open()
+  expect(await screen.findByRole('heading', { level: 1, name: 'Carregando…' })).toBeInTheDocument()
 })

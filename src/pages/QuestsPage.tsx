@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import Icon from '../components/Icon'
 import QuestCard from '../components/QuestCard'
-import { LoadError, Loading } from '../components/Status'
+import { LoadError, PageLoading } from '../components/Status'
 import { useAppData, useSignedUrls } from '../data/hooks'
 import { useUserId } from '../data/session'
 import { formatDate } from '../lib/dates'
@@ -24,7 +24,7 @@ export default function QuestsPage() {
   const urls = useSignedUrls(coverPaths).data ?? {}
 
   if (q.error) return <LoadError retry={() => q.refetch()} />
-  if (!data) return <Loading />
+  if (!data) return <PageLoading />
 
   const pending = pendingReviews(data.completions, data.reviews, me)
   const set = (patch: Partial<QuestFilter>) => setFilter((f) => ({ ...f, ...patch }))

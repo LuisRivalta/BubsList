@@ -17,7 +17,7 @@ vi.mock('../lib/supabase', () => ({
 }))
 
 // jsdom has no WebGL; the 3D sky is irrelevant to the screen hand-off being tested.
-vi.mock('../components/LoginScene', () => ({ default: () => null }))
+vi.mock('../components/SkyScene', () => ({ default: () => null }))
 
 import { AuthGate } from './session'
 

@@ -1,7 +1,7 @@
 import { Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import Icon, { IconPicker } from '../components/Icon'
-import { LoadError, Loading } from '../components/Status'
+import { LoadError, PageLoading } from '../components/Status'
 import { deleteCategory, saveCategory, signOut, updateProfile, uploadAvatar, type CategoryInput } from '../data/api'
 import { useAppData, useRefresh, useSignedUrls } from '../data/hooks'
 import { useUserId } from '../data/session'
@@ -13,7 +13,7 @@ export default function ProfilePage() {
   const me = useUserId()
   const refresh = useRefresh()
   if (q.error) return <LoadError retry={() => q.refetch()} />
-  if (!q.data) return <Loading />
+  if (!q.data) return <PageLoading />
   const profile = q.data.profiles.find((p) => p.id === me)
 
   return (

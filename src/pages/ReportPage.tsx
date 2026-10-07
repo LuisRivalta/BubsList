@@ -5,7 +5,7 @@ import DifficultyBadge from '../components/DifficultyBadge'
 import Icon from '../components/Icon'
 import PhotoGrid from '../components/PhotoGrid'
 import RarityBadge from '../components/RarityBadge'
-import { LoadError, Loading } from '../components/Status'
+import { LoadError, PageLoading } from '../components/Status'
 import { useAppData } from '../data/hooks'
 import { evaluateAchievements } from '../lib/achievements'
 import { formatDate, todayISO } from '../lib/dates'
@@ -18,7 +18,7 @@ export default function ReportPage() {
   const [y, m] = today.split('-').map(Number)
   const [period, setPeriod] = useState<Period>(() => monthPeriod(y, m))
   if (q.error) return <LoadError retry={() => q.refetch()} />
-  if (!q.data) return <Loading />
+  if (!q.data) return <PageLoading />
   const data = q.data
   const report = buildReport(period, data, evaluateAchievements(data.achievements, data.quests, data.completions))
   const nameOf = (userId: string) => data.profiles.find((p) => p.id === userId)?.display_name ?? '?'

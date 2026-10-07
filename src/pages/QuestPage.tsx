@@ -6,7 +6,7 @@ import Icon from '../components/Icon'
 import PhotoGrid from '../components/PhotoGrid'
 import QuestCard from '../components/QuestCard'
 import Stars from '../components/Stars'
-import { LoadError, Loading } from '../components/Status'
+import { LoadError, PageLoading } from '../components/Status'
 import { deleteCompletion, deleteQuest, setProgress } from '../data/api'
 import { useAppData, useMediaRefresh, useRefresh } from '../data/hooks'
 import { useUserId } from '../data/session'
@@ -27,7 +27,7 @@ export default function QuestPage() {
   useMediaRefresh(media)
 
   if (q.error) return <LoadError retry={() => q.refetch()} />
-  if (!data) return <Loading />
+  if (!data) return <PageLoading />
   if (!quest) {
     return (
       <div className="space-y-3">

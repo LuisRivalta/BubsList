@@ -5,7 +5,7 @@ import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
 import { makeBolt, type Point } from '../lib/bolt'
 
-// Night sky behind the login: pink sparkles (Sailor Moon), a glowing crescent moon and Killua's Godspeed lightning.
+// Night sky: pink sparkles (Sailor Moon), a glowing crescent moon and Killua's Godspeed lightning. Used by the login and behind every page hero.
 
 function canvasTexture(size: number, draw: (ctx: CanvasRenderingContext2D, s: number) => void) {
   const canvas = document.createElement('canvas')
@@ -49,9 +49,10 @@ function drawMoon(ctx: CanvasRenderingContext2D, s: number) {
   ctx.drawImage(moon, 0, 0)
 }
 
-export default function LoginScene({ flashSignal }: { flashSignal: number }) {
+export default function SkyScene({ flashSignal = 0, boltEvery = [2600, 6200] }: { flashSignal?: number; boltEvery?: [number, number] }) {
   const host = useRef<HTMLDivElement>(null)
   const flash = useRef<() => void>(() => {})
+  const every = useRef(boltEvery)
 
   useEffect(() => {
     const el = host.current!
@@ -146,6 +147,7 @@ export default function LoginScene({ flashSignal }: { flashSignal: number }) {
     }
 
     function resize() {
+      if (!el.clientWidth || !el.clientHeight) return
       const w = el.clientWidth
       const h = el.clientHeight
       renderer.setSize(w, h, false)
@@ -159,6 +161,8 @@ export default function LoginScene({ flashSignal }: { flashSignal: number }) {
       for (const m of lineMaterials) m.resolution.set(w, h)
     }
     resize()
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(resize) : null
+    ro?.observe(el)
     window.addEventListener('resize', resize)
 
     const pointer = { x: 0, y: 0 }
@@ -169,7 +173,7 @@ export default function LoginScene({ flashSignal }: { flashSignal: number }) {
     window.addEventListener('pointermove', onPointer)
 
     const clock = new THREE.Clock()
-    let nextBolt = performance.now() + 1800
+    let nextBolt = performance.now() + every.current[0] * 0.7
     let raf = 0
     function frame(now: number) {
       raf = requestAnimationFrame(frame)
@@ -187,7 +191,7 @@ export default function LoginScene({ flashSignal }: { flashSignal: number }) {
       moonMaterial.rotation = Math.sin(t * 0.3) * 0.06
       if (now > nextBolt) {
         spawnBolt()
-        nextBolt = now + 2600 + Math.random() * 3600
+        nextBolt = now + every.current[0] + Math.random() * (every.current[1] - every.current[0])
       }
       bolts = bolts.filter((b) => {
         const age = (now - b.born) / b.life
@@ -201,19 +205,26 @@ export default function LoginScene({ flashSignal }: { flashSignal: number }) {
       })
       renderer.render(scene, camera)
     }
-    raf = requestAnimationFrame(frame)
-
-    const onVisibility = () => {
+    let visible = true
+    const schedule = () => {
       cancelAnimationFrame(raf)
-      if (!document.hidden) raf = requestAnimationFrame(frame)
+      if (visible && !document.hidden) raf = requestAnimationFrame(frame)
     }
-    document.addEventListener('visibilitychange', onVisibility)
+    const io = typeof IntersectionObserver !== 'undefined' ? new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting
+      schedule()
+    }) : null
+    io?.observe(el)
+    schedule()
+    document.addEventListener('visibilitychange', schedule)
 
     return () => {
       cancelAnimationFrame(raf)
       window.removeEventListener('resize', resize)
       window.removeEventListener('pointermove', onPointer)
-      document.removeEventListener('visibilitychange', onVisibility)
+      document.removeEventListener('visibilitychange', schedule)
+      ro?.disconnect()
+      io?.disconnect()
       bolts.forEach(removeBolt)
       disposables.forEach((d) => d.dispose())
       renderer.dispose()

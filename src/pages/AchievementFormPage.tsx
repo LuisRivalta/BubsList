@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { IconPicker } from '../components/Icon'
-import { LoadError, Loading } from '../components/Status'
+import { LoadError, PageLoading } from '../components/Status'
 import { deleteAchievement, saveAchievement, type AchievementInput } from '../data/api'
 import { useAppData, useRefresh } from '../data/hooks'
 import { RARITIES, RARITY_LABEL } from '../lib/achievements'
@@ -12,7 +12,7 @@ export default function AchievementFormPage() {
   const { id } = useParams()
   const q = useAppData()
   if (q.error) return <LoadError retry={() => q.refetch()} />
-  if (!q.data) return <Loading />
+  if (!q.data) return <PageLoading />
   const existing = id ? q.data.achievements.find((a) => a.id === id) : undefined
   if (id && !existing) return <p>Conquista não encontrada.</p>
   return <AchievementForm key={id ?? 'new'} data={q.data} existing={existing} />

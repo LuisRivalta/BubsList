@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import Icon from '../components/Icon'
 import RarityBadge from '../components/RarityBadge'
-import { LoadError, Loading } from '../components/Status'
+import { LoadError, PageLoading } from '../components/Status'
 import { setManualUnlock } from '../data/api'
 import { useAppData, useRefresh } from '../data/hooks'
 import { RARITIES, describeRule, evaluateAchievements, type AchievementStatus } from '../lib/achievements'
@@ -14,7 +14,7 @@ export default function AchievementsPage() {
   const q = useAppData()
   const refresh = useRefresh()
   if (q.error) return <LoadError retry={() => q.refetch()} />
-  if (!q.data) return <Loading />
+  if (!q.data) return <PageLoading />
   const data = q.data
   const statuses = evaluateAchievements(data.achievements, data.quests, data.completions)
 

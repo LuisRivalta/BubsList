@@ -3,7 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router'
 import CatalogSearch from '../components/CatalogSearch'
 import Icon from '../components/Icon'
 import PhotoPicker, { uploadPending } from '../components/PhotoPicker'
-import { LoadError, Loading } from '../components/Status'
+import { LoadError, PageLoading } from '../components/Status'
 import { createQuest, deletePhoto, updateQuest, upsertMedia, type QuestInput } from '../data/api'
 import { useAppData, useRefresh } from '../data/hooks'
 import { KIND_SOURCE } from '../lib/catalog'
@@ -15,7 +15,7 @@ export default function QuestFormPage() {
   const [params] = useSearchParams()
   const q = useAppData()
   if (q.error) return <LoadError retry={() => q.refetch()} />
-  if (!q.data) return <Loading />
+  if (!q.data) return <PageLoading />
   const existing = id ? q.data.quests.find((x) => x.id === id) : undefined
   if (id && !existing) return <p>Quest não encontrada.</p>
   return <QuestForm key={id ?? 'new'} data={q.data} existing={existing} parentId={existing ? existing.parent_id : params.get('parent')} />

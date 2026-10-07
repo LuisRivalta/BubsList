@@ -3,7 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router'
 import Celebration from '../components/Celebration'
 import PhotoPicker, { uploadPending } from '../components/PhotoPicker'
 import Stars from '../components/Stars'
-import { LoadError, Loading } from '../components/Status'
+import { LoadError, PageLoading } from '../components/Status'
 import { createCompletion, deletePhoto, deleteReview, saveReview, updateCompletion } from '../data/api'
 import { useAppData, useRefresh } from '../data/hooks'
 import { useUserId } from '../data/session'
@@ -16,7 +16,7 @@ export default function CompletePage() {
   const [params] = useSearchParams()
   const q = useAppData()
   if (q.error) return <LoadError retry={() => q.refetch()} />
-  if (!q.data) return <Loading />
+  if (!q.data) return <PageLoading />
   const quest = q.data.quests.find((x) => x.id === id)
   if (!quest) return <p>Quest não encontrada.</p>
   const completionId = params.get('completion')
