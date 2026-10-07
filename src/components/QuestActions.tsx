@@ -9,7 +9,7 @@ import DrawDialog from './DrawDialog'
 // Hero buttons of the quest pages: a new quest (already in the category, if any) and the draw.
 export default function QuestActions({ data, categoryId }: { data: AppData; categoryId: string | null }) {
   const [drawing, setDrawing] = useState(false)
-  const pool = drawPool(data.quests, doneQuestIds(data.completions), { categoryId, difficulty: null })
+  const pool = drawPool(data.quests, doneQuestIds(data.completions), { categoryId, typeIds: [], difficulties: [], cities: [] })
   return (
     <>
       <Link
