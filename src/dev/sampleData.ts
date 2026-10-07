@@ -17,7 +17,7 @@ const cat = (id: string, name: string, icon: string, color: string, kind: Catego
 })
 
 const quest = (id: string, title: string, category_id: string, difficulty: Difficulty, extra: Partial<Quest> = {}): Quest => ({
-  id, parent_id: null, category_id, title, notes: null, difficulty, media_id: null, progress_season: null,
+  id, parent_id: null, category_id, title, notes: null, difficulty, media_id: null, type_id: null, city: null, progress_season: null,
   progress_episode: null, created_by: ME, created_at: T, updated_at: T, ...extra,
 })
 
@@ -51,6 +51,7 @@ export const sampleData: AppData = {
     cat('anime', 'Anime', 'swords', '#ec4899', 'anime'),
     cat('outro', 'Outro', 'sparkles', '#64748b'),
   ],
+  questTypes: [],
   media: [
     media('m-hxh', 'anilist', 'Hunter x Hunter (2011)', '/login/killua.webp', [{ season: 1, episodes: 148 }], 23),
     media('m-sm', 'anilist', 'Sailor Moon Crystal', '/login/usagi.webp', [{ season: 1, episodes: 39 }], 24),

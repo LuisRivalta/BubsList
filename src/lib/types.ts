@@ -23,6 +23,13 @@ export interface Category {
   created_at: string
 }
 
+export interface QuestType {
+  id: string
+  category_id: string
+  name: string
+  created_at: string
+}
+
 export interface Media {
   id: string
   source: MediaSource
@@ -46,6 +53,8 @@ export interface Quest {
   notes: string | null
   difficulty: Difficulty
   media_id: string | null
+  type_id: string | null
+  city: string | null
   progress_season: number | null
   progress_episode: number | null
   created_by: string
@@ -97,6 +106,7 @@ export interface Achievement {
 export interface AppData {
   profiles: Profile[]
   categories: Category[]
+  questTypes: QuestType[]
   media: Media[]
   quests: Quest[]
   completions: Completion[]

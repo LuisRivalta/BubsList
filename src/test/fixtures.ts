@@ -1,4 +1,4 @@
-import type { Achievement, AppData, Category, Completion, Media, Photo, Quest, Review } from '../lib/types'
+import type { Achievement, AppData, Category, Completion, Media, Photo, Quest, QuestType, Review } from '../lib/types'
 
 export const ME = 'user-me'
 export const PARTNER = 'user-partner'
@@ -11,9 +11,13 @@ export const category = (o: Partial<Category> = {}): Category => ({
   id: nextId('cat'), name: 'Viagem', icon: 'plane', color: '#0ea5e9', kind: 'general', builtin: true, created_at: T, ...o,
 })
 
+export const questType = (o: Partial<QuestType> = {}): QuestType => ({
+  id: nextId('t'), category_id: 'cat-none', name: 'Tipo', created_at: T, ...o,
+})
+
 export const quest = (o: Partial<Quest> = {}): Quest => ({
   id: nextId('q'), parent_id: null, category_id: 'cat-none', title: 'Quest', notes: null, difficulty: 'easy',
-  media_id: null, progress_season: null, progress_episode: null, created_by: ME, created_at: T, updated_at: T, ...o,
+  media_id: null, type_id: null, city: null, progress_season: null, progress_episode: null, created_by: ME, created_at: T, updated_at: T, ...o,
 })
 
 export const completion = (o: Partial<Completion> = {}): Completion => ({
@@ -54,6 +58,6 @@ export const appData = (o: Partial<AppData> = {}): AppData => ({
     { id: ME, display_name: 'Luis', avatar_path: null, created_at: T },
     { id: PARTNER, display_name: 'Bubs', avatar_path: null, created_at: '2026-01-02T00:00:00Z' },
   ],
-  categories: [], media: [], quests: [], completions: [], reviews: [], photos: [], achievements: [],
+  categories: [], questTypes: [], media: [], quests: [], completions: [], reviews: [], photos: [], achievements: [],
   ...o,
 })

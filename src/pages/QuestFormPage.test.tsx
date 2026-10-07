@@ -35,7 +35,7 @@ it('creates a top-level quest', async () => {
   await user.click(screen.getByRole('button', { name: 'Salvar' }))
   await waitFor(() => expect(router.state.location.pathname).toBe('/quests/new-q'))
   expect(api.createQuest).toHaveBeenCalledWith({
-    parent_id: null, category_id: CATS.restaurante.id, title: 'Batata do Marechal', notes: null, difficulty: 'medium', media_id: null,
+    parent_id: null, category_id: CATS.restaurante.id, title: 'Batata do Marechal', notes: null, difficulty: 'medium', media_id: null, type_id: null, city: null,
   })
 })
 

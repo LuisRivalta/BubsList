@@ -77,6 +77,7 @@ function QuestForm({ data, existing, parentId, initialCategory }: { data: AppDat
       const mediaId = mediaFits && media ? ('id' in media ? media.id : (await upsertMedia(media)).id) : null
       const input: QuestInput = {
         parent_id: parentId, category_id: category.id, title: title.trim(), notes: notes.trim() || null, difficulty, media_id: mediaId,
+        type_id: existing?.type_id ?? null, city: existing?.city ?? null,
       }
       let questId: string
       if (existing) {

@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 
 const url = process.env.VITE_SUPABASE_URL
 const key = process.env.VITE_SUPABASE_ANON_KEY
-const tables = ['profiles', 'categories', 'media', 'quests', 'completions', 'reviews', 'photos', 'achievements']
+const tables = ['profiles', 'categories', 'quest_types', 'media', 'quests', 'completions', 'reviews', 'photos', 'achievements']
 let failed = false
 const fail = (msg) => {
   console.error('FAIL', msg)

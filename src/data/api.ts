@@ -2,7 +2,7 @@ import type { NormalizedMedia } from '../../supabase/functions/_shared/catalog'
 import type { Progress } from '../lib/progress'
 import { supabase } from '../lib/supabase'
 import { completionPhotos, subtreePhotos } from '../lib/tree'
-import type { Achievement, AppData, Category, Completion, Media, Photo, Profile, Quest, Review } from '../lib/types'
+import type { Achievement, AppData, Category, Completion, Media, Photo, Profile, Quest, QuestType, Review } from '../lib/types'
 
 const PAGE = 1000
 
@@ -21,9 +21,10 @@ async function all<T>(table: string): Promise<T[]> {
 }
 
 export async function loadAll(): Promise<AppData> {
-  const [profiles, categories, media, quests, completions, reviews, photos, achievements] = await Promise.all([
+  const [profiles, categories, questTypes, media, quests, completions, reviews, photos, achievements] = await Promise.all([
     all<Profile>('profiles'),
     all<Category>('categories'),
+    all<QuestType>('quest_types'),
     all<Media>('media'),
     all<Quest>('quests'),
     all<Completion>('completions'),
@@ -31,11 +32,11 @@ export async function loadAll(): Promise<AppData> {
     all<Photo>('photos'),
     all<Achievement>('achievements'),
   ])
-  return { profiles, categories, media, quests, completions, reviews, photos, achievements }
+  return { profiles, categories, questTypes, media, quests, completions, reviews, photos, achievements }
 }
 
 // Quests -----------------------------------------------------------------
-export type QuestInput = Pick<Quest, 'parent_id' | 'category_id' | 'title' | 'notes' | 'difficulty' | 'media_id'>
+export type QuestInput = Pick<Quest, 'parent_id' | 'category_id' | 'title' | 'notes' | 'difficulty' | 'media_id' | 'type_id' | 'city'>
 
 export const createQuest = async (input: QuestInput) =>
   check<Quest>(await supabase.from('quests').insert(input).select().single())
@@ -121,6 +122,17 @@ export async function saveCategory({ id, ...row }: CategoryInput & { id?: string
 
 export async function deleteCategory(id: string) {
   check(await supabase.from('categories').delete().eq('id', id))
+}
+
+export async function saveQuestType({ id, ...row }: { id?: string; category_id: string; name: string }): Promise<QuestType> {
+  const res = id
+    ? await supabase.from('quest_types').update(row).eq('id', id).select().single()
+    : await supabase.from('quest_types').insert(row).select().single()
+  return check<QuestType>(res)
+}
+
+export async function deleteQuestType(id: string) {
+  check(await supabase.from('quest_types').delete().eq('id', id))
 }
 
 export type AchievementInput = Omit<Achievement, 'id' | 'created_at'>
