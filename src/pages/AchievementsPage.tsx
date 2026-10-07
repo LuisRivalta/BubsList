@@ -1,14 +1,36 @@
-import { Pencil } from 'lucide-react'
-import { useState } from 'react'
+import { Plus } from 'lucide-react'
 import { Link } from 'react-router'
-import Icon from '../components/Icon'
+import MedalCard from '../components/MedalCard'
+import PageHero from '../components/PageHero'
 import RarityBadge from '../components/RarityBadge'
+import Stagger from '../components/Stagger'
 import { LoadError, PageLoading } from '../components/Status'
-import { setManualUnlock } from '../data/api'
 import { useAppData, useRefresh } from '../data/hooks'
-import { RARITIES, describeRule, evaluateAchievements, type AchievementStatus } from '../lib/achievements'
-import { formatDate, todayISO } from '../lib/dates'
-import type { Category } from '../lib/types'
+import { RARITIES, RARITY_LABEL, evaluateAchievements } from '../lib/achievements'
+
+function Ring({ value, max }: { value: number; max: number }) {
+  const r = 34
+  const c = 2 * Math.PI * r
+  const pct = max > 0 ? value / max : 0
+  return (
+    <div className="relative grid size-24 shrink-0 place-items-center">
+      <svg aria-hidden viewBox="0 0 80 80" className="absolute inset-0 -rotate-90">
+        <circle cx="40" cy="40" r={r} fill="none" stroke="rgb(255 255 255 / 0.15)" strokeWidth="8" />
+        <circle cx="40" cy="40" r={r} fill="none" stroke="url(#ring)" strokeWidth="8" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - pct)} />
+        <defs>
+          <linearGradient id="ring" x1="0" x2="1">
+            <stop offset="0" stopColor="#e3b4cf" />
+            <stop offset="1" stopColor="#fde68a" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <span className="text-center leading-none">
+        <span className="block font-display text-2xl font-bold">{value}</span>
+        <span className="text-xs text-white/70">de {max}</span>
+      </span>
+    </div>
+  )
+}
 
 export default function AchievementsPage() {
   const q = useAppData()
@@ -17,81 +39,39 @@ export default function AchievementsPage() {
   if (!q.data) return <PageLoading />
   const data = q.data
   const statuses = evaluateAchievements(data.achievements, data.quests, data.completions)
+  const unlocked = statuses.filter((s) => s.unlockedOn)
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Conquistas</h1>
-        <Link to="/conquistas/nova" className="btn btn-primary">+ Nova</Link>
-      </div>
-      <p className="text-gray-600">{statuses.filter((s) => s.unlockedOn).length} de {statuses.length} desbloqueadas</p>
-      {RARITIES.map((rarity) => {
-        const group = statuses.filter((s) => s.achievement.rarity === rarity)
-        if (group.length === 0) return null
-        return (
-          <section key={rarity} className="space-y-2">
-            <h2 className="flex items-center gap-2 font-semibold">
-              <RarityBadge rarity={rarity} /> {group.filter((s) => s.unlockedOn).length}/{group.length}
-            </h2>
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {group.map((s) => <AchievementCard key={s.achievement.id} status={s} categories={data.categories} onChange={refresh} />)}
-            </div>
-          </section>
-        )
-      })}
-    </div>
-  )
-}
-
-function AchievementCard({ status, categories, onChange }: { status: AchievementStatus; categories: Category[]; onChange: () => void }) {
-  const { achievement: a, unlockedOn, current, target } = status
-  const [unlocking, setUnlocking] = useState(false)
-  const [date, setDate] = useState(todayISO())
-
-  async function unlock() {
-    await setManualUnlock(a.id, date)
-    onChange()
-  }
-
-  async function relock() {
-    if (!window.confirm('Bloquear de novo?')) return
-    await setManualUnlock(a.id, null)
-    onChange()
-  }
-
-  return (
-    <div className={`card flex gap-3 p-3 ${unlockedOn ? '' : 'opacity-75'}`}>
-      <Icon name={a.icon} className={`size-9 shrink-0 ${unlockedOn ? 'text-accent' : 'text-gray-400'}`} />
-      <div className="min-w-0 flex-1 space-y-1">
-        <div className="flex items-start justify-between gap-2">
-          <p className="font-semibold">{a.name}</p>
-          <Link to={`/conquistas/${a.id}/editar`} aria-label={`Editar ${a.name}`} className="grid size-8 place-items-center text-gray-400">
-            <Pencil aria-hidden className="size-4" />
-          </Link>
+    <>
+      <PageHero title="Conquistas" actions={<Link to="/conquistas/nova" className="btn btn-ghost"><Plus aria-hidden className="size-4" /> Nova</Link>}>
+        <div className="flex items-center gap-4">
+          <Ring value={unlocked.length} max={statuses.length} />
+          <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm text-white/80">
+            {RARITIES.map((r) => (
+              <li key={r} className="inline-flex items-center gap-2">
+                <span aria-hidden className={`medal-${r} size-3 rounded-full`} style={{ background: 'var(--metal)' }} />
+                {RARITY_LABEL[r]}: <strong className="text-white">{unlocked.filter((s) => s.achievement.rarity === r).length}</strong>
+              </li>
+            ))}
+          </ul>
         </div>
-        {a.description && <p className="text-sm text-gray-600">{a.description}</p>}
-        {a.kind === 'auto' && <p className="text-xs text-gray-500">{describeRule(a, categories)}</p>}
-        {unlockedOn ? (
-          <p className="text-sm text-green-700">Desbloqueada em {formatDate(unlockedOn)}</p>
-        ) : a.kind === 'auto' ? (
-          <div>
-            <div className="h-2 rounded bg-gray-200">
-              <div className="h-2 rounded bg-accent" style={{ width: `${(current / target) * 100}%` }} />
-            </div>
-            <p className="text-xs">{current}/{target}</p>
-          </div>
-        ) : unlocking ? (
-          <div className="flex gap-2">
-            <input type="date" aria-label="Data do desbloqueio" className="input" value={date} max={todayISO()} onChange={(e) => setDate(e.target.value)} />
-            <button type="button" className="btn btn-primary" onClick={unlock}>Confirmar</button>
-          </div>
-        ) : (
-          <button type="button" className="btn" onClick={() => setUnlocking(true)}>Desbloquear</button>
-        )}
-        {a.kind === 'manual' && unlockedOn && (
-          <button type="button" className="text-xs text-gray-500 underline" onClick={relock}>Bloquear de novo</button>
-        )}
+      </PageHero>
+      <div className="space-y-8">
+        {RARITIES.map((rarity) => {
+          const group = statuses.filter((s) => s.achievement.rarity === rarity)
+          if (group.length === 0) return null
+          return (
+            <section key={rarity} className="space-y-3">
+              <h2 className="flex items-center gap-2 text-lg font-semibold">
+                <RarityBadge rarity={rarity} /> {group.filter((s) => s.unlockedOn).length}/{group.length}
+              </h2>
+              <Stagger className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {group.map((s) => <MedalCard key={s.achievement.id} status={s} categories={data.categories} onChange={refresh} />)}
+              </Stagger>
+            </section>
+          )
+        })}
       </div>
-    </div>
+    </>
   )
 }
