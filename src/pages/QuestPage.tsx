@@ -1,17 +1,22 @@
-import { CalendarDays, Check, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { animate } from 'animejs'
+import { CalendarDays, Check, Pencil, Plus, Trash2 } from 'lucide-react'
+import { useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import DifficultyBadge from '../components/DifficultyBadge'
-import Icon from '../components/Icon'
+import Avatar from '../components/Avatar'
+import Bubble from '../components/Bubble'
+import Gems from '../components/Gems'
+import PageHero from '../components/PageHero'
 import PhotoGrid from '../components/PhotoGrid'
+import ProgressBar from '../components/ProgressBar'
 import QuestCard from '../components/QuestCard'
 import Stars from '../components/Stars'
 import { LoadError, PageLoading } from '../components/Status'
 import { deleteCompletion, deleteQuest, setProgress } from '../data/api'
-import { useAppData, useMediaRefresh, useRefresh } from '../data/hooks'
+import { useAppData, useMediaRefresh, useRefresh, useSignedUrls } from '../data/hooks'
 import { useUserId } from '../data/session'
 import { formatDate } from '../lib/dates'
-import { formatProgress, nextEpisode, progressOf } from '../lib/progress'
+import { prefersReducedMotion } from '../lib/motion'
+import { episodesWatched, formatProgress, nextEpisode, progressOf } from '../lib/progress'
 import { ancestors, childrenOf, descendantIds, doneQuestIds } from '../lib/tree'
 import type { AppData, Completion, Quest } from '../lib/types'
 
@@ -21,28 +26,28 @@ export default function QuestPage() {
   const me = useUserId()
   const refresh = useRefresh()
   const q = useAppData()
+  const plusButton = useRef<HTMLButtonElement>(null)
   const data = q.data
   const quest = data?.quests.find((x) => x.id === id)
   const media = quest?.media_id ? data?.media.find((m) => m.id === quest.media_id) : undefined
+  const refPhotos = data && quest ? data.photos.filter((p) => p.quest_id === quest.id) : []
+  const coverUrl = useSignedUrls(refPhotos.slice(0, 1).map((p) => p.storage_path)).data?.[refPhotos[0]?.storage_path ?? '']
   useMediaRefresh(media)
 
   if (q.error) return <LoadError retry={() => q.refetch()} />
   if (!data) return <PageLoading />
   if (!quest) {
-    return (
-      <div className="space-y-3">
-        <p>Quest não encontrada.</p>
-        <Link to="/" className="btn">Voltar</Link>
-      </div>
-    )
+    return <PageHero title="Quest não encontrada" actions={<Link to="/" className="btn btn-ghost">Voltar</Link>} />
   }
 
   const category = data.categories.find((c) => c.id === quest.category_id)
   const path = ancestors(data.quests, quest.id)
   const done = doneQuestIds(data.completions)
+  const isDone = done.has(quest.id)
   const children = childrenOf(data.quests, quest.id)
   const history = data.completions.filter((c) => c.quest_id === quest.id).sort((a, b) => b.done_on.localeCompare(a.done_on))
   const progress = progressOf(quest)
+  const episodes = media ? episodesWatched(media.seasons, progress) : null
 
   async function plusOne() {
     if (!media) return
@@ -51,6 +56,7 @@ export default function QuestPage() {
       if (window.confirm('Vocês chegaram ao último episódio! Concluir agora?')) navigate(`/quests/${quest!.id}/concluir`)
       return
     }
+    if (plusButton.current && !prefersReducedMotion()) animate(plusButton.current, { scale: [1, 1.12, 1], duration: 380, ease: 'outQuad' })
     await setProgress(quest!.id, next)
     await refresh()
   }
@@ -70,68 +76,96 @@ export default function QuestPage() {
   }
 
   return (
-    <article className="space-y-6">
-      {path.length > 0 && (
-        <nav aria-label="Caminho" className="flex flex-wrap gap-1 text-sm text-gray-500">
-          {path.map((a) => (
-            <span key={a.id}>
-              <Link to={`/quests/${a.id}`} className="underline">{a.title}</Link> ›
+    <>
+      <PageHero
+        cover={media?.poster_url ?? coverUrl}
+        eyebrow={
+          path.length > 0 && (
+            <nav aria-label="Caminho" className="flex flex-wrap items-center gap-1 text-sm text-white/75">
+              {path.map((a) => (
+                <span key={a.id} className="inline-flex items-center gap-1">
+                  <Link to={`/quests/${a.id}`} className="font-semibold underline-offset-2 hover:underline">{a.title}</Link> ›
+                </span>
+              ))}
+            </nav>
+          )
+        }
+        title={quest.title}
+        stats={
+          <>
+            <span className="inline-flex items-center gap-1.5">
+              <Bubble icon={category?.icon ?? ''} color={category?.color ?? '#e3b4cf'} size="sm" /> {category?.name}
             </span>
-          ))}
-        </nav>
-      )}
+            <Gems difficulty={quest.difficulty} onDark />
+            {isDone && (
+              <span className="inline-flex items-center gap-1 font-bold text-emerald-300">
+                <Check aria-hidden className="size-4" /> Feita
+              </span>
+            )}
+          </>
+        }
+        actions={
+          <>
+            <Link to={`/quests/${quest.id}/concluir`} className="btn btn-primary">{isDone ? 'Fazer de novo' : 'Concluir'}</Link>
+            <Link to={`/quests/nova?parent=${quest.id}`} className="btn btn-ghost"><Plus aria-hidden className="size-4" /> Subquest</Link>
+            <Link to={`/quests/${quest.id}/editar`} className="btn btn-ghost"><Pencil aria-hidden className="size-4" /> Editar</Link>
+            <button type="button" className="btn btn-ghost" onClick={remove}><Trash2 aria-hidden className="size-4" /> Excluir</button>
+          </>
+        }
+      />
 
-      <header className="flex gap-4">
-        {media?.poster_url && <img src={media.poster_url} alt="" className="h-36 w-24 shrink-0 rounded-xl object-cover" />}
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold">{quest.title}</h1>
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <span className="inline-flex items-center gap-1" style={{ color: category?.color }}>
-              <Icon name={category?.icon ?? ''} className="size-4" /> {category?.name}
-            </span>
-            <DifficultyBadge difficulty={quest.difficulty} />
-            {done.has(quest.id) && <span className="inline-flex items-center gap-1 text-green-700"><Check aria-hidden className="size-4" /> Feita</span>}
-          </div>
-          {media?.synopsis && <p className="text-sm text-gray-600">{media.synopsis}</p>}
-          {quest.notes && <p className="whitespace-pre-wrap">{quest.notes}</p>}
-        </div>
-      </header>
+      <div className="space-y-6">
+        {(media?.synopsis || quest.notes) && (
+          <section className="card space-y-2 p-5">
+            {media?.synopsis && <p className="text-ink/70">{media.synopsis}</p>}
+            {quest.notes && <p className="whitespace-pre-wrap font-semibold">{quest.notes}</p>}
+          </section>
+        )}
 
-      <div className="flex flex-wrap gap-2">
-        <Link to={`/quests/${quest.id}/concluir`} className="btn btn-primary">{done.has(quest.id) ? 'Fazer de novo' : 'Concluir'}</Link>
-        <Link to={`/quests/nova?parent=${quest.id}`} className="btn">+ Subquest</Link>
-        <Link to={`/quests/${quest.id}/editar`} className="btn">Editar</Link>
-        <button type="button" className="btn btn-danger" onClick={remove}>Excluir</button>
-      </div>
+        {media && media.source !== 'tmdb_movie' && (
+          <section className="card space-y-4 p-5">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-ink/50">Progresso</p>
+                <span className="font-display text-3xl font-bold text-brand">{formatProgress(media.source, media.seasons, progress)}</span>
+              </div>
+              <button ref={plusButton} type="button" className="btn btn-primary" onClick={plusOne}>+1 episódio</button>
+            </div>
+            {episodes && (
+              <ProgressBar size="lg" value={episodes.watched} max={episodes.total}>
+                <span>{episodes.watched} de {episodes.total} episódios</span>
+                <span>{Math.round((episodes.watched / episodes.total) * 100)}%</span>
+              </ProgressBar>
+            )}
+            <ProgressEditor key={`${quest.progress_season}:${quest.progress_episode}`} quest={quest} onSaved={refresh} />
+          </section>
+        )}
 
-      {media && media.source !== 'tmdb_movie' && (
-        <section className="card space-y-3 p-4">
-          <h2 className="font-semibold">Progresso</h2>
-          <div className="flex items-center gap-3">
-            <span className="text-lg">{formatProgress(media.source, media.seasons, progress)}</span>
-            <button type="button" className="btn btn-primary" onClick={plusOne}>+1 episódio</button>
-          </div>
-          <ProgressEditor key={`${quest.progress_season}:${quest.progress_episode}`} quest={quest} onSaved={refresh} />
+        <PhotoGrid photos={refPhotos} />
+
+        <section className="space-y-3">
+          <h2 className="text-xl font-semibold">Subquests ({children.length})</h2>
+          {children.length > 0 && (
+            <div className="tree">
+              {children.map((c) => <QuestCard key={c.id} quest={c} data={data} done={done} />)}
+            </div>
+          )}
         </section>
-      )}
 
-      <PhotoGrid photos={data.photos.filter((p) => p.quest_id === quest.id)} />
-
-      <section className="space-y-2">
-        <h2 className="font-semibold">Subquests ({children.length})</h2>
-        <div className="grid gap-2 md:grid-cols-2">
-          {children.map((c) => <QuestCard key={c.id} quest={c} data={data} done={done} />)}
-        </div>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="font-semibold">Histórico</h2>
-        {history.length === 0 && <p className="text-gray-500">Ainda não fizeram essa.</p>}
-        {history.map((c) => (
-          <CompletionEntry key={c.id} completion={c} data={data} me={me} questId={quest.id} onDelete={() => removeCompletion(c)} />
-        ))}
-      </section>
-    </article>
+        <section className="space-y-3">
+          <h2 className="text-xl font-semibold">Histórico</h2>
+          {history.length === 0 ? (
+            <p className="text-ink/50">Ainda não fizeram essa.</p>
+          ) : (
+            <ol className="timeline">
+              {history.map((c) => (
+                <CompletionEntry key={c.id} completion={c} data={data} me={me} questId={quest.id} onDelete={() => removeCompletion(c)} />
+              ))}
+            </ol>
+          )}
+        </section>
+      </div>
+    </>
   )
 }
 
@@ -146,7 +180,7 @@ function ProgressEditor({ quest, onSaved }: { quest: Quest; onSaved: () => void 
   }
   return (
     <details>
-      <summary className="cursor-pointer text-sm text-gray-600">Editar progresso</summary>
+      <summary className="cursor-pointer text-sm font-semibold text-ink/60">Editar progresso</summary>
       <div className="mt-2 flex items-end gap-2">
         <label className="w-24">
           <span className="block text-xs">Temporada</span>
@@ -158,7 +192,7 @@ function ProgressEditor({ quest, onSaved }: { quest: Quest; onSaved: () => void 
         </label>
         <button type="button" className="btn" onClick={save}>Salvar</button>
       </div>
-      <p className="mt-1 text-xs text-gray-500">Episódio 0 = não começou.</p>
+      <p className="mt-1 text-xs text-ink/50">Episódio 0 = não começou.</p>
     </details>
   )
 }
@@ -175,31 +209,38 @@ function CompletionEntry({ completion, data, me, questId, onDelete }: EntryProps
   const reviews = data.reviews.filter((r) => r.completion_id === completion.id)
   const mine = reviews.find((r) => r.user_id === me)
   return (
-    <div className="card space-y-3 p-4">
-      <div className="flex items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-1.5 font-medium"><CalendarDays aria-hidden className="size-4" /> {formatDate(completion.done_on)}</span>
-        <div className="flex gap-2">
-          <Link to={`/quests/${questId}/concluir?completion=${completion.id}`} className="btn">{mine ? 'Editar' : 'Escrever minha resenha'}</Link>
-          <button type="button" className="btn btn-danger" aria-label="Excluir conclusão" onClick={onDelete}><Trash2 aria-hidden className="size-4" /></button>
+    <li>
+      <div className="card space-y-4 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="inline-flex items-center gap-1.5 font-display text-lg font-semibold">
+            <CalendarDays aria-hidden className="size-4 text-accent" /> {formatDate(completion.done_on)}
+          </span>
+          <div className="flex gap-2">
+            <Link to={`/quests/${questId}/concluir?completion=${completion.id}`} className="btn">{mine ? 'Editar' : 'Escrever minha resenha'}</Link>
+            <button type="button" className="btn btn-danger" aria-label="Excluir conclusão" onClick={onDelete}>
+              <Trash2 aria-hidden className="size-4" />
+            </button>
+          </div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {data.profiles.map((p) => {
+            const r = reviews.find((x) => x.user_id === p.id)
+            return (
+              <div key={p.id} className="space-y-2 rounded-2xl bg-paper/70 p-3">
+                <div className="flex items-center gap-2">
+                  <Avatar profile={p} />
+                  <div>
+                    <p className="text-sm font-bold">{p.display_name}</p>
+                    {r ? <Stars value={r.rating} /> : <p className="text-xs text-ink/50">Aguardando resenha</p>}
+                  </div>
+                </div>
+                {r?.body && <p className="whitespace-pre-wrap text-sm">{r.body}</p>}
+                {r && <PhotoGrid photos={data.photos.filter((ph) => ph.review_id === r.id)} />}
+              </div>
+            )
+          })}
         </div>
       </div>
-      {data.profiles.map((p) => {
-        const r = reviews.find((x) => x.user_id === p.id)
-        return (
-          <div key={p.id} className="space-y-1">
-            <p className="text-sm font-medium">{p.display_name}</p>
-            {r ? (
-              <>
-                <Stars value={r.rating} />
-                {r.body && <p className="whitespace-pre-wrap text-sm">{r.body}</p>}
-                <PhotoGrid photos={data.photos.filter((ph) => ph.review_id === r.id)} />
-              </>
-            ) : (
-              <p className="text-sm text-gray-500">Aguardando resenha</p>
-            )}
-          </div>
-        )
-      })}
-    </div>
+    </li>
   )
 }

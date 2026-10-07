@@ -49,7 +49,7 @@ function drawMoon(ctx: CanvasRenderingContext2D, s: number) {
   ctx.drawImage(moon, 0, 0)
 }
 
-export default function SkyScene({ flashSignal = 0, boltEvery = [2600, 6200] }: { flashSignal?: number; boltEvery?: [number, number] }) {
+export default function SkyScene({ flashSignal = 0, boltEvery = [2600, 6200], moon: moonStyle = 'large' }: { flashSignal?: number; boltEvery?: [number, number]; moon?: 'large' | 'small' }) {
   const host = useRef<HTMLDivElement>(null)
   const flash = useRef<() => void>(() => {})
   const every = useRef(boltEvery)
@@ -156,8 +156,14 @@ export default function SkyScene({ flashSignal = 0, boltEvery = [2600, 6200] }: 
       halfH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z
       halfW = halfH * camera.aspect
       const portrait = camera.aspect < 0.9
-      moonSize = portrait ? 4.2 : 6
-      moon.position.set(portrait ? halfW * 0.45 : halfW * 0.58, halfH * (portrait ? 0.72 : 0.6), -1)
+      if (moonStyle === 'small') {
+        // Behind page heroes: tucked into the top-right corner so it never sits behind the title.
+        moonSize = 3.2
+        moon.position.set(halfW * 0.78, halfH * 0.52, -1)
+      } else {
+        moonSize = portrait ? 4.2 : 6
+        moon.position.set(portrait ? halfW * 0.45 : halfW * 0.58, halfH * (portrait ? 0.72 : 0.6), -1)
+      }
       for (const m of lineMaterials) m.resolution.set(w, h)
     }
     resize()

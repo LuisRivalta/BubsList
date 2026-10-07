@@ -207,7 +207,7 @@
 .hero-cover {
   position: absolute;
   top: -2rem;
-  bottom: -2.5rem;
+  bottom: 0;
   left: 50%;
   width: 100vw;
   transform: translateX(-50%);

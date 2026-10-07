@@ -102,7 +102,7 @@ export default function Layout() {
           <div className="sky-static absolute inset-0" />
           {animated && (
             <Suspense fallback={null}>
-              <SkyScene boltEvery={[9000, 18000]} />
+              <SkyScene boltEvery={[9000, 18000]} moon="small" />
             </Suspense>
           )}
           <svg className="absolute -bottom-px left-0 h-8 w-full text-paper md:h-12" viewBox="0 0 100 10" preserveAspectRatio="none">
