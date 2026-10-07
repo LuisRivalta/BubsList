@@ -1,5 +1,5 @@
 import { effectiveCity } from './tree'
-import type { Completion, Difficulty, Quest, Review } from './types'
+import type { Completion, Difficulty, Quest, QuestType, Review } from './types'
 
 export const normalizeText = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim()
 
@@ -23,21 +23,27 @@ export function filterQuests(quests: Quest[], done: Set<string>, f: QuestFilter)
 }
 
 export interface DrawFilter {
-  categoryId: string | null
-  typeIds: string[] // empty = any
+  categoryIds: string[] // empty = any
+  typeIds: string[] // empty = any; each type narrows only its own category
   difficulties: Difficulty[] // empty = any
   cities: string[] // empty = any; compared with sameText against the effective city
 }
 
 // What "Sortear" picks from: pending quests you can do right now (none of their subquests still pending) that pass the filters.
-export function drawPool(quests: Quest[], done: Set<string>, f: DrawFilter): Quest[] {
+export function drawPool(quests: Quest[], done: Set<string>, f: DrawFilter, types: QuestType[] = []): Quest[] {
   const pending = quests.filter((q) => !done.has(q.id))
   const hasPendingChild = new Set(pending.flatMap((q) => q.parent_id ?? []))
   const cities = new Set(f.cities.map(normalizeText))
+  const categoryOf = new Map(types.map((t) => [t.id, t.category_id]))
+  // "Filme + Restaurante + Hamburgueria" = any film, or a burger place: a chosen type narrows only its own category.
+  const chosenTypes = (categoryId: string) => f.typeIds.filter((id) => categoryOf.get(id) === categoryId)
   return pending
     .filter((q) => !hasPendingChild.has(q.id))
-    .filter((q) => !f.categoryId || q.category_id === f.categoryId)
-    .filter((q) => !f.typeIds.length || (q.type_id !== null && f.typeIds.includes(q.type_id)))
+    .filter((q) => !f.categoryIds.length || f.categoryIds.includes(q.category_id))
+    .filter((q) => {
+      const chosen = chosenTypes(q.category_id)
+      return !chosen.length || (q.type_id !== null && chosen.includes(q.type_id))
+    })
     .filter((q) => !f.difficulties.length || f.difficulties.includes(q.difficulty))
     .filter((q) => !cities.size || cities.has(normalizeText(effectiveCity(quests, q.id) ?? '')))
 }

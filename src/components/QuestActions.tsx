@@ -10,7 +10,7 @@ import DrawDialog from './DrawDialog'
 export default function QuestActions({ data, categoryId }: { data: AppData; categoryId: string | null }) {
   const [drawing, setDrawing] = useState(false)
   // Disabled only when nothing at all can be drawn; the filters are chosen inside the draw.
-  const pool = drawPool(data.quests, doneQuestIds(data.completions), { categoryId: null, typeIds: [], difficulties: [], cities: [] })
+  const pool = drawPool(data.quests, doneQuestIds(data.completions), { categoryIds: [], typeIds: [], difficulties: [], cities: [] })
   return (
     <>
       <Link

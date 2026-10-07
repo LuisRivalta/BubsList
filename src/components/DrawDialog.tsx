@@ -24,23 +24,24 @@ type Step = 'filters' | 'rolling' | 'result'
 // Full-screen draw: choose the filters, watch the constellation, get a quest.
 export default function DrawDialog({ data, categoryId, onClose }: { data: AppData; categoryId: string | null; onClose: () => void }) {
   useHideSky()
-  const [filter, setFilter] = useState<DrawFilter>({ categoryId, typeIds: [], difficulties: [], cities: [] })
+  const [filter, setFilter] = useState<DrawFilter>({ categoryIds: categoryId ? [categoryId] : [], typeIds: [], difficulties: [], cities: [] })
   const [step, setStep] = useState<Step>('filters')
   const [winner, setWinner] = useState<Quest | null>(null)
   const [stars, setStars] = useState<Quest[]>([])
   const [animated] = useState(() => !prefersReducedMotion())
   const done = useMemo(() => doneQuestIds(data.completions), [data.completions])
-  const types = filter.categoryId
-    ? data.questTypes.filter((t) => t.category_id === filter.categoryId).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
-    : []
-  const cities = cityOptions(data.quests, drawPool(data.quests, done, { categoryId: filter.categoryId, typeIds: [], difficulties: [], cities: [] }))
+  const order = (categoryId: string) => data.categories.findIndex((c) => c.id === categoryId)
+  const types = data.questTypes
+    .filter((t) => filter.categoryIds.includes(t.category_id))
+    .sort((a, b) => order(a.category_id) - order(b.category_id) || a.name.localeCompare(b.name, 'pt-BR'))
+  const cities = cityOptions(data.quests, drawPool(data.quests, done, { categoryIds: filter.categoryIds, typeIds: [], difficulties: [], cities: [] }))
   // Selections whose chip is not on screen (a city of another category, a type deleted meanwhile) are ignored, never silently applied.
   const active: DrawFilter = {
     ...filter,
     typeIds: filter.typeIds.filter((id) => types.some((t) => t.id === id)),
     cities: filter.cities.filter((c) => cities.some((o) => sameText(o, c))),
   }
-  const pool = drawPool(data.quests, done, active)
+  const pool = drawPool(data.quests, done, active, data.questTypes)
   const closeRef = useRef(onClose)
   closeRef.current = onClose
 
@@ -113,25 +114,27 @@ function Filters({ data, filter, types, cities, onChange, poolSize, onDraw }: {
   poolSize: number
   onDraw: () => void
 }) {
-  const pickCategory = (categoryId: string | null) => onChange({ ...filter, categoryId, typeIds: [] })
 
   return (
     <div className="relative mx-auto flex min-h-full max-w-md flex-col gap-5 px-4 pb-8 pt-20">
       <Group id="draw-category" title="Categoria">
-        <button type="button" className={`${CHIP} pl-3`} aria-pressed={filter.categoryId === null} onClick={() => pickCategory(null)}>Todas</button>
+        <button type="button" className={`${CHIP} pl-3`} aria-pressed={filter.categoryIds.length === 0} onClick={() => onChange({ ...filter, categoryIds: [], typeIds: [] })}>Todas</button>
         {data.categories.map((c) => (
-          <button key={c.id} type="button" className={CHIP} aria-pressed={filter.categoryId === c.id} onClick={() => pickCategory(c.id)}>
+          <button key={c.id} type="button" className={CHIP} aria-pressed={filter.categoryIds.includes(c.id)} onClick={() => onChange({ ...filter, categoryIds: toggle(filter.categoryIds, c.id) })}>
             <Bubble icon={c.icon} color={c.color} size="sm" /> {c.name}
           </button>
         ))}
       </Group>
       {types.length > 0 && (
         <Group id="draw-type" title="Tipo">
-          {types.map((t) => (
-            <button key={t.id} type="button" className={`${CHIP} pl-3`} aria-pressed={filter.typeIds.includes(t.id)} onClick={() => onChange({ ...filter, typeIds: toggle(filter.typeIds, t.id) })}>
-              {t.name}
-            </button>
-          ))}
+          {types.map((t) => {
+            const category = data.categories.find((c) => c.id === t.category_id)
+            return (
+              <button key={t.id} type="button" className={CHIP} aria-pressed={filter.typeIds.includes(t.id)} onClick={() => onChange({ ...filter, typeIds: toggle(filter.typeIds, t.id) })}>
+                <Bubble icon={category?.icon ?? ''} color={category?.color ?? '#b3607e'} size="sm" /> {t.name}
+              </button>
+            )
+          })}
         </Group>
       )}
       <Group id="draw-difficulty" title="Dificuldade">

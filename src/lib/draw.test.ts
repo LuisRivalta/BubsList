@@ -11,8 +11,9 @@ const forno = quest({ id: 'forno', title: 'Forno a Lenha', category_id: 'rest', 
 const sushi = quest({ id: 'sushi', title: 'Sushi', category_id: 'rest', city: 'São Paulo', difficulty: 'easy' })
 const matrix = quest({ id: 'matrix', title: 'Matrix', category_id: 'filme', difficulty: 'easy' })
 const quests = [japao, fuji, toquio, brabus, forno, sushi, matrix]
-const none: DrawFilter = { categoryId: null, typeIds: [], difficulties: [], cities: [] }
-const pool = (done: string[], f: Partial<DrawFilter> = {}) => drawPool(quests, new Set(done), { ...none, ...f }).map((q) => q.id).sort()
+const types = [questType({ id: 't-burger', category_id: 'rest' }), questType({ id: 't-pizza', category_id: 'rest' })]
+const none: DrawFilter = { categoryIds: [], typeIds: [], difficulties: [], cities: [] }
+const pool = (done: string[], f: Partial<DrawFilter> = {}) => drawPool(quests, new Set(done), { ...none, ...f }, types).map((q) => q.id).sort()
 
 describe('effectiveCity', () => {
   it('uses the quest own city, trimmed', () => expect(effectiveCity(quests, 'japao')).toBe('Tóquio'))
@@ -40,9 +41,13 @@ describe('drawPool', () => {
   it('a quest whose subquests are all done can be drawn itself', () => {
     expect(pool(['matrix', 'fuji', 'toquio'])).toEqual(['brabus', 'forno', 'japao', 'sushi'])
   })
-  it('filters by category', () => expect(pool([], { categoryId: 'rest' })).toEqual(['brabus', 'forno', 'sushi']))
-  it('a type filter keeps any of the chosen types and drops quests without a type', () => {
-    expect(pool([], { typeIds: ['t-burger', 't-pizza'] })).toEqual(['brabus', 'forno'])
+  it('filters by category', () => expect(pool([], { categoryIds: ['rest'] })).toEqual(['brabus', 'forno', 'sushi']))
+  it('several categories add up', () => expect(pool([], { categoryIds: ['rest', 'filme'] })).toEqual(['brabus', 'forno', 'matrix', 'sushi']))
+  it('a type filter keeps the chosen types of its category and drops the untyped quests of that category', () => {
+    expect(pool([], { categoryIds: ['rest'], typeIds: ['t-burger', 't-pizza'] })).toEqual(['brabus', 'forno'])
+  })
+  it('a type only narrows its own category', () => {
+    expect(pool([], { categoryIds: ['rest', 'filme'], typeIds: ['t-burger'] })).toEqual(['brabus', 'matrix'])
   })
   it('keeps any of the chosen difficulties', () => expect(pool(['matrix'], { difficulties: ['easy', 'hard'] })).toEqual(['brabus', 'fuji', 'sushi']))
   it('cities ignore accents, case and spaces, and count the inherited city', () => {
@@ -50,7 +55,7 @@ describe('drawPool', () => {
     expect(pool([], { cities: ['tóquio'] })).toEqual(['fuji', 'toquio'])
   })
   it('combines every filter', () => {
-    expect(pool([], { categoryId: 'rest', difficulties: ['medium'], cities: ['Ribeirão Preto'] })).toEqual(['forno'])
+    expect(pool([], { categoryIds: ['rest'], difficulties: ['medium'], cities: ['Ribeirão Preto'] })).toEqual(['forno'])
   })
 })
 

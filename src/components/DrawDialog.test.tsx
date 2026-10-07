@@ -38,15 +38,35 @@ it('opens on the filters with the page category marked and counts the pool live'
   expect(screen.getByText('1 quest no sorteio')).toBeInTheDocument()
 })
 
-it('types show for the chosen category and are cleared when it changes', async () => {
+it('types show for the chosen categories, with the category bubble, and leave with it', async () => {
   const user = userEvent.setup()
   open(CATS.restaurante.id)
   await user.click(button('Pizzaria'))
   expect(screen.getByText('1 quest no sorteio')).toBeInTheDocument()
-  await user.click(button('Filme'))
-  expect(screen.queryByRole('button', { name: 'Pizzaria' })).not.toBeInTheDocument()
+  expect(button('Pizzaria').querySelector('svg')).not.toBeNull()
   await user.click(button('Restaurante'))
-  expect(button('Pizzaria')).toHaveAttribute('aria-pressed', 'false')
+  expect(screen.queryByRole('button', { name: 'Pizzaria' })).not.toBeInTheDocument()
+  expect(button('Todas')).toHaveAttribute('aria-pressed', 'true')
+})
+
+it('several categories add up, and Todas clears them', async () => {
+  const user = userEvent.setup()
+  open()
+  await user.click(button('Restaurante'))
+  await user.click(button('Filme'))
+  expect(button('Restaurante')).toHaveAttribute('aria-pressed', 'true')
+  expect(button('Filme')).toHaveAttribute('aria-pressed', 'true')
+  expect(screen.getByText('3 quests no sorteio')).toBeInTheDocument()
+  await user.click(button('Todas'))
+  expect(button('Restaurante')).toHaveAttribute('aria-pressed', 'false')
+})
+
+it('a type narrows only its own category', async () => {
+  const user = userEvent.setup()
+  open(CATS.restaurante.id)
+  await user.click(button('Filme'))
+  await user.click(button('Hamburgueria'))
+  expect(screen.getByText('2 quests no sorteio')).toBeInTheDocument()
 })
 
 it('cities narrow the draw, and no match disables it', async () => {
