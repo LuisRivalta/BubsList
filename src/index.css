@@ -190,7 +190,7 @@
 }
 
 /* App shell: the shared sky sits behind each page's hero (height reported by PageHero as --hero-h). */
-.sky-host { height: calc(var(--hero-h, 230px) + 2.5rem); transition: height 0.45s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.sky-host { height: var(--hero-h, 230px); transition: height 0.45s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .sky-static {
   background:
     radial-gradient(1.5px 1.5px at 8% 22%, rgb(255 255 255 / 0.9), transparent),

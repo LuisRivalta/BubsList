@@ -1,10 +1,11 @@
 import { Check, ListChecks, Play } from 'lucide-react'
 import { Link } from 'react-router'
-import { formatProgress, progressOf } from '../lib/progress'
+import { episodesWatched, formatProgress, progressOf } from '../lib/progress'
 import { pathLabel, subquestProgress } from '../lib/tree'
 import type { AppData, Quest } from '../lib/types'
-import DifficultyBadge from './DifficultyBadge'
-import Icon from './Icon'
+import Bubble from './Bubble'
+import Gems from './Gems'
+import ProgressBar from './ProgressBar'
 
 interface Props {
   quest: Quest
@@ -20,22 +21,38 @@ export default function QuestCard({ quest, data, done, photoUrl, showPath = fals
   const sub = subquestProgress(data.quests, done, quest.id)
   const path = showPath ? pathLabel(data.quests, quest.id) : ''
   const image = media?.poster_url ?? photoUrl
+  const series = media && media.source !== 'tmdb_movie' ? media : undefined
+  const episodes = series ? episodesWatched(series.seasons, progressOf(quest)) : null
   return (
-    <Link to={`/quests/${quest.id}`} className="card flex gap-3 p-3" style={{ borderLeft: `4px solid ${category?.color ?? '#e5e7eb'}` }}>
-      {image && <img src={image} alt="" loading="lazy" className="h-20 w-14 shrink-0 rounded-lg bg-gray-100 object-cover" />}
-      <div className="min-w-0 flex-1">
-        {path && <p className="truncate text-xs text-gray-500">{path} ›</p>}
-        <p className="flex items-center gap-1.5 font-semibold">
-          <span style={{ color: category?.color }}><Icon name={category?.icon ?? ''} className="size-4" /></span> {quest.title}
-        </p>
-        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-600">
-          <DifficultyBadge difficulty={quest.difficulty} />
-          {sub.total > 0 && <span className="inline-flex items-center gap-1"><ListChecks aria-hidden className="size-3.5" /> {sub.done}/{sub.total}</span>}
-          {media && media.source !== 'tmdb_movie' && (
-            <span className="inline-flex items-center gap-1"><Play aria-hidden className="size-3.5" /> {formatProgress(media.source, media.seasons, progressOf(quest))}</span>
+    <Link to={`/quests/${quest.id}`} className="card card-hover flex gap-3 p-3">
+      {image ? (
+        <img src={image} alt="" loading="lazy" className="h-24 w-18 shrink-0 rounded-xl bg-blush/30 object-cover shadow-sm" />
+      ) : (
+        <Bubble icon={category?.icon ?? ''} color={category?.color ?? '#b3607e'} size="lg" />
+      )}
+      <div className="min-w-0 flex-1 space-y-1.5 py-0.5">
+        {path && <p className="truncate text-xs text-ink/50">{path} ›</p>}
+        <p className="break-words font-display text-lg font-semibold leading-snug">{quest.title}</p>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+          <Gems difficulty={quest.difficulty} />
+          {done.has(quest.id) && (
+            <span className="inline-flex items-center gap-1 font-bold text-emerald-700">
+              <Check aria-hidden className="size-3.5" /> Feita
+            </span>
           )}
-          {done.has(quest.id) && <span className="inline-flex items-center gap-1 text-green-700"><Check aria-hidden className="size-3.5" /> Feita</span>}
         </div>
+        {sub.total > 0 && (
+          <ProgressBar value={sub.done} max={sub.total}>
+            <span className="inline-flex items-center gap-1"><ListChecks aria-hidden className="size-3.5" /> {sub.done}/{sub.total}</span>
+            <span>subquests</span>
+          </ProgressBar>
+        )}
+        {series && (
+          <ProgressBar value={episodes?.watched ?? 0} max={episodes?.total ?? 0}>
+            <span className="inline-flex items-center gap-1"><Play aria-hidden className="size-3.5" /> {formatProgress(series.source, series.seasons, progressOf(quest))}</span>
+            {episodes && <span>{Math.round((episodes.watched / episodes.total) * 100)}%</span>}
+          </ProgressBar>
+        )}
       </div>
     </Link>
   )
