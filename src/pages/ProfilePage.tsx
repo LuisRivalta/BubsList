@@ -5,11 +5,12 @@ import Bubble from '../components/Bubble'
 import { IconPicker } from '../components/Icon'
 import PageHero from '../components/PageHero'
 import { LoadError, PageLoading } from '../components/Status'
-import { deleteCategory, saveCategory, signOut, updateProfile, uploadAvatar, type CategoryInput } from '../data/api'
+import { deleteCategory, deleteQuestType, saveCategory, saveQuestType, signOut, updateProfile, uploadAvatar, type CategoryInput } from '../data/api'
 import { useAppData, useRefresh } from '../data/hooks'
 import { useUserId } from '../data/session'
 import { UnsupportedImageError, compressImage } from '../lib/image'
-import type { AppData, Category, Profile } from '../lib/types'
+import { sameText } from '../lib/filters'
+import type { AppData, Category, Profile, QuestType } from '../lib/types'
 
 export default function ProfilePage() {
   const q = useAppData()
@@ -135,11 +136,54 @@ function Categories({ data, onChange }: { data: AppData; onChange: () => void })
     }
   }
 
+  async function saveType(input: { id?: string; category_id: string; name: string }): Promise<boolean> {
+    const name = input.name.trim()
+    if (!name) {
+      setMessage('Dê um nome ao tipo.')
+      return false
+    }
+    if (data.questTypes.some((t) => t.category_id === input.category_id && t.id !== input.id && sameText(t.name, name))) {
+      setMessage('Esse tipo já existe.')
+      return false
+    }
+    try {
+      await saveQuestType({ ...input, name })
+      setMessage(null)
+      onChange()
+      return true
+    } catch {
+      setMessage('Não foi possível salvar.')
+      return false
+    }
+  }
+
+  async function removeType(t: QuestType) {
+    const n = data.quests.filter((q) => q.type_id === t.id).length
+    const question = n ? `${n} quest(s) usam esse tipo; elas ficam sem tipo. Excluir "${t.name}"?` : `Excluir o tipo "${t.name}"?`
+    if (!window.confirm(question)) return
+    try {
+      await deleteQuestType(t.id)
+      onChange()
+    } catch {
+      setMessage('Não foi possível excluir.')
+    }
+  }
+
   return (
     <section className="space-y-3">
       <h2 className="font-semibold">Categorias</h2>
       <ul className="space-y-2">
-        {data.categories.map((c) => <CategoryRow key={c.id} category={c} onSave={save} onDelete={remove} />)}
+        {data.categories.map((c) => (
+          <CategoryRow
+            key={c.id}
+            category={c}
+            types={data.questTypes.filter((t) => t.category_id === c.id).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))}
+            onSave={save}
+            onDelete={remove}
+            onSaveType={saveType}
+            onDeleteType={removeType}
+          />
+        ))}
       </ul>
       <CategoryFields initial={{ name: '', icon: 'sparkles', color: '#64748b' }} submitLabel="Adicionar" onSubmit={save} />
       {message && <p role="alert" className="text-sm text-red-600">{message}</p>}
@@ -149,11 +193,14 @@ function Categories({ data, onChange }: { data: AppData; onChange: () => void })
 
 interface RowProps {
   category: Category
+  types: QuestType[]
   onSave: (c: CategoryInput & { id?: string }) => Promise<boolean>
   onDelete: (c: Category) => void
+  onSaveType: (t: { id?: string; category_id: string; name: string }) => Promise<boolean>
+  onDeleteType: (t: QuestType) => void
 }
 
-function CategoryRow({ category: c, onSave, onDelete }: RowProps) {
+function CategoryRow({ category: c, types, onSave, onDelete, onSaveType, onDeleteType }: RowProps) {
   const [editing, setEditing] = useState(false)
   if (editing) {
     return (
@@ -172,20 +219,59 @@ function CategoryRow({ category: c, onSave, onDelete }: RowProps) {
     )
   }
   return (
-    <li className="flex items-center gap-3 rounded-2xl bg-paper/70 p-2 pr-3">
-      <Bubble icon={c.icon} color={c.color} />
-      <span className="flex-1">{c.name}</span>
-      {c.builtin ? (
-        <span className="text-xs text-gray-500">padrão</span>
-      ) : (
-        <>
-          <button type="button" className="btn" onClick={() => setEditing(true)}>Editar</button>
-          <button type="button" className="btn btn-danger" aria-label={`Excluir ${c.name}`} onClick={() => onDelete(c)}>
-            <Trash2 aria-hidden className="size-4" />
-          </button>
-        </>
-      )}
+    <li className="space-y-2 rounded-2xl bg-paper/70 p-2 pr-3">
+      <div className="flex items-center gap-3">
+        <Bubble icon={c.icon} color={c.color} />
+        <span className="flex-1">{c.name}</span>
+        {c.builtin ? (
+          <span className="text-xs text-ink/60">padrão</span>
+        ) : (
+          <>
+            <button type="button" className="btn" onClick={() => setEditing(true)}>Editar</button>
+            <button type="button" className="btn btn-danger" aria-label={`Excluir ${c.name}`} onClick={() => onDelete(c)}>
+              <Trash2 aria-hidden className="size-4" />
+            </button>
+          </>
+        )}
+      </div>
+      <TypeChips category={c} types={types} onSave={onSaveType} onDelete={onDeleteType} />
     </li>
+  )
+}
+
+// A category's types: tap one to rename or delete it, "+ Tipo" to add.
+function TypeChips({ category, types, onSave, onDelete }: {
+  category: Category
+  types: QuestType[]
+  onSave: (t: { id?: string; category_id: string; name: string }) => Promise<boolean>
+  onDelete: (t: QuestType) => void
+}) {
+  const [editing, setEditing] = useState<string | null>(null) // a type id, 'new', or closed
+  const [name, setName] = useState('')
+  const current = types.find((t) => t.id === editing)
+  const open = (id: string, initial: string) => {
+    setEditing(id)
+    setName(initial)
+  }
+  async function submit(e: FormEvent) {
+    e.preventDefault()
+    if (await onSave({ id: current?.id, category_id: category.id, name })) setEditing(null)
+  }
+  return (
+    <div className="flex flex-wrap items-center gap-2 pl-12">
+      {types.map((t) => (
+        <button key={t.id} type="button" className="chip pl-3" aria-label={`Editar tipo ${t.name}`} onClick={() => open(t.id, t.name)}>{t.name}</button>
+      ))}
+      <button type="button" className="chip pl-3" aria-label={`Adicionar tipo em ${category.name}`} onClick={() => open('new', '')}>+ Tipo</button>
+      {editing && (
+        <form onSubmit={submit} className="flex w-full flex-wrap gap-2">
+          <input aria-label={`Nome do tipo em ${category.name}`} className="input min-w-0 flex-1" value={name} maxLength={40} autoFocus onChange={(e) => setName(e.target.value)} />
+          <button className="btn btn-primary">Salvar</button>
+          {current && <button type="button" className="btn btn-danger" onClick={() => onDelete(current)}>Excluir</button>}
+          <button type="button" className="btn" onClick={() => setEditing(null)}>Cancelar</button>
+        </form>
+      )}
+    </div>
   )
 }
 

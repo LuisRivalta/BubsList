@@ -2,7 +2,7 @@ import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { expect, it, vi } from 'vitest'
 import * as api from '../data/api'
-import { ME, achievement, allCats, appData, category, quest } from '../test/fixtures'
+import { ME, achievement, allCats, appData, category, quest, questType } from '../test/fixtures'
 import { renderRoute } from '../test/render'
 import ProfilePage from './ProfilePage'
 
@@ -62,4 +62,44 @@ it('saves my display name', async () => {
   await user.type(input, 'Luís')
   await user.click(screen.getByRole('button', { name: 'Salvar nome' }))
   expect(api.updateProfile).toHaveBeenCalledWith(ME, { display_name: 'Luís' })
+})
+
+const burger = questType({ id: 't-burger', category_id: 'cat-rest', name: 'Hamburgueria' })
+const pizza = questType({ id: 't-pizza', category_id: 'cat-rest', name: 'Pizzaria' })
+
+it('adds a type to a category', async () => {
+  vi.mocked(api.saveQuestType).mockResolvedValue(questType({ id: 't-new' }))
+  open()
+  const user = userEvent.setup()
+  await user.click(await screen.findByRole('button', { name: 'Adicionar tipo em Restaurante' }))
+  await user.type(screen.getByLabelText('Nome do tipo em Restaurante'), ' Hamburgueria ')
+  await user.click(screen.getByRole('button', { name: 'Salvar' }))
+  expect(api.saveQuestType).toHaveBeenCalledWith({ id: undefined, category_id: 'cat-rest', name: 'Hamburgueria' })
+})
+
+it('renames a type, refusing a name that already exists in the category', async () => {
+  vi.mocked(api.saveQuestType).mockResolvedValue(pizza)
+  open({ questTypes: [burger, pizza] })
+  const user = userEvent.setup()
+  await user.click(await screen.findByRole('button', { name: 'Editar tipo Pizzaria' }))
+  const name = screen.getByLabelText('Nome do tipo em Restaurante')
+  await user.clear(name)
+  await user.type(name, 'hamburgueria')
+  await user.click(screen.getByRole('button', { name: 'Salvar' }))
+  expect(screen.getByRole('alert')).toHaveTextContent('Esse tipo já existe.')
+  expect(api.saveQuestType).not.toHaveBeenCalled()
+  await user.clear(name)
+  await user.type(name, 'Pizza napolitana')
+  await user.click(screen.getByRole('button', { name: 'Salvar' }))
+  expect(api.saveQuestType).toHaveBeenCalledWith({ id: 't-pizza', category_id: 'cat-rest', name: 'Pizza napolitana' })
+})
+
+it('deleting a type in use warns how many quests lose it', async () => {
+  const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true)
+  open({ questTypes: [burger], quests: [quest({ type_id: 't-burger' }), quest({ type_id: 't-burger' })] })
+  const user = userEvent.setup()
+  await user.click(await screen.findByRole('button', { name: 'Editar tipo Hamburgueria' }))
+  await user.click(screen.getByRole('button', { name: 'Excluir' }))
+  expect(confirm).toHaveBeenCalledWith('2 quest(s) usam esse tipo; elas ficam sem tipo. Excluir "Hamburgueria"?')
+  await waitFor(() => expect(api.deleteQuestType).toHaveBeenCalledWith('t-burger'))
 })
