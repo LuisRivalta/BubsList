@@ -2,11 +2,15 @@
 
 /* Palette "agejo 2": plum for actions (white text 10.5:1), dusty rose for accents, blush for soft fills. */
 @theme {
+  --font-sans: "Nunito", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fredoka", "Nunito", ui-sans-serif, sans-serif;
   --color-brand: #553548;
   --color-accent: #b3607e;
   --color-blush: #e3b4cf;
   --color-paper: #efeced;
   --color-ink: #1a1115;
+  --color-night: #1a1115;
+  --color-dusk: #2c1b25;
   --color-bronze: #b0743c;
   --color-silver: #9ca3af;
   --color-gold: #eab308;
@@ -19,6 +23,7 @@
     color: var(--color-ink);
     -webkit-tap-highlight-color: transparent;
   }
+  h1, h2, h3 { font-family: var(--font-display); }
 }
 
 @layer components {
@@ -28,24 +33,43 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    border-radius: 0.75rem;
-    border: 1px solid var(--color-blush);
+    border-radius: 999px;
+    border: 1px solid rgb(227 180 207 / 0.8);
     background: #fff;
-    padding: 0 1rem;
-    font-weight: 500;
+    padding: 0 1.1rem;
+    font-weight: 700;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease;
   }
+  .btn:active { transform: scale(0.97); }
   .btn:disabled { opacity: 0.6; }
-  .btn-primary { background: var(--color-brand); border-color: transparent; color: #fff; }
-  .btn-danger { color: #dc2626; }
+  .btn-primary {
+    border-color: transparent;
+    background: linear-gradient(135deg, var(--color-brand) 0%, #844a64 55%, var(--color-accent) 100%);
+    color: #fff;
+    box-shadow: 0 6px 16px -6px rgb(85 53 72 / 0.55);
+  }
+  .btn-ghost { border-color: rgb(255 255 255 / 0.3); background: rgb(255 255 255 / 0.12); color: #fff; backdrop-filter: blur(6px); }
+  .btn-ghost:hover { background: rgb(255 255 255 / 0.2); }
+  .btn-danger { border-color: #fecaca; color: #dc2626; }
   .input {
     width: 100%;
     min-height: 2.75rem;
-    border-radius: 0.75rem;
-    border: 1px solid #d1d5db;
+    border-radius: 0.9rem;
+    border: 1px solid #d9cfd5;
     background: #fff;
-    padding: 0.5rem 0.75rem;
+    padding: 0.5rem 0.85rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
-  .card { border-radius: 1rem; background: #fff; box-shadow: 0 1px 3px rgb(0 0 0 / 0.08); }
+  .input:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px rgb(179 96 126 / 0.2); }
+  .card {
+    border-radius: 1.25rem;
+    border: 1px solid rgb(227 180 207 / 0.5);
+    background: #fff;
+    box-shadow: 0 1px 2px rgb(26 17 21 / 0.06), 0 8px 24px -12px rgb(85 53 72 / 0.25);
+  }
+  .card-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .card-hover:hover { transform: translateY(-2px); box-shadow: 0 2px 4px rgb(26 17 21 / 0.06), 0 16px 32px -14px rgb(85 53 72 / 0.35); }
+  .card-hover:active { transform: scale(0.98); }
   .glass-card {
     border-radius: 1.5rem;
     border: 1px solid rgb(255 255 255 / 0.35);
@@ -53,6 +77,72 @@
     box-shadow: 0 25px 60px rgb(26 17 21 / 0.45);
     backdrop-filter: blur(14px);
   }
+  .chip {
+    display: inline-flex;
+    min-height: 2.75rem;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    border: 1px solid rgb(227 180 207 / 0.8);
+    background: #fff;
+    padding: 0 0.9rem 0 0.3rem;
+    font-weight: 700;
+    font-size: 0.875rem;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .chip[aria-pressed="true"] { border-color: var(--color-accent); background: rgb(227 180 207 / 0.35); box-shadow: 0 0 0 2px rgb(179 96 126 / 0.25); }
+  .tile {
+    display: flex;
+    min-height: 5.5rem;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 1rem;
+    border: 1px solid rgb(227 180 207 / 0.7);
+    background: #fff;
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.875rem;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  }
+  .tile:active { transform: scale(0.97); }
+  .tile[aria-pressed="true"] { border-color: var(--color-accent); background: rgb(227 180 207 / 0.25); box-shadow: 0 0 0 3px rgb(179 96 126 / 0.25); }
+  .gem { display: inline-block; width: 0.5rem; height: 0.5rem; border-radius: 2px; transform: rotate(45deg); background: rgb(26 17 21 / 0.12); }
+  .gem-dark { background: rgb(255 255 255 / 0.22); }
+  .medal { position: relative; overflow: hidden; border-radius: 1.25rem; padding: 2px; background: var(--metal); box-shadow: 0 10px 24px -14px rgb(26 17 21 / 0.45); }
+  .medal-inner { height: 100%; border-radius: calc(1.25rem - 2px); background: #fff; }
+  .medal-bronze { --metal: linear-gradient(135deg, #8a5a2b, #e2a46c 45%, #b0743c); --on-metal: #fff; }
+  .medal-silver { --metal: linear-gradient(135deg, #6b7280, #f3f4f6 45%, #9ca3af); --on-metal: #374151; }
+  .medal-gold { --metal: linear-gradient(135deg, #a16207, #fde68a 45%, #eab308); --on-metal: #713f12; }
+  .medal-platinum { --metal: linear-gradient(135deg, #22d3ee, #e3b4cf 40%, #a78bfa 70%, #22d3ee); --on-metal: #fff; }
+  .medal:not(.medal-locked)::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(110deg, transparent 40%, rgb(255 255 255 / 0.55) 50%, transparent 60%);
+    transform: translateX(-120%);
+    animation: fab-shine 5s ease-in-out 1s infinite;
+  }
+  .medal-locked { --metal: linear-gradient(135deg, #d1d5db, #f3f4f6); --on-metal: #9ca3af; }
+  .medallion {
+    position: relative;
+    display: grid;
+    width: 3.5rem;
+    height: 3.5rem;
+    flex-shrink: 0;
+    place-items: center;
+    border-radius: 999px;
+    background: var(--metal);
+    color: var(--on-metal);
+    box-shadow: inset 0 2px 6px rgb(255 255 255 / 0.55), 0 4px 10px -4px rgb(26 17 21 / 0.4);
+  }
+  .medallion-lock { position: absolute; right: -4px; bottom: -4px; width: 1.4rem; height: 1.4rem; border-radius: 999px; background: #fff; padding: 3px; color: #6b7280; box-shadow: 0 1px 3px rgb(0 0 0 / 0.2); }
+  .spark { position: absolute; width: 0.5rem; height: 0.5rem; border-radius: 999px; background: var(--color-accent); opacity: 0; box-shadow: 0 0 10px var(--color-blush); }
+  .spark:nth-child(odd) { background: #fde68a; box-shadow: 0 0 10px #fde68a; }
 }
 
 /* Login motion: hidden until anime.js reveals them (only when animating). */
@@ -70,7 +160,8 @@
 }
 .float { animation: float 6s ease-in-out infinite; }
 .float-late { animation-delay: -3s; }
-/* "Nova quest" floating button: plum→rose gradient, breathing glow, a shine sweeping across every few seconds. */
+
+/* "Nova quest" button: plum→rose gradient, breathing glow, a shine sweeping across every few seconds. */
 .fab {
   overflow: hidden;
   background: linear-gradient(135deg, var(--color-brand) 0%, #844a64 55%, var(--color-accent) 100%);
@@ -81,7 +172,7 @@
 .fab:hover { transform: translateY(-2px); }
 .fab:active { transform: scale(0.97); }
 .fab::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -96,6 +187,55 @@
 @keyframes fab-shine {
   0%, 70% { transform: translateX(-120%); }
   100% { transform: translateX(120%); }
+}
+
+/* App shell: the shared sky sits behind each page's hero (height reported by PageHero as --hero-h). */
+.sky-host { height: calc(var(--hero-h, 230px) + 2.5rem); transition: height 0.45s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.sky-static {
+  background:
+    radial-gradient(1.5px 1.5px at 8% 22%, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1px 1px at 18% 64%, rgb(227 180 207 / 0.9), transparent),
+    radial-gradient(1.5px 1.5px at 31% 38%, rgb(255 255 255 / 0.7), transparent),
+    radial-gradient(1px 1px at 44% 12%, rgb(227 180 207 / 0.9), transparent),
+    radial-gradient(2px 2px at 57% 56%, rgb(255 255 255 / 0.8), transparent),
+    radial-gradient(1px 1px at 66% 28%, rgb(227 180 207 / 0.9), transparent),
+    radial-gradient(1.5px 1.5px at 79% 70%, rgb(255 255 255 / 0.7), transparent),
+    radial-gradient(1px 1px at 88% 18%, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(2px 2px at 94% 48%, rgb(227 180 207 / 0.8), transparent),
+    radial-gradient(ellipse at 78% 0%, #553548 0%, #2c1b25 55%, #1a1115 100%);
+}
+.hero-cover {
+  position: absolute;
+  top: -2rem;
+  bottom: -2.5rem;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  background-size: cover;
+  background-position: center;
+  filter: blur(28px) saturate(1.2);
+  opacity: 0.35;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent);
+  mask-image: linear-gradient(to bottom, #000 55%, transparent);
+}
+
+/* Subquest tree and history timeline. */
+.tree { display: grid; gap: 0.5rem; margin-left: 0.75rem; border-left: 2px dashed rgb(227 180 207 / 0.9); padding-left: 1rem; }
+.tree > * { position: relative; }
+.tree > *::before { content: ""; position: absolute; left: -1rem; top: 50%; width: 0.75rem; border-top: 2px dashed rgb(227 180 207 / 0.9); }
+.timeline { display: grid; gap: 1rem; margin-left: 0.5rem; border-left: 2px solid var(--color-blush); padding-left: 1.5rem; }
+.timeline > li { position: relative; }
+.timeline > li::before {
+  content: "";
+  position: absolute;
+  left: calc(-1.5rem - 9px);
+  top: 1.1rem;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  border: 4px solid var(--color-paper);
+  background: var(--color-accent);
 }
 
 /* Entering the app after login: the blush flash opens in a circle from the center, content rises, nav slides in. */
@@ -115,17 +255,17 @@
   animation: reveal 0.8s cubic-bezier(0.65, 0, 0.35, 1) forwards;
 }
 @keyframes reveal { to { --reveal: 120vmax; } }
-[data-entering] main > div { animation: rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s both; }
+[data-entering] [data-page] { animation: rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s both; }
 [data-entering] nav[aria-label="Principal"] { animation: nav-up 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.25s both; }
 @media (min-width: 768px) {
   [data-entering] nav[aria-label="Principal"] { animation-name: nav-left; }
 }
 @keyframes rise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
-@keyframes nav-up { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes nav-up { from { transform: translateY(120%); } to { transform: none; } }
 @keyframes nav-left { from { transform: translateX(-100%); } to { transform: none; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .fab, .fab::after { animation: none; }
+  .fab, .fab::after, .medal::after { animation: none; }
   .float { animation: none; }
-  .parallax { transition: none; }
+  .parallax, .sky-host { transition: none; }
 }

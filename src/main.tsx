@@ -5,6 +5,7 @@ import App from './App'
 import { AuthGate } from './data/session'
 import { startSmoothScroll } from './lib/smoothScroll'
 import 'lenis/dist/lenis.css'
+import './fonts'
 import './index.css'
 
 startSmoothScroll()

@@ -11,6 +11,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png', 'logo.svg', 'tmdb.svg'],
+      workbox: { globPatterns: ['**/*.{js,css,html,woff2,png,svg,webp,ico}'] },
       manifest: {
         name: 'BubsList',
         short_name: 'BubsList',

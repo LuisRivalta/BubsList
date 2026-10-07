@@ -26,3 +26,12 @@ export function formatProgress(source: MediaSource, seasons: Season[], current: 
 
 export const progressOf = (q: Quest): Progress | null =>
   q.progress_season !== null && q.progress_episode !== null ? { season: q.progress_season, episode: q.progress_episode } : null
+
+export function episodesWatched(seasons: Season[], current: Progress | null): { watched: number; total: number } | null {
+  const sorted = [...seasons].sort((a, b) => a.season - b.season)
+  const total = sorted.reduce((sum, s) => sum + s.episodes, 0)
+  if (total === 0) return null
+  if (!current) return { watched: 0, total }
+  const before = sorted.filter((s) => s.season < current.season).reduce((sum, s) => sum + s.episodes, 0)
+  return { watched: Math.min(total, before + current.episode), total }
+}

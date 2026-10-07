@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { quest } from '../test/fixtures'
-import { formatProgress, nextEpisode, progressOf } from './progress'
+import { episodesWatched, formatProgress, nextEpisode, progressOf } from './progress'
 
 const seasons = [{ season: 1, episodes: 10 }, { season: 2, episodes: 8 }]
 
@@ -28,4 +28,11 @@ describe('formatProgress', () => {
 it('reads progress from a quest', () => {
   expect(progressOf(quest({ progress_season: 2, progress_episode: 3 }))).toEqual({ season: 2, episode: 3 })
   expect(progressOf(quest())).toBeNull()
+})
+
+describe('episodesWatched', () => {
+  it('counts episodes of earlier seasons plus the current one', () =>
+    expect(episodesWatched(seasons, { season: 2, episode: 5 })).toEqual({ watched: 15, total: 18 }))
+  it('not started is zero', () => expect(episodesWatched(seasons, null)).toEqual({ watched: 0, total: 18 }))
+  it('unknown seasons give nothing', () => expect(episodesWatched([], { season: 1, episode: 3 })).toBeNull())
 })
