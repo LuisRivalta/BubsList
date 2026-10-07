@@ -129,7 +129,7 @@ function SlideView({ slide, cover, urls }: { slide: Slide; cover: string | null;
         <img
           src={cover}
           alt=""
-          className="max-h-64 w-56 rounded-3xl object-cover shadow-2xl"
+          className="max-h-72 max-w-64 rounded-3xl shadow-2xl"
           onError={(e) => {
             e.currentTarget.hidden = true
           }}

@@ -74,36 +74,49 @@ export async function drawStory(card: StoryCard, year: number, imageUrl: string 
   ctx.fillRect(0, 0, W, H)
   drawStars(ctx)
 
+  // Measure first so the whole block (eyebrow, image, title, caption) sits centered above the wave.
+  const bigSize = image ? 96 : 150
+  ctx.font = `700 ${bigSize}px Fredoka`
+  const bigLines = wrapLines(card.big, 920, measure, image ? 3 : 4)
+  ctx.font = '600 46px Nunito'
+  const captionLines = wrapLines(card.caption, 900, measure, 3)
+  // Posters are portrait (2:3): keep their shape instead of cropping them to a square.
+  const portrait = !!image && image.naturalHeight > image.naturalWidth * 1.15
+  const frame = { w: portrait ? 480 : 640, h: portrait ? 720 : 640 }
+  const height = 100 + (image ? frame.h + 70 : 0) + bigLines.length * bigSize * 1.1 + 30 + captionLines.length * 62
+  let y = Math.max(160, (H - 230 - height) / 2)
+
   ctx.textAlign = 'center'
+  ctx.textBaseline = 'top'
   ctx.fillStyle = BLUSH
   ctx.font = '800 40px Nunito'
-  ctx.fillText(card.eyebrow.toUpperCase(), W / 2, 300)
+  ctx.fillText(card.eyebrow.toUpperCase(), W / 2, y)
+  y += 100
 
-  let y = 760
   if (image) {
-    const size = 640
-    const x = (W - size) / 2
-    const crop = Math.min(image.naturalWidth, image.naturalHeight)
+    const x = (W - frame.w) / 2
+    const scale = Math.max(frame.w / image.naturalWidth, frame.h / image.naturalHeight)
+    const sw = frame.w / scale
+    const sh = frame.h / scale
     ctx.save()
     ctx.beginPath()
-    ctx.roundRect(x, 360, size, size, 48)
+    ctx.roundRect(x, y, frame.w, frame.h, 48)
     ctx.clip()
-    ctx.drawImage(image, (image.naturalWidth - crop) / 2, (image.naturalHeight - crop) / 2, crop, crop, x, 360, size, size)
+    ctx.drawImage(image, (image.naturalWidth - sw) / 2, (image.naturalHeight - sh) / 2, sw, sh, x, y, frame.w, frame.h)
     ctx.restore()
-    y = 1100
+    y += frame.h + 70
   }
 
-  const bigSize = image ? 96 : 150
   ctx.fillStyle = '#fff'
   ctx.font = `700 ${bigSize}px Fredoka`
-  for (const line of wrapLines(card.big, 920, measure, image ? 3 : 4)) {
+  for (const line of bigLines) {
     ctx.fillText(line, W / 2, y)
     y += bigSize * 1.1
   }
   y += 30
   ctx.fillStyle = 'rgb(255 255 255 / 0.8)'
   ctx.font = '600 46px Nunito'
-  for (const line of wrapLines(card.caption, 900, measure, 3)) {
+  for (const line of captionLines) {
     ctx.fillText(line, W / 2, y)
     y += 62
   }
@@ -118,7 +131,7 @@ export async function drawStory(card: StoryCard, year: number, imageUrl: string 
   ctx.fill()
   ctx.fillStyle = BRAND
   ctx.font = '600 44px Fredoka'
-  ctx.fillText(`Bubs2Do · ${year}`, W / 2, H - 80)
+  ctx.fillText(`Bubs2Do · ${year}`, W / 2, H - 120)
 
   return new Promise((resolve, reject) =>
     canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Falha ao gerar a imagem'))), 'image/png'),

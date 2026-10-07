@@ -1,5 +1,5 @@
 // Dev tool: screenshot a page in headless Chrome with a real mobile/desktop viewport.
-// Usage: node scripts/shot.mjs <url> <out.png> [width=390] [height=844] [waitMs=4000] [--reduce] [--bottom] [--offline] [--click=<button text>]
+// Usage: node scripts/shot.mjs <url> <out.png> [width=390] [height=844] [waitMs=4000] [--reduce] [--bottom] [--offline] [--eval=<js>] [--click=<label>[*N][,<label>[*N]…]] [--downloads=<dir>]
 import { spawn } from 'node:child_process'
 import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -35,12 +35,24 @@ const call = (method, params = {}) =>
   })
 await call('Emulation.setDeviceMetricsOverride', { width: +w, height: +h, deviceScaleFactor: 2, mobile: +w < 768 })
 if (flags.has('--reduce')) await call('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
+const downloads = [...flags].find((f) => f.startsWith('--downloads='))?.slice(12)
+if (downloads) await call('Page.setDownloadBehavior', { behavior: 'allow', downloadPath: downloads })
 await call('Page.navigate', { url })
 await sleep(+wait)
+const evaluate = [...flags].find((f) => f.startsWith('--eval='))?.slice(7)
+if (evaluate) await call('Runtime.evaluate', { expression: evaluate })
 const click = [...flags].find((f) => f.startsWith('--click='))?.slice(8)
 if (click) {
-  await call('Runtime.evaluate', { expression: `[...document.querySelectorAll('button')].find((b) => b.textContent.includes(${JSON.stringify(click)}))?.click()` })
-  await sleep(2200)
+  for (const step of click.split(',')) {
+    const [label, times = '1'] = step.split('*')
+    for (let i = 0; i < +times; i++) {
+      await call('Runtime.evaluate', {
+        expression: `[...document.querySelectorAll('button')].find((b) => b.getAttribute('aria-label') === ${JSON.stringify(label)} || b.textContent.includes(${JSON.stringify(label)}))?.click()`,
+      })
+      await sleep(700)
+    }
+  }
+  await sleep(1500)
 }
 if (flags.has('--offline')) {
   await call('Runtime.evaluate', { expression: "Object.defineProperty(navigator, 'onLine', { get: () => false }); dispatchEvent(new Event('offline'))" })
