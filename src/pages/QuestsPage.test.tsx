@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, expect, it, vi } from 'vitest'
 import * as api from '../data/api'
@@ -77,6 +77,7 @@ it('draws a pending quest you can actually do and opens it', async () => {
   open()
   await user.click(await screen.findByRole('button', { name: 'Sortear' }))
   const dialog = screen.getByRole('dialog', { name: 'Sorteio' })
+  await user.click(within(dialog).getByRole('button', { name: 'Sortear' }))
   expect(dialog).toHaveTextContent('Tóquio')
   expect(screen.getByRole('link', { name: 'Bora!' })).toHaveAttribute('href', '/quests/toquio')
   await user.click(screen.getByRole('button', { name: 'Fechar' }))

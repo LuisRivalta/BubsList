@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, expect, it, vi } from 'vitest'
 import * as api from '../data/api'
@@ -51,7 +51,10 @@ it('a new quest starts in this category and Sortear draws only from it', async (
   open('cat-viagem')
   expect(await screen.findByRole('link', { name: 'Nova quest' })).toHaveAttribute('href', '/quests/nova?categoria=cat-viagem')
   await user.click(screen.getByRole('button', { name: 'Sortear' }))
-  expect(screen.getByRole('dialog', { name: 'Sorteio' })).toHaveTextContent('Tóquio')
+  const dialog = screen.getByRole('dialog', { name: 'Sorteio' })
+  expect(within(dialog).getByRole('button', { name: 'Viagem' })).toHaveAttribute('aria-pressed', 'true')
+  await user.click(within(dialog).getByRole('button', { name: 'Sortear' }))
+  expect(dialog).toHaveTextContent('Tóquio')
 })
 
 it('an unknown category shows a not-found hero', async () => {

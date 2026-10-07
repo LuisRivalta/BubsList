@@ -9,7 +9,8 @@ import DrawDialog from './DrawDialog'
 // Hero buttons of the quest pages: a new quest (already in the category, if any) and the draw.
 export default function QuestActions({ data, categoryId }: { data: AppData; categoryId: string | null }) {
   const [drawing, setDrawing] = useState(false)
-  const pool = drawPool(data.quests, doneQuestIds(data.completions), { categoryId, typeIds: [], difficulties: [], cities: [] })
+  // Disabled only when nothing at all can be drawn; the filters are chosen inside the draw.
+  const pool = drawPool(data.quests, doneQuestIds(data.completions), { categoryId: null, typeIds: [], difficulties: [], cities: [] })
   return (
     <>
       <Link
@@ -21,7 +22,7 @@ export default function QuestActions({ data, categoryId }: { data: AppData; cate
       <button type="button" className="btn btn-ghost shrink-0 rounded-full px-5 text-base" disabled={pool.length === 0} onClick={() => setDrawing(true)}>
         <Dices aria-hidden className="size-5" /> Sortear
       </button>
-      {drawing && <DrawDialog pool={pool} quests={data.quests} categories={data.categories} onClose={() => setDrawing(false)} />}
+      {drawing && <DrawDialog data={data} categoryId={categoryId} onClose={() => setDrawing(false)} />}
     </>
   )
 }
