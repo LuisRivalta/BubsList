@@ -4,6 +4,7 @@ import { beforeEach, expect, it, vi } from 'vitest'
 import { normalizeAniList } from '../../supabase/functions/_shared/catalog'
 import * as api from '../data/api'
 import * as catalog from '../lib/catalog'
+import * as place from '../lib/place'
 import { CATS, allCats, appData, media, quest, questType } from '../test/fixtures'
 import { renderRoute } from '../test/render'
 import QuestFormPage from './QuestFormPage'
@@ -13,6 +14,10 @@ vi.mock('../lib/catalog', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../lib/catalog')>()),
   searchCatalog: vi.fn(),
   fetchCatalogDetails: vi.fn(),
+}))
+vi.mock('../lib/place', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../lib/place')>()),
+  searchPlaces: vi.fn(),
 }))
 
 const japao = quest({ id: 'japao', title: 'Japão', category_id: CATS.viagem.id })
@@ -24,6 +29,7 @@ const routes = [
 beforeEach(() => {
   vi.mocked(api.loadAll).mockResolvedValue(appData({ categories: allCats(), quests: [japao] }))
   vi.mocked(api.createQuest).mockResolvedValue(quest({ id: 'new-q' }))
+  vi.mocked(place.searchPlaces).mockResolvedValue([])
 })
 
 it('creates a top-level quest', async () => {
@@ -124,7 +130,7 @@ it('a new type with an existing name selects the existing one', async () => {
   expect(screen.getByRole('button', { name: 'Hamburgueria' })).toHaveAttribute('aria-pressed', 'true')
 })
 
-it('saves the chosen type and the trimmed city', async () => {
+it('saves the chosen type, and text typed in Local without picking becomes the city', async () => {
   withTypes()
   const user = userEvent.setup()
   renderRoute(routes, '/quests/nova')
@@ -132,15 +138,18 @@ it('saves the chosen type and the trimmed city', async () => {
   await user.click(screen.getByRole('button', { name: 'Hamburgueria' }))
   await user.type(screen.getByLabelText('Título'), 'Brabus Burguer')
   await user.click(screen.getByRole('button', { name: 'Fácil' }))
-  await user.type(screen.getByLabelText(/Cidade/), '  Ribeirão Preto ')
+  await user.type(screen.getByLabelText(/Local/), '  Ribeirão Preto ')
   await user.click(screen.getByRole('button', { name: 'Salvar' }))
-  await waitFor(() => expect(api.createQuest).toHaveBeenCalledWith(expect.objectContaining({ type_id: 't-burger', city: 'Ribeirão Preto' })))
+  await waitFor(() =>
+    expect(api.createQuest).toHaveBeenCalledWith(expect.objectContaining({ type_id: 't-burger', city: 'Ribeirão Preto', state: null, country: null, place_label: null })),
+  )
 })
 
-it('a new subquest starts with the city of its parent', async () => {
-  withTypes({ quests: [quest({ id: 'japao', title: 'Japão', category_id: CATS.viagem.id, city: 'Tóquio' })] })
+it('a new subquest shows the place it inherits and stores none of its own', async () => {
+  withTypes({ quests: [quest({ id: 'japao', title: 'Japão', category_id: CATS.viagem.id, city: 'Tóquio', country: 'Japão' })] })
   renderRoute(routes, '/quests/nova?parent=japao')
-  expect(await screen.findByLabelText(/Cidade/)).toHaveValue('Tóquio')
+  expect(await screen.findByText('Herdado: Tóquio, Japão')).toBeInTheDocument()
+  expect(screen.getByLabelText(/Local/)).toHaveValue('')
 })
 
 it('editing a quest whose type was deleted shows Nenhum', async () => {
@@ -179,4 +188,69 @@ it('a catalog genre that is not a type yet becomes a one-tap shortcut', async ()
   await user.click(await screen.findByRole('button', { name: 'Comédia' }))
   expect(api.saveQuestType).toHaveBeenCalledWith({ category_id: CATS.anime.id, name: 'Comédia' })
   expect(await screen.findByRole('button', { name: 'Comédia' })).toHaveAttribute('aria-pressed', 'true')
+})
+
+const ribeirao = { city: 'Ribeirão Preto', state: 'São Paulo', country: 'Brasil', label: 'Ribeirão Preto, São Paulo, Brasil', lat: -21.17, lng: -47.81 }
+
+it('Local only shows for categories with a physical place', async () => {
+  withTypes()
+  const user = userEvent.setup()
+  renderRoute(routes, '/quests/nova')
+  await user.click(await screen.findByRole('button', { name: 'Restaurante' }))
+  expect(screen.getByLabelText(/Local/)).toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Anime' }))
+  expect(screen.queryByLabelText(/Local/)).not.toBeInTheDocument()
+})
+
+it('typing searches once after a pause, and picking a suggestion saves the whole place', async () => {
+  withTypes()
+  vi.mocked(place.searchPlaces).mockResolvedValue([ribeirao])
+  const user = userEvent.setup()
+  renderRoute(routes, '/quests/nova')
+  await user.click(await screen.findByRole('button', { name: 'Restaurante' }))
+  await user.type(screen.getByLabelText('Título'), 'Brabus')
+  await user.click(screen.getByRole('button', { name: 'Fácil' }))
+  await user.type(screen.getByLabelText(/Local/), 'Ribeirão')
+  await user.click(await screen.findByRole('button', { name: 'Ribeirão Preto, São Paulo, Brasil' }))
+  expect(place.searchPlaces).toHaveBeenCalledTimes(1)
+  expect(vi.mocked(place.searchPlaces).mock.calls[0][0]).toBe('Ribeirão')
+  await user.click(screen.getByRole('button', { name: 'Salvar' }))
+  await waitFor(() =>
+    expect(api.createQuest).toHaveBeenCalledWith(
+      expect.objectContaining({ city: 'Ribeirão Preto', state: 'São Paulo', country: 'Brasil', place_label: 'Ribeirão Preto, São Paulo, Brasil', lat: -21.17, lng: -47.81 }),
+    ),
+  )
+})
+
+it('× clears the chosen place', async () => {
+  withTypes()
+  vi.mocked(place.searchPlaces).mockResolvedValue([ribeirao])
+  const user = userEvent.setup()
+  renderRoute(routes, '/quests/nova')
+  await user.click(await screen.findByRole('button', { name: 'Restaurante' }))
+  await user.type(screen.getByLabelText(/Local/), 'Ribeirão')
+  await user.click(await screen.findByRole('button', { name: 'Ribeirão Preto, São Paulo, Brasil' }))
+  await user.click(screen.getByRole('button', { name: 'Limpar local' }))
+  expect(screen.getByLabelText(/Local/)).toHaveValue('')
+})
+
+it('a failed search says so', async () => {
+  withTypes()
+  vi.mocked(place.searchPlaces).mockRejectedValue(new Error('offline'))
+  const user = userEvent.setup()
+  renderRoute(routes, '/quests/nova')
+  await user.click(await screen.findByRole('button', { name: 'Restaurante' }))
+  await user.type(screen.getByLabelText(/Local/), 'Ribeirão')
+  expect(await screen.findByRole('alert')).toHaveTextContent('Não deu para buscar agora')
+})
+
+it('moving a quest to a category without a physical place keeps its stored place', async () => {
+  withTypes({ quests: [quest({ id: 'brabus', title: 'Brabus', category_id: CATS.restaurante.id, city: 'Ribeirão Preto', country: 'Brasil', place_label: 'Ribeirão Preto, Brasil' })] })
+  const user = userEvent.setup()
+  renderRoute([{ path: '/quests/:id/editar', element: <QuestFormPage /> }, { path: '/quests/:id', element: <p>quest</p> }], '/quests/brabus/editar')
+  await user.click(await screen.findByRole('button', { name: 'Atividade' }))
+  await user.click(screen.getByRole('button', { name: 'Anime' }))
+  expect(screen.queryByLabelText(/Local/)).not.toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Salvar' }))
+  await waitFor(() => expect(api.updateQuest).toHaveBeenCalledWith('brabus', expect.objectContaining({ city: 'Ribeirão Preto', country: 'Brasil', place_label: 'Ribeirão Preto, Brasil' })))
 })

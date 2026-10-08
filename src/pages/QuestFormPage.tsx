@@ -6,13 +6,14 @@ import Bubble from '../components/Bubble'
 import Gems from '../components/Gems'
 import PageHero from '../components/PageHero'
 import PhotoPicker, { uploadPending } from '../components/PhotoPicker'
+import PlaceField, { NO_PLACE, type PlaceFields } from '../components/PlaceField'
 import { LoadError, NotFound, PageLoading } from '../components/Status'
 import { createQuest, deletePhoto, saveQuestType, updateQuest, upsertMedia, type QuestInput } from '../data/api'
 import { useAppData, useRefresh } from '../data/hooks'
 import { KIND_SOURCE } from '../lib/catalog'
 import { DIFFICULTIES, suggestDifficulty } from '../lib/difficulty'
-import { cityOptions, sameText } from '../lib/filters'
-import { effectiveCity } from '../lib/tree'
+import { sameText } from '../lib/filters'
+import { effectivePlace, placeLabel } from '../lib/place'
 import type { AppData, Difficulty, Media, NormalizedMedia, Quest, QuestType } from '../lib/types'
 
 export default function QuestFormPage() {
@@ -39,7 +40,12 @@ function QuestForm({ data, existing, parentId, initialCategory }: { data: AppDat
   const [createdTypes, setCreatedTypes] = useState<QuestType[]>([])
   const [newType, setNewType] = useState<string | null>(null) // null = the "new type" field is closed
   const [genre, setGenre] = useState<string | null>(null)
-  const [city, setCity] = useState(existing?.city ?? (parentId ? effectiveCity(data.quests, parentId) ?? '' : ''))
+  const [place, setPlace] = useState<PlaceFields>(
+    existing
+      ? { city: existing.city, state: existing.state, country: existing.country, place_label: existing.place_label, lat: existing.lat, lng: existing.lng }
+      : NO_PLACE,
+  )
+  const inherited = parentId ? effectivePlace(data.quests, parentId) : null
   const [title, setTitle] = useState(existing?.title ?? '')
   const [notes, setNotes] = useState(existing?.notes ?? '')
   const [difficulty, setDifficulty] = useState<Difficulty | null>(existing?.difficulty ?? null)
@@ -124,9 +130,8 @@ function QuestForm({ data, existing, parentId, initialCategory }: { data: AppDat
       const mediaId = mediaFits && media ? ('id' in media ? media.id : (await upsertMedia(media)).id) : null
       const input: QuestInput = {
         parent_id: parentId, category_id: category.id, title: title.trim(), notes: notes.trim() || null, difficulty, media_id: mediaId,
-        type_id: typeId, city: city.trim() || null,
-        state: existing?.state ?? null, country: existing?.country ?? null, place_label: existing?.place_label ?? null,
-        lat: existing?.lat ?? null, lng: existing?.lng ?? null,
+        type_id: typeId,
+        city: place.city?.trim() || null, state: place.state, country: place.country, place_label: place.place_label, lat: place.lat, lng: place.lng,
       }
       let questId: string
       if (existing) {
@@ -225,13 +230,7 @@ function QuestForm({ data, existing, parentId, initialCategory }: { data: AppDat
             <span className="mb-1 block font-bold">Título</span>
             <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} />
           </label>
-          <label className="block">
-            <span className="mb-1 block font-bold">Cidade <span className="font-normal text-ink/60">(opcional)</span></span>
-            <input className="input" list="city-options" value={city} maxLength={80} onChange={(e) => setCity(e.target.value)} />
-            <datalist id="city-options">
-              {cityOptions(data.quests).map((c) => <option key={c} value={c} />)}
-            </datalist>
-          </label>
+          {category?.has_place && <PlaceField value={place} inherited={inherited ? placeLabel(inherited) : null} onChange={setPlace} />}
           <div className="space-y-2">
             <h2 id="diff-label" className="font-bold">Dificuldade</h2>
             <div role="group" aria-labelledby="diff-label" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
