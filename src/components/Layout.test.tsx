@@ -82,15 +82,15 @@ it('a full-screen draw hides the page sky while it is open', async () => {
   expect(await screen.findByTestId('sky')).toBeInTheDocument()
 })
 
-const newVersion = (update = vi.fn(), registration?: Partial<ServiceWorkerRegistration>) =>
+const newVersion = ({ update = vi.fn(), registration, needRefresh = true }: { update?: () => Promise<void>; registration?: Partial<ServiceWorkerRegistration>; needRefresh?: boolean } = {}) =>
   vi.mocked(useRegisterSW).mockImplementation((options) => {
     if (registration) options?.onRegisteredSW?.('/sw.js', registration as ServiceWorkerRegistration)
-    return { needRefresh: [!registration, vi.fn()], offlineReady: [false, vi.fn()], updateServiceWorker: update }
+    return { needRefresh: [needRefresh, vi.fn()], offlineReady: [false, vi.fn()], updateServiceWorker: update }
   })
 
 it('offers the new version and only reloads when asked', async () => {
   const update = vi.fn()
-  newVersion(update)
+  newVersion({ update, registration: { waiting: new EventTarget() as ServiceWorker } })
   renderLayout()
   expect(screen.getByRole('status')).toHaveTextContent('Nova versão do Bubs2Do')
   expect(update).not.toHaveBeenCalled()
@@ -100,7 +100,7 @@ it('offers the new version and only reloads when asked', async () => {
 
 it('looks for a new version whenever the app comes back to the screen, quietly when offline', async () => {
   const check = vi.fn().mockRejectedValue(new Error('offline'))
-  newVersion(vi.fn(), { update: check })
+  newVersion({ needRefresh: false, registration: { update: check } })
   renderLayout()
   act(() => {
     document.dispatchEvent(new Event('visibilitychange'))

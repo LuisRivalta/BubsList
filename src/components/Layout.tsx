@@ -4,6 +4,7 @@ import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useL
 import { Link, Outlet, useLocation } from 'react-router'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { prefersReducedMotion } from '../lib/motion'
+import { applyUpdate } from '../lib/update'
 
 const SkyScene = lazy(() => import('./SkyScene'))
 
@@ -58,18 +59,20 @@ function useSaveFailed() {
 // A deploy shows "Nova versão" instead of reloading on its own, so nothing typed is lost.
 // The installed iPhone app stays open in the background for days: look for a new version whenever it comes back.
 function useNewVersion() {
+  const registration = useRef<ServiceWorkerRegistration | undefined>(undefined)
   const {
     needRefresh: [needRefresh],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegisteredSW(_url, registration) {
-      if (!registration) return
+    onRegisteredSW(_url, r) {
+      if (!r) return
+      registration.current = r
       document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') registration.update().catch(() => {})
+        if (document.visibilityState === 'visible') r.update().catch(() => {})
       })
     },
   })
-  return needRefresh ? () => updateServiceWorker(true) : null
+  return needRefresh ? () => applyUpdate(registration.current, () => updateServiceWorker(true), () => window.location.reload()) : null
 }
 
 // New page content rises in; the inline transform is removed afterwards so fixed overlays inside keep covering the screen.
