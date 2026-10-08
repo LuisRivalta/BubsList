@@ -1,5 +1,5 @@
-import { MapPin, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { MapPin, Search, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { searchPlaces, type PlaceChoice } from '../lib/place'
 
 export interface PlaceFields {
@@ -12,44 +12,45 @@ export interface PlaceFields {
 }
 export const NO_PLACE: PlaceFields = { city: null, state: null, country: null, place_label: null, lat: null, lng: null }
 
-// Place search (OpenStreetMap): 3+ letters and a 500 ms pause, then pick a suggestion. Text typed without picking is kept as the city.
+// Place search (OpenStreetMap): type, then Buscar (or Enter), then pick a suggestion. Never searches while typing (Nominatim policy).
+// Text typed without picking is kept as the city.
 export default function PlaceField({ value, inherited, onChange }: { value: PlaceFields; inherited: string | null; onChange: (v: PlaceFields) => void }) {
   const chosen = value.place_label
   const [text, setText] = useState(chosen ? '' : (value.city ?? ''))
   const [results, setResults] = useState<PlaceChoice[]>([])
   const [status, setStatus] = useState<'idle' | 'loading' | 'empty' | 'error'>('idle')
 
-  useEffect(() => {
+  const pending = useRef<AbortController | null>(null)
+  useEffect(() => () => pending.current?.abort(), [])
+
+  async function search() {
     const q = text.trim()
-    if (chosen || q.length < 3) {
-      setResults([])
-      setStatus('idle')
-      return
-    }
+    if (q.length < 3) return
+    pending.current?.abort()
     const controller = new AbortController()
-    const timer = setTimeout(() => {
-      setStatus('loading')
-      searchPlaces(q, controller.signal)
-        .then((list) => {
-          setResults(list)
-          setStatus(list.length ? 'idle' : 'empty')
-        })
-        .catch(() => {
-          if (!controller.signal.aborted) setStatus('error')
-        })
-    }, 500)
-    return () => {
-      clearTimeout(timer)
-      controller.abort()
+    pending.current = controller
+    setResults([])
+    setStatus('loading')
+    try {
+      const list = await searchPlaces(q, controller.signal)
+      if (controller.signal.aborted) return
+      setResults(list)
+      setStatus(list.length ? 'idle' : 'empty')
+    } catch {
+      if (!controller.signal.aborted) setStatus('error')
     }
-  }, [text, chosen])
+  }
 
   function type(t: string) {
+    pending.current?.abort()
+    setResults([])
+    setStatus('idle')
     setText(t)
     onChange({ ...NO_PLACE, city: t.trim() || null })
   }
 
   function pick(p: PlaceChoice) {
+    pending.current?.abort()
     onChange({ city: p.city, state: p.state, country: p.country, place_label: p.label, lat: p.lat, lng: p.lng })
     setResults([])
   }
@@ -71,7 +72,25 @@ export default function PlaceField({ value, inherited, onChange }: { value: Plac
           </button>
         </div>
       ) : (
-        <input aria-labelledby="place-label" className="input" value={text} maxLength={80} placeholder="Cidade, estado ou país" onChange={(e) => type(e.target.value)} />
+        <div className="flex gap-2">
+          <input
+            aria-labelledby="place-label"
+            className="input min-w-0 flex-1"
+            value={text}
+            maxLength={80}
+            placeholder="Cidade, estado ou país"
+            onChange={(e) => type(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                search()
+              }
+            }}
+          />
+          <button type="button" className="btn shrink-0" disabled={text.trim().length < 3} onClick={search}>
+            <Search aria-hidden className="size-4" /> Buscar
+          </button>
+        </div>
       )}
       {!chosen && !text && inherited && <p className="text-sm text-ink/60">Herdado: {inherited}</p>}
       {status === 'loading' && <p className="text-sm text-ink/60">Buscando…</p>}

@@ -31,7 +31,33 @@ describe('searchPlaces', () => {
   })
   it('fails loudly on an HTTP error so the field can say so', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 429 }))
-    await expect(searchPlaces('japao')).rejects.toThrow('429')
+    await expect(searchPlaces('erro')).rejects.toThrow('429')
+  })
+  it('answers a repeated query from the cache (Nominatim policy)', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => [{ name: 'Cunha', lat: '1', lon: '2', address: { city: 'Cunha', country: 'Brasil' } }] })
+    vi.stubGlobal('fetch', fetchMock)
+    await searchPlaces('Cunha')
+    expect(await searchPlaces(' cunha ')).toHaveLength(1)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+  it('drops suggestions with a repeated label', async () => {
+    const row = { name: 'Bonfim Paulista', lat: '1', lon: '2', address: { village: 'Bonfim Paulista', state: 'São Paulo', country: 'Brasil' } }
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => [row, { ...row, lat: '1.1' }] }))
+    expect(await searchPlaces('bonfim')).toHaveLength(1)
+  })
+  it('waits at least a second between two requests (Nominatim policy)', async () => {
+    vi.useFakeTimers()
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => [] })
+    vi.stubGlobal('fetch', fetchMock)
+    await vi.advanceTimersByTimeAsync(1100)
+    await searchPlaces('primeira')
+    const second = searchPlaces('segunda')
+    await vi.advanceTimersByTimeAsync(500)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    await vi.advanceTimersByTimeAsync(600)
+    await second
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    vi.useRealTimers()
   })
 })
 

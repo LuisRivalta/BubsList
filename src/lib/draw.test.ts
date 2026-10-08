@@ -56,6 +56,11 @@ describe('drawPool', () => {
   it('combines every filter', () => {
     expect(pool([], { categoryIds: ['rest'], difficulties: ['medium'], places: ['city:||ribeirao preto'] })).toEqual(['forno'])
   })
+  it('a physical-category quest without a place is left out only when a place is marked', () => {
+    const noPlace = quest({ id: 'x', category_id: 'rest' })
+    expect(drawPool([noPlace], new Set(), { ...none, places: ['city:||ribeirao preto'] }, { categories }).map((q) => q.id)).toEqual([])
+    expect(drawPool([noPlace], new Set(), none, { categories }).map((q) => q.id)).toEqual(['x'])
+  })
   it('a country or a state takes everything inside it', () => {
     const rp = quest({ id: 'rp', category_id: 'rest', city: 'Ribeirão Preto', state: 'São Paulo', country: 'Brasil' })
     const rio = quest({ id: 'rio', category_id: 'rest', city: 'Rio de Janeiro', state: 'Rio de Janeiro', country: 'Brasil' })

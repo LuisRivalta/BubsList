@@ -182,7 +182,18 @@ function CategoryRow({ data, category: c, onSave, onDelete, onChange }: RowProps
       <div className="flex items-center gap-3">
         <Bubble icon={c.icon} color={c.color} />
         <span className="flex-1">{c.name}</span>
-        <span aria-hidden className="text-xs font-semibold text-ink/60">Lugar</span>
+        {c.builtin ? (
+          <span className="text-xs text-ink/60">padrão</span>
+        ) : (
+          <>
+            <button type="button" className="btn" onClick={() => setEditing(true)}>Editar</button>
+            <button type="button" className="btn btn-danger" aria-label={`Excluir ${c.name}`} onClick={() => onDelete(c)}>
+              <Trash2 aria-hidden className="size-4" />
+            </button>
+          </>
+        )}
+      </div>
+      <div className="flex items-center gap-2 pl-12">
         <button
           type="button"
           role="switch"
@@ -196,16 +207,7 @@ function CategoryRow({ data, category: c, onSave, onDelete, onChange }: RowProps
         >
           <span aria-hidden className={`size-5 rounded-full bg-white shadow transition-transform ${c.has_place ? 'translate-x-6' : 'translate-x-1'}`} />
         </button>
-        {c.builtin ? (
-          <span className="text-xs text-ink/60">padrão</span>
-        ) : (
-          <>
-            <button type="button" className="btn" onClick={() => setEditing(true)}>Editar</button>
-            <button type="button" className="btn btn-danger" aria-label={`Excluir ${c.name}`} onClick={() => onDelete(c)}>
-              <Trash2 aria-hidden className="size-4" />
-            </button>
-          </>
-        )}
+        <span aria-hidden className="text-sm text-ink/60">Lugar físico</span>
       </div>
       <TypeChips data={data} category={c} onChange={onChange} />
     </li>

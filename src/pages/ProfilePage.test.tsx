@@ -141,3 +141,10 @@ it('credits OpenStreetMap for the places', async () => {
   open()
   expect(await screen.findByRole('link', { name: '© OpenStreetMap contributors' })).toHaveAttribute('href', 'https://www.openstreetmap.org/copyright')
 })
+
+it('the physical-place switch sits on its own line, so the edit and delete buttons stay on screen', async () => {
+  open()
+  const name = await screen.findByText('Shows')
+  expect(name.parentElement).not.toContainElement(screen.getByRole('switch', { name: 'Lugar físico em Shows' }))
+  expect(name.parentElement).toContainElement(screen.getByRole('button', { name: 'Excluir Shows' }))
+})

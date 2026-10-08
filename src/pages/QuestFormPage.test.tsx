@@ -202,7 +202,7 @@ it('Local only shows for categories with a physical place', async () => {
   expect(screen.queryByLabelText(/Local/)).not.toBeInTheDocument()
 })
 
-it('typing searches once after a pause, and picking a suggestion saves the whole place', async () => {
+it('typing alone never searches; Buscar does, and picking a suggestion saves the whole place', async () => {
   withTypes()
   vi.mocked(place.searchPlaces).mockResolvedValue([ribeirao])
   const user = userEvent.setup()
@@ -211,6 +211,9 @@ it('typing searches once after a pause, and picking a suggestion saves the whole
   await user.type(screen.getByLabelText('Título'), 'Brabus')
   await user.click(screen.getByRole('button', { name: 'Fácil' }))
   await user.type(screen.getByLabelText(/Local/), 'Ribeirão')
+  await new Promise((r) => setTimeout(r, 700))
+  expect(place.searchPlaces).not.toHaveBeenCalled()
+  await user.click(screen.getByRole('button', { name: 'Buscar' }))
   await user.click(await screen.findByRole('button', { name: 'Ribeirão Preto, São Paulo, Brasil' }))
   expect(place.searchPlaces).toHaveBeenCalledTimes(1)
   expect(vi.mocked(place.searchPlaces).mock.calls[0][0]).toBe('Ribeirão')
@@ -222,6 +225,17 @@ it('typing searches once after a pause, and picking a suggestion saves the whole
   )
 })
 
+it('Enter in Local searches instead of saving the form', async () => {
+  withTypes()
+  vi.mocked(place.searchPlaces).mockResolvedValue([ribeirao])
+  const user = userEvent.setup()
+  renderRoute(routes, '/quests/nova')
+  await user.click(await screen.findByRole('button', { name: 'Restaurante' }))
+  await user.type(screen.getByLabelText(/Local/), 'Ribeirão{Enter}')
+  expect(await screen.findByRole('button', { name: 'Ribeirão Preto, São Paulo, Brasil' })).toBeInTheDocument()
+  expect(api.createQuest).not.toHaveBeenCalled()
+})
+
 it('× clears the chosen place', async () => {
   withTypes()
   vi.mocked(place.searchPlaces).mockResolvedValue([ribeirao])
@@ -229,6 +243,7 @@ it('× clears the chosen place', async () => {
   renderRoute(routes, '/quests/nova')
   await user.click(await screen.findByRole('button', { name: 'Restaurante' }))
   await user.type(screen.getByLabelText(/Local/), 'Ribeirão')
+  await user.click(screen.getByRole('button', { name: 'Buscar' }))
   await user.click(await screen.findByRole('button', { name: 'Ribeirão Preto, São Paulo, Brasil' }))
   await user.click(screen.getByRole('button', { name: 'Limpar local' }))
   expect(screen.getByLabelText(/Local/)).toHaveValue('')
@@ -241,6 +256,7 @@ it('a failed search says so', async () => {
   renderRoute(routes, '/quests/nova')
   await user.click(await screen.findByRole('button', { name: 'Restaurante' }))
   await user.type(screen.getByLabelText(/Local/), 'Ribeirão')
+  await user.click(screen.getByRole('button', { name: 'Buscar' }))
   expect(await screen.findByRole('alert')).toHaveTextContent('Não deu para buscar agora')
 })
 

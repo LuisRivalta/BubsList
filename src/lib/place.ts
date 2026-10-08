@@ -36,11 +36,24 @@ export function normalizePlace(r: NominatimResult): PlaceChoice {
   return { city, state, country, label: [name, ...parts].filter(Boolean).join(', '), lat: Number(r.lat), lng: Number(r.lon) }
 }
 
+const cache = new Map<string, PlaceChoice[]>()
+let lastRequest = 0
+
+// Nominatim usage policy: no search-as-you-type, at most 1 request per second, repeated queries answered from a cache.
 export async function searchPlaces(q: string, signal?: AbortSignal): Promise<PlaceChoice[]> {
-  const params = new URLSearchParams({ q, format: 'jsonv2', addressdetails: '1', limit: '5', 'accept-language': 'pt-BR' })
+  const key = normalizeText(q)
+  const cached = cache.get(key)
+  if (cached) return cached
+  const wait = lastRequest + 1000 - Date.now()
+  if (wait > 0) await new Promise((r) => setTimeout(r, wait))
+  lastRequest = Date.now()
+  const params = new URLSearchParams({ q: q.trim(), format: 'jsonv2', addressdetails: '1', limit: '5', 'accept-language': 'pt-BR' })
   const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, { signal })
   if (!res.ok) throw new Error(`Nominatim ${res.status}`)
-  return ((await res.json()) as NominatimResult[]).map(normalizePlace)
+  const list = ((await res.json()) as NominatimResult[]).map(normalizePlace)
+  const unique = list.filter((p, i) => list.findIndex((o) => sameText(o.label, p.label)) === i)
+  cache.set(key, unique)
+  return unique
 }
 
 const clean = (s: string | null | undefined) => (s?.trim() ? s.trim() : null)
