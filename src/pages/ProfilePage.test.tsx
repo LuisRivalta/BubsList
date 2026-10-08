@@ -125,3 +125,19 @@ it('the type editor closes after deleting the type', async () => {
   await user.click(screen.getByRole('button', { name: 'Excluir' }))
   await waitFor(() => expect(screen.queryByLabelText('Nome do tipo em Restaurante')).not.toBeInTheDocument())
 })
+
+it('each category has a physical-place switch', async () => {
+  vi.mocked(api.setCategoryPlace).mockResolvedValue()
+  open()
+  const user = userEvent.setup()
+  const filme = await screen.findByRole('switch', { name: 'Lugar físico em Filme' })
+  expect(filme).toHaveAttribute('aria-checked', 'false')
+  expect(screen.getByRole('switch', { name: 'Lugar físico em Restaurante' })).toHaveAttribute('aria-checked', 'true')
+  await user.click(filme)
+  expect(api.setCategoryPlace).toHaveBeenCalledWith('cat-filme', true)
+})
+
+it('credits OpenStreetMap for the places', async () => {
+  open()
+  expect(await screen.findByRole('link', { name: '© OpenStreetMap contributors' })).toHaveAttribute('href', 'https://www.openstreetmap.org/copyright')
+})

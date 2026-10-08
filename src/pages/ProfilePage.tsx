@@ -5,7 +5,7 @@ import Bubble from '../components/Bubble'
 import { IconPicker } from '../components/Icon'
 import PageHero from '../components/PageHero'
 import { LoadError, PageLoading } from '../components/Status'
-import { deleteCategory, deleteQuestType, saveCategory, saveQuestType, signOut, updateProfile, uploadAvatar, type CategoryInput } from '../data/api'
+import { deleteCategory, deleteQuestType, saveCategory, saveQuestType, setCategoryPlace, signOut, updateProfile, uploadAvatar, type CategoryInput } from '../data/api'
 import { useAppData, useRefresh } from '../data/hooks'
 import { useUserId } from '../data/session'
 import { UnsupportedImageError, compressImage } from '../lib/image'
@@ -43,6 +43,7 @@ export default function ProfilePage() {
           </a>
           <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
           <p>Dados de anime: <a className="underline" href="https://anilist.co" target="_blank" rel="noreferrer">AniList</a>.</p>
+          <p>Lugares: <a className="underline" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a></p>
         </section>
         <button type="button" className="btn btn-danger min-h-12 w-full" onClick={() => signOut()}>Sair</button>
       </div>
@@ -181,6 +182,20 @@ function CategoryRow({ data, category: c, onSave, onDelete, onChange }: RowProps
       <div className="flex items-center gap-3">
         <Bubble icon={c.icon} color={c.color} />
         <span className="flex-1">{c.name}</span>
+        <span aria-hidden className="text-xs font-semibold text-ink/60">Lugar</span>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={c.has_place}
+          aria-label={`Lugar físico em ${c.name}`}
+          onClick={async () => {
+            await setCategoryPlace(c.id, !c.has_place)
+            onChange()
+          }}
+          className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors ${c.has_place ? 'bg-accent' : 'bg-ink/20'}`}
+        >
+          <span aria-hidden className={`size-5 rounded-full bg-white shadow transition-transform ${c.has_place ? 'translate-x-6' : 'translate-x-1'}`} />
+        </button>
         {c.builtin ? (
           <span className="text-xs text-ink/60">padrão</span>
         ) : (
