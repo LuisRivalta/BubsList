@@ -1,9 +1,8 @@
+import { normalizeText } from './text'
 import { effectiveCity } from './tree'
 import type { Completion, Difficulty, Quest, QuestType, Review } from './types'
 
-export const normalizeText = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim()
-
-export const sameText = (a: string, b: string) => normalizeText(a) === normalizeText(b)
+export { normalizeText, sameText } from './text'
 
 export interface QuestFilter {
   tab: 'pending' | 'done'
