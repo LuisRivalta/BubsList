@@ -1,5 +1,5 @@
 import { animate } from 'animejs'
-import { ChartColumn, Map as MapIcon, Trophy, User } from 'lucide-react'
+import { ChartColumn, Map as MapIcon, ScrollText, Trophy, User } from 'lucide-react'
 import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, Outlet, useLocation } from 'react-router'
 import { useRegisterSW } from 'virtual:pwa-register/react'
@@ -16,7 +16,8 @@ export function useHideSky() {
 }
 
 const NAV = [
-  { to: '/', label: 'Quests', Icon: MapIcon },
+  { to: '/', label: 'Quests', Icon: ScrollText },
+  { to: '/mapa', label: 'Mapa', Icon: MapIcon },
   { to: '/conquistas', label: 'Conquistas', Icon: Trophy },
   { to: '/relatorio', label: 'Relatório', Icon: ChartColumn },
   { to: '/perfil', label: 'Perfil', Icon: User },

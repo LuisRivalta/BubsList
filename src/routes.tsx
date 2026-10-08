@@ -5,6 +5,7 @@ import AchievementFormPage from './pages/AchievementFormPage'
 import AchievementsPage from './pages/AchievementsPage'
 import CategoryPage from './pages/CategoryPage'
 import CompletePage from './pages/CompletePage'
+import MapPage from './pages/MapPage'
 import ProfilePage from './pages/ProfilePage'
 import QuestFormPage from './pages/QuestFormPage'
 import QuestPage from './pages/QuestPage'
@@ -18,6 +19,7 @@ export const routes: RouteObject[] = [
     children: [
       { path: '/', element: <QuestsPage /> },
       { path: '/categoria/:id', element: <CategoryPage /> },
+      { path: '/mapa', element: <MapPage /> },
       { path: '/quests/nova', element: <QuestFormPage /> },
       { path: '/quests/:id/editar', element: <QuestFormPage /> },
       { path: '/quests/:id', element: <QuestPage /> },

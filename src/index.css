@@ -280,3 +280,22 @@
 @media (prefers-reduced-motion: reduce) {
   .story-fill, .bar-grow, .medal-spin { animation: none; }
 }
+
+/* Map pins (QuestMap): pink = something pending there, gold = all done. */
+.map-pin {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 3px solid white;
+  border-radius: 9999px;
+  box-shadow: 0 4px 10px rgb(26 17 21 / 0.35);
+  color: white;
+  font: 700 13px/1 var(--font-sans, sans-serif);
+}
+.map-pin-pending {
+  background: var(--color-accent);
+}
+.map-pin-done {
+  background: var(--color-gold);
+}

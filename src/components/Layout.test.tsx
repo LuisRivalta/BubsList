@@ -18,9 +18,10 @@ afterEach(() => {
   vi.mocked(useRegisterSW).mockReset() // back to "no new version" (setup.ts)
 })
 
-it('shows the four sections and the page content', () => {
+it('shows the five sections and the page content', () => {
   renderLayout()
-  for (const name of ['Quests', 'Conquistas', 'Relatório', 'Perfil']) expect(screen.getByRole('link', { name })).toBeInTheDocument()
+  for (const name of ['Quests', 'Mapa', 'Conquistas', 'Relatório', 'Perfil']) expect(screen.getByRole('link', { name })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Mapa' })).toHaveAttribute('href', '/mapa')
   expect(screen.getByText('conteúdo')).toBeInTheDocument()
 })
 
