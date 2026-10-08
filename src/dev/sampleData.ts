@@ -17,7 +17,7 @@ const cat = (id: string, name: string, icon: string, color: string, kind: Catego
 })
 
 const quest = (id: string, title: string, category_id: string, difficulty: Difficulty, extra: Partial<Quest> = {}): Quest => ({
-  id, parent_id: null, category_id, title, notes: null, difficulty, media_id: null, type_id: null, city: null, state: null, country: null, place_label: null, lat: null, lng: null, progress_season: null,
+  id, parent_id: null, category_id, title, notes: null, difficulty, media_id: null, type_id: null, city: null, state: null, country: null, place_label: null, lat: null, lng: null, scheduled_on: null, scheduled_time: null, progress_season: null,
   progress_episode: null, created_by: ME, created_at: T, updated_at: T, ...extra,
 })
 

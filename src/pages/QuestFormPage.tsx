@@ -132,6 +132,7 @@ function QuestForm({ data, existing, parentId, initialCategory }: { data: AppDat
         parent_id: parentId, category_id: category.id, title: title.trim(), notes: notes.trim() || null, difficulty, media_id: mediaId,
         type_id: typeId,
         city: place.city?.trim() || null, state: place.state, country: place.country, place_label: place.place_label, lat: place.lat, lng: place.lng,
+        scheduled_on: existing?.scheduled_on ?? null, scheduled_time: existing?.scheduled_time ?? null,
       }
       let questId: string
       if (existing) {

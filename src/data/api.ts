@@ -38,7 +38,7 @@ export async function loadAll(): Promise<AppData> {
 // Quests -----------------------------------------------------------------
 export type QuestInput = Pick<
   Quest,
-  'parent_id' | 'category_id' | 'title' | 'notes' | 'difficulty' | 'media_id' | 'type_id' | 'city' | 'state' | 'country' | 'place_label' | 'lat' | 'lng'
+  'parent_id' | 'category_id' | 'title' | 'notes' | 'difficulty' | 'media_id' | 'type_id' | 'city' | 'state' | 'country' | 'place_label' | 'lat' | 'lng' | 'scheduled_on' | 'scheduled_time'
 >
 
 export const createQuest = async (input: QuestInput) =>

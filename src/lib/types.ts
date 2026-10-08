@@ -61,6 +61,8 @@ export interface Quest {
   place_label: string | null
   lat: number | null
   lng: number | null
+  scheduled_on: string | null // YYYY-MM-DD
+  scheduled_time: string | null // HH:MM:SS from the database, HH:MM from the form
   progress_season: number | null
   progress_episode: number | null
   created_by: string

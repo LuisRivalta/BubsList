@@ -17,7 +17,7 @@ export const questType = (o: Partial<QuestType> = {}): QuestType => ({
 
 export const quest = (o: Partial<Quest> = {}): Quest => ({
   id: nextId('q'), parent_id: null, category_id: 'cat-none', title: 'Quest', notes: null, difficulty: 'easy',
-  media_id: null, type_id: null, city: null, state: null, country: null, place_label: null, lat: null, lng: null, progress_season: null, progress_episode: null, created_by: ME, created_at: T, updated_at: T, ...o,
+  media_id: null, type_id: null, city: null, state: null, country: null, place_label: null, lat: null, lng: null, scheduled_on: null, scheduled_time: null, progress_season: null, progress_episode: null, created_by: ME, created_at: T, updated_at: T, ...o,
 })
 
 export const completion = (o: Partial<Completion> = {}): Completion => ({
