@@ -2,6 +2,7 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, expect, it, vi } from 'vitest'
 import * as api from '../data/api'
+import { todayISO } from '../lib/dates'
 import { CATS, ME, allCats, appData, completion, quest, review } from '../test/fixtures'
 import { renderRoute } from '../test/render'
 import QuestsPage from './QuestsPage'
@@ -82,4 +83,33 @@ it('draws a pending quest you can actually do and opens it', async () => {
   expect(screen.getByRole('link', { name: 'Bora!' })).toHaveAttribute('href', '/quests/toquio')
   await user.click(screen.getByRole('button', { name: 'Fechar' }))
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+})
+
+const shift = (days: number) => todayISO(new Date(Date.now() + days * 86_400_000))
+const dayMonth = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`
+
+it('Próximas lists pending scheduled quests by date, late ones first and flagged, done ones left out', async () => {
+  vi.mocked(api.loadAll).mockResolvedValue({
+    ...data,
+    quests: [
+      ...data.quests.filter((x) => x.id !== 'matrix'),
+      { ...matrix, scheduled_on: shift(0) },
+      quest({ id: 'brabus', title: 'Brabus', category_id: CATS.restaurante.id, scheduled_on: shift(1), scheduled_time: '20:00:00' }),
+      quest({ id: 'sushi', title: 'Sushi', category_id: CATS.restaurante.id, scheduled_on: shift(-2) }),
+    ],
+  })
+  open()
+  const next = await screen.findByRole('region', { name: 'Próximas' })
+  const items = within(next).getAllByRole('link')
+  expect(items).toHaveLength(2)
+  expect(items[0]).toHaveTextContent('Sushi')
+  expect(within(items[0]).getByText(`Atrasada · ${dayMonth(shift(-2))}`)).toHaveClass('text-red-600')
+  expect(items[1]).toHaveTextContent('BrabusAmanhã · 20h')
+  expect(items[1]).toHaveAttribute('href', '/quests/brabus')
+})
+
+it('without scheduled quests there is no Próximas', async () => {
+  open()
+  await screen.findByRole('link', { name: /^Viagem/ })
+  expect(screen.queryByRole('region', { name: 'Próximas' })).not.toBeInTheDocument()
 })

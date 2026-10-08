@@ -1,5 +1,5 @@
 import { animate } from 'animejs'
-import { CalendarDays, Check, Pencil, Plus, Trash2 } from 'lucide-react'
+import { CalendarClock, CalendarDays, Check, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import Avatar from '../components/Avatar'
@@ -14,9 +14,11 @@ import { LoadError, NotFound, PageLoading } from '../components/Status'
 import { deleteCompletion, deleteQuest, setProgress } from '../data/api'
 import { useAppData, useMediaRefresh, useRefresh, useSignedUrls } from '../data/hooks'
 import { useUserId } from '../data/session'
-import { formatDate } from '../lib/dates'
+import { formatDate, todayISO } from '../lib/dates'
 import { prefersReducedMotion } from '../lib/motion'
+import { effectivePlace, placeLabel } from '../lib/place'
 import { episodesWatched, formatProgress, nextEpisode, progressOf } from '../lib/progress'
+import { calendarUrl, isOverdue, scheduleLabel } from '../lib/schedule'
 import { ancestors, childrenOf, descendantIds, doneQuestIds, questMeta } from '../lib/tree'
 import type { AppData, Completion, Quest } from '../lib/types'
 
@@ -115,6 +117,8 @@ export default function QuestPage() {
       />
 
       <div className="space-y-6">
+        {quest.scheduled_on && !isDone && <ScheduleCard quest={quest} data={data} />}
+
         {(media?.synopsis || quest.notes) && (
           <section className="card space-y-2 p-5">
             {media?.synopsis && <p className="text-ink/70">{media.synopsis}</p>}
@@ -166,6 +170,23 @@ export default function QuestPage() {
         </section>
       </div>
     </>
+  )
+}
+
+function ScheduleCard({ quest, data }: { quest: Quest; data: AppData }) {
+  const today = todayISO()
+  const label = scheduleLabel(quest.scheduled_on!, quest.scheduled_time, today)
+  const late = isOverdue(quest.scheduled_on!, today)
+  const place = effectivePlace(data.quests, quest.id)
+  return (
+    <section className="card flex flex-wrap items-center justify-between gap-3 p-4">
+      <span className={`inline-flex items-center gap-2 font-semibold ${late ? 'text-red-600' : ''}`}>
+        <CalendarClock aria-hidden className="size-4 text-accent" /> {late ? label : `Agendada · ${label}`}
+      </span>
+      <a href={calendarUrl(quest, quest.place_label ?? (place && placeLabel(place)))} target="_blank" rel="noreferrer" className="btn">
+        Adicionar ao calendário
+      </a>
+    </section>
   )
 }
 

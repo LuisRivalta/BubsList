@@ -123,3 +123,23 @@ it('the hero shows the type and the city', async () => {
   renderRoute(routes, '/quests/japao')
   expect(await screen.findByText('Roteiro · Tóquio')).toBeInTheDocument()
 })
+
+it('a scheduled pending quest shows when, and the calendar link carries it', async () => {
+  load({
+    quests: [
+      quest({ id: 'brabus', title: 'Brabus Burguer', category_id: CATS.restaurante.id, scheduled_on: '2099-01-03', scheduled_time: '20:30:00', city: 'Ribeirão Preto', state: 'São Paulo', country: 'Brasil', place_label: 'Ribeirão Preto, São Paulo, Brasil' }),
+    ],
+  })
+  renderRoute(routes, '/quests/brabus')
+  expect(await screen.findByText('Agendada · sáb, 03/01 · 20h30')).toBeInTheDocument()
+  const link = screen.getByRole('link', { name: 'Adicionar ao calendário' })
+  expect(link).toHaveAttribute('href', '/api/calendario?t=Brabus+Burguer&d=2099-01-03&h=20%3A30&l=Ribeir%C3%A3o+Preto%2C+S%C3%A3o+Paulo%2C+Brasil&id=brabus')
+  expect(link).toHaveAttribute('target', '_blank')
+})
+
+it('a done quest hides its schedule', async () => {
+  load({ quests: [quest({ id: 'cine', title: 'Cinema', category_id: CATS.filme.id, scheduled_on: '2099-01-03' })], completions: [completion({ quest_id: 'cine' })] })
+  renderRoute(routes, '/quests/cine')
+  await screen.findByRole('heading', { level: 1, name: 'Cinema' })
+  expect(screen.queryByRole('link', { name: 'Adicionar ao calendário' })).not.toBeInTheDocument()
+})

@@ -1,4 +1,4 @@
-import { PenLine } from 'lucide-react'
+import { CalendarClock, PenLine } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import Bubble from '../components/Bubble'
@@ -13,6 +13,7 @@ import { useUserId } from '../data/session'
 import { evaluateAchievements } from '../lib/achievements'
 import { formatDate, todayISO } from '../lib/dates'
 import { filterQuests, pendingReviews } from '../lib/filters'
+import { isOverdue, scheduleLabel, upcoming } from '../lib/schedule'
 import { count } from '../lib/text'
 import { doneQuestIds } from '../lib/tree'
 import type { AppData } from '../lib/types'
@@ -28,7 +29,9 @@ export default function QuestsPage() {
   const data = q.data
   const done = doneQuestIds(data.completions)
   const pending = pendingReviews(data.completions, data.reviews, me)
-  const month = todayISO().slice(0, 7)
+  const today = todayISO()
+  const month = today.slice(0, 7)
+  const next = upcoming(data.quests, done)
   const openCount = data.quests.filter((x) => x.parent_id === null && !done.has(x.id)).length
   const doneThisMonth = data.completions.filter((c) => c.done_on.startsWith(month)).length
   const unlocked = evaluateAchievements(data.achievements, data.quests, data.completions).filter((s) => s.unlockedOn).length
@@ -53,6 +56,29 @@ export default function QuestsPage() {
         actions={<QuestActions data={data} categoryId={null} />}
       />
       <div className="space-y-4">
+        {next.length > 0 && (
+          <section aria-labelledby="next-title" className="card space-y-2 p-4">
+            <h2 id="next-title" className="flex items-center gap-2 font-bold">
+              <CalendarClock aria-hidden className="size-4 text-accent" /> Próximas
+            </h2>
+            <ul className="space-y-1">
+              {next.map((x) => {
+                const c = data.categories.find((k) => k.id === x.category_id)
+                return (
+                  <li key={x.id}>
+                    <Link to={`/quests/${x.id}`} className="flex items-center gap-2 rounded-xl p-1.5 hover:bg-blush/30">
+                      <Bubble icon={c?.icon ?? ''} color={c?.color ?? '#e3b4cf'} size="sm" />
+                      <span className="min-w-0 flex-1 truncate font-semibold">{x.title}</span>
+                      <span className={`shrink-0 text-sm ${isOverdue(x.scheduled_on!, today) ? 'font-bold text-red-600' : 'text-ink/60'}`}>
+                        {scheduleLabel(x.scheduled_on!, x.scheduled_time, today)}
+                      </span>
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          </section>
+        )}
         {pending.length > 0 && (
           <details className="card border-accent/30 bg-blush/30 p-4">
             <summary className="flex cursor-pointer items-center gap-2 font-bold">

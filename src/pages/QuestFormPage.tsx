@@ -48,6 +48,8 @@ function QuestForm({ data, existing, parentId, initialCategory }: { data: AppDat
   const inherited = parentId ? effectivePlace(data.quests, parentId) : null
   const [title, setTitle] = useState(existing?.title ?? '')
   const [notes, setNotes] = useState(existing?.notes ?? '')
+  const [scheduledOn, setScheduledOn] = useState(existing?.scheduled_on ?? '')
+  const [scheduledTime, setScheduledTime] = useState(existing?.scheduled_time?.slice(0, 5) ?? '')
   const [difficulty, setDifficulty] = useState<Difficulty | null>(existing?.difficulty ?? null)
   const [media, setMedia] = useState<Media | NormalizedMedia | null>(
     existing?.media_id ? data.media.find((m) => m.id === existing.media_id) ?? null : null,
@@ -132,7 +134,7 @@ function QuestForm({ data, existing, parentId, initialCategory }: { data: AppDat
         parent_id: parentId, category_id: category.id, title: title.trim(), notes: notes.trim() || null, difficulty, media_id: mediaId,
         type_id: typeId,
         city: place.city?.trim() || null, state: place.state, country: place.country, place_label: place.place_label, lat: place.lat, lng: place.lng,
-        scheduled_on: existing?.scheduled_on ?? null, scheduled_time: existing?.scheduled_time ?? null,
+        scheduled_on: scheduledOn || null, scheduled_time: scheduledOn && scheduledTime ? scheduledTime : null,
       }
       let questId: string
       if (existing) {
@@ -232,6 +234,22 @@ function QuestForm({ data, existing, parentId, initialCategory }: { data: AppDat
             <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} />
           </label>
           {category?.has_place && <PlaceField value={place} inherited={inherited ? placeLabel(inherited) : null} onChange={setPlace} />}
+          <fieldset>
+            <legend className="mb-1 font-bold">Quando <span className="font-normal text-ink/60">(opcional)</span></legend>
+            <div className="flex gap-2">
+              <input
+                type="date"
+                aria-label="Data"
+                className="input min-w-0 flex-1"
+                value={scheduledOn}
+                onChange={(e) => {
+                  setScheduledOn(e.target.value)
+                  if (!e.target.value) setScheduledTime('')
+                }}
+              />
+              <input type="time" aria-label="Horário" className="input w-32" value={scheduledTime} disabled={!scheduledOn} onChange={(e) => setScheduledTime(e.target.value)} />
+            </div>
+          </fieldset>
           <div className="space-y-2">
             <h2 id="diff-label" className="font-bold">Dificuldade</h2>
             <div role="group" aria-labelledby="diff-label" className="grid grid-cols-2 gap-2 sm:grid-cols-4">

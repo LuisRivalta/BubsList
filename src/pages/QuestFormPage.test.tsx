@@ -1,4 +1,4 @@
-import { act, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { normalizeAniList } from '../../supabase/functions/_shared/catalog'
@@ -321,4 +321,31 @@ it('picking a place moves the focus to Limpar local, and clearing brings it back
   expect(screen.getByRole('button', { name: 'Limpar local' })).toHaveFocus()
   await user.click(screen.getByRole('button', { name: 'Limpar local' }))
   expect(screen.getByLabelText(/Local/)).toHaveFocus()
+})
+
+it('schedules a date and an optional time; the time needs a date', async () => {
+  const user = userEvent.setup()
+  renderRoute(routes, '/quests/nova')
+  await user.click(await screen.findByRole('button', { name: 'Restaurante' }))
+  await user.type(screen.getByLabelText('Título'), 'Brabus')
+  await user.click(screen.getByRole('button', { name: 'Fácil' }))
+  expect(screen.getByLabelText('Horário')).toBeDisabled()
+  fireEvent.change(screen.getByLabelText('Data'), { target: { value: '2026-10-10' } })
+  fireEvent.change(screen.getByLabelText('Horário'), { target: { value: '20:00' } })
+  await user.click(screen.getByRole('button', { name: 'Salvar' }))
+  await waitFor(() => expect(api.createQuest).toHaveBeenCalledWith(expect.objectContaining({ scheduled_on: '2026-10-10', scheduled_time: '20:00' })))
+})
+
+it('clearing the date clears the time, so the schedule is removed', async () => {
+  vi.mocked(api.loadAll).mockResolvedValue(
+    appData({ categories: allCats(), quests: [quest({ id: 'brabus', title: 'Brabus', category_id: CATS.restaurante.id, scheduled_on: '2026-10-10', scheduled_time: '20:00:00' })] }),
+  )
+  const user = userEvent.setup()
+  renderRoute([{ path: '/quests/:id/editar', element: <QuestFormPage /> }, { path: '/quests/:id', element: <p>quest</p> }], '/quests/brabus/editar')
+  expect(await screen.findByLabelText('Horário')).toHaveValue('20:00')
+  fireEvent.change(screen.getByLabelText('Data'), { target: { value: '' } })
+  expect(screen.getByLabelText('Horário')).toHaveValue('')
+  expect(screen.getByLabelText('Horário')).toBeDisabled()
+  await user.click(screen.getByRole('button', { name: 'Salvar' }))
+  await waitFor(() => expect(api.updateQuest).toHaveBeenCalledWith('brabus', expect.objectContaining({ scheduled_on: null, scheduled_time: null })))
 })
