@@ -24,16 +24,21 @@ const data = appData({
   quests: [brabus, forno, interstellar, matrix, naruto],
   completions: [completion({ quest_id: 'matrix' })],
 })
-const open = (categoryId: string | null = null) =>
-  render(<MemoryRouter><DrawDialog data={data} categoryId={categoryId} onClose={() => {}} /></MemoryRouter>)
+// The draw always opens on Todas; tests that start in a category tap it first.
+const open = async (category?: string) => {
+  render(<MemoryRouter><DrawDialog data={data} onClose={() => {}} /></MemoryRouter>)
+  if (category) await userEvent.click(button(category))
+}
 const button = (name: string) => screen.getByRole('button', { name })
 const draw = () => within(screen.getByRole('dialog', { name: 'Sorteio' })).getByRole('button', { name: 'Sortear' })
 const withMotion = () => vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener() {}, removeEventListener() {} }))
 
-it('opens on the filters with the page category marked and counts the pool live', async () => {
+it('always opens on Todas and counts the pool live', async () => {
   const user = userEvent.setup()
-  open(CATS.restaurante.id)
-  expect(button('Restaurante')).toHaveAttribute('aria-pressed', 'true')
+  await open()
+  expect(button('Todas')).toHaveAttribute('aria-pressed', 'true')
+  expect(screen.getByText('4 quests no sorteio')).toBeInTheDocument()
+  await user.click(button('Restaurante'))
   expect(screen.getByText('2 quests no sorteio')).toBeInTheDocument()
   await user.click(button('Fácil'))
   expect(screen.getByText('1 quest no sorteio')).toBeInTheDocument()
@@ -41,7 +46,7 @@ it('opens on the filters with the page category marked and counts the pool live'
 
 it('types show for the chosen categories, with the category bubble, and leave with it', async () => {
   const user = userEvent.setup()
-  open(CATS.restaurante.id)
+  await open('Restaurante')
   await user.click(button('Pizzaria'))
   expect(screen.getByText('1 quest no sorteio')).toBeInTheDocument()
   expect(button('Pizzaria').querySelector('svg')).not.toBeNull()
@@ -52,7 +57,7 @@ it('types show for the chosen categories, with the category bubble, and leave wi
 
 it('several categories add up, and Todas clears them', async () => {
   const user = userEvent.setup()
-  open()
+  await open()
   await user.click(button('Restaurante'))
   await user.click(button('Filme'))
   expect(button('Restaurante')).toHaveAttribute('aria-pressed', 'true')
@@ -64,7 +69,7 @@ it('several categories add up, and Todas clears them', async () => {
 
 it('a type narrows only its own category', async () => {
   const user = userEvent.setup()
-  open(CATS.restaurante.id)
+  await open('Restaurante')
   await user.click(button('Filme'))
   await user.click(button('Hamburgueria'))
   expect(screen.getByText('2 quests no sorteio')).toBeInTheDocument()
@@ -72,7 +77,7 @@ it('a type narrows only its own category', async () => {
 
 it('a place narrows the physical categories only, and no match disables the draw', async () => {
   const user = userEvent.setup()
-  open(CATS.restaurante.id)
+  await open('Restaurante')
   await user.click(button('Anime'))
   expect(screen.getByText('3 quests no sorteio')).toBeInTheDocument()
   await user.click(button('Ribeirão Preto'))
@@ -85,7 +90,7 @@ it('a place narrows the physical categories only, and no match disables the draw
 
 it('Local shows countries, states and cities, and a country or state takes everything inside', async () => {
   const user = userEvent.setup()
-  open(CATS.restaurante.id)
+  await open('Restaurante')
   expect(within(screen.getByRole('group', { name: 'Países' })).getByRole('button', { name: 'Brasil' })).toBeInTheDocument()
   expect(within(screen.getByRole('group', { name: 'Estados' })).getAllByRole('button').map((b) => b.textContent)).toEqual(['Rio de Janeiro', 'São Paulo'])
   await user.click(button('Brasil'))
@@ -97,7 +102,7 @@ it('Local shows countries, states and cities, and a country or state takes every
 
 it('with reduced motion the result shows right away and Bora! opens the quest', async () => {
   const user = userEvent.setup()
-  open(CATS.filme.id)
+  await open('Filme')
   await user.click(draw())
   expect(screen.getByText('Interstellar')).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Bora!' })).toHaveAttribute('href', '/quests/interstellar')
@@ -106,7 +111,7 @@ it('with reduced motion the result shows right away and Bora! opens the quest', 
 
 it('Sortear outra never repeats the last quest, and Filtros keeps the choices', async () => {
   const user = userEvent.setup()
-  open(CATS.restaurante.id)
+  await open('Restaurante')
   await user.click(draw())
   const first = screen.getByRole('link', { name: 'Bora!' }).getAttribute('href')
   await user.click(button('Sortear outra'))
@@ -118,7 +123,7 @@ it('Sortear outra never repeats the last quest, and Filtros keeps the choices', 
 it('with motion on it plays the constellation, and Pular jumps to the result', async () => {
   withMotion()
   const user = userEvent.setup()
-  open(CATS.filme.id)
+  await open('Filme')
   await user.click(draw())
   expect(await screen.findByRole('button', { name: 'constelação' })).toBeInTheDocument()
   await user.click(button('Pular'))
@@ -128,14 +133,14 @@ it('with motion on it plays the constellation, and Pular jumps to the result', a
 it('when the constellation ends, the result appears', async () => {
   withMotion()
   const user = userEvent.setup()
-  open(CATS.filme.id)
+  await open('Filme')
   await user.click(draw())
   await user.click(await screen.findByRole('button', { name: 'constelação' }))
   expect(screen.getByRole('link', { name: 'Bora!' })).toBeInTheDocument()
 })
 
-it('filter chips keep dark text on their light background over the night sky', () => {
-  open(CATS.restaurante.id)
+it('filter chips keep dark text on their light background over the night sky', async () => {
+  await open('Restaurante')
   for (const group of screen.getAllByRole('group')) {
     for (const chip of within(group).getAllByRole('button')) expect(chip).toHaveClass('text-ink')
   }
@@ -143,7 +148,7 @@ it('filter chips keep dark text on their light background over the night sky', (
 
 it('a city picked in another category never hides the quests of the new one', async () => {
   const user = userEvent.setup()
-  open()
+  await open()
   await user.click(button('Ribeirão Preto'))
   await user.click(button('Filme'))
   expect(screen.getByText('1 quest no sorteio')).toBeInTheDocument()
@@ -152,14 +157,14 @@ it('a city picked in another category never hides the quests of the new one', as
 
 it('Escape closes the draw', async () => {
   const onClose = vi.fn()
-  render(<MemoryRouter><DrawDialog data={data} categoryId={null} onClose={onClose} /></MemoryRouter>)
+  render(<MemoryRouter><DrawDialog data={data} onClose={onClose} /></MemoryRouter>)
   await userEvent.setup().keyboard('{Escape}')
   expect(onClose).toHaveBeenCalled()
 })
 
 it('the result takes the focus and is announced', async () => {
   const user = userEvent.setup()
-  open(CATS.filme.id)
+  await open('Filme')
   await user.click(draw())
   expect(screen.getByRole('link', { name: 'Bora!' })).toHaveFocus()
   expect(screen.getByText('Sorteada: Interstellar')).toHaveAttribute('aria-live', 'polite')
@@ -168,12 +173,12 @@ it('the result takes the focus and is announced', async () => {
 it('Pular has the focus while the constellation plays', async () => {
   withMotion()
   const user = userEvent.setup()
-  open(CATS.filme.id)
+  await open('Filme')
   await user.click(draw())
   expect(await screen.findByRole('button', { name: 'Pular' })).toHaveFocus()
 })
 
-it('difficulty chips show their gems', () => {
-  open()
+it('difficulty chips show their gems', async () => {
+  await open()
   expect(button('Fácil').querySelectorAll('.gem')).toHaveLength(4)
 })

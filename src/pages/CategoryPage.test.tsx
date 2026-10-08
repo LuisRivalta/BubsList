@@ -46,15 +46,9 @@ it('filters by difficulty', async () => {
   expect(screen.getByText(/Nenhuma quest pendente/)).toBeInTheDocument()
 })
 
-it('a new quest starts in this category and Sortear draws only from it', async () => {
-  const user = userEvent.setup()
+it('a new quest starts in this category', async () => {
   open('cat-viagem')
   expect(await screen.findByRole('link', { name: 'Nova quest' })).toHaveAttribute('href', '/quests/nova?categoria=cat-viagem')
-  await user.click(screen.getByRole('button', { name: 'Sortear' }))
-  const dialog = screen.getByRole('dialog', { name: 'Sorteio' })
-  expect(within(dialog).getByRole('button', { name: 'Viagem' })).toHaveAttribute('aria-pressed', 'true')
-  await user.click(within(dialog).getByRole('button', { name: 'Sortear' }))
-  expect(dialog).toHaveTextContent('Tóquio')
 })
 
 it('an unknown category shows a not-found hero', async () => {
@@ -82,4 +76,13 @@ it('cards show the type and the city, and nothing extra when there is none', asy
   open('cat-viagem')
   expect(await screen.findByText('Roteiro · Tóquio')).toBeInTheDocument()
   expect(screen.getByText('Praia').closest('a')).not.toHaveTextContent('·')
+})
+
+it('the draw opens on Todas even from a category page', async () => {
+  const user = userEvent.setup()
+  open('cat-viagem')
+  await user.click(await screen.findByRole('button', { name: 'Sortear' }))
+  const dialog = screen.getByRole('dialog', { name: 'Sorteio' })
+  expect(within(dialog).getByRole('button', { name: 'Todas' })).toHaveAttribute('aria-pressed', 'true')
+  expect(within(dialog).getByRole('button', { name: 'Viagem' })).toHaveAttribute('aria-pressed', 'false')
 })

@@ -25,9 +25,9 @@ const toggle = <T,>(list: T[], item: T) => (list.includes(item) ? list.filter((x
 type Step = 'filters' | 'rolling' | 'result'
 
 // Full-screen draw: choose the filters, watch the constellation, get a quest.
-export default function DrawDialog({ data, categoryId, onClose }: { data: AppData; categoryId: string | null; onClose: () => void }) {
+export default function DrawDialog({ data, onClose }: { data: AppData; onClose: () => void }) {
   useHideSky()
-  const [filter, setFilter] = useState<DrawFilter>({ categoryIds: categoryId ? [categoryId] : [], typeIds: [], difficulties: [], places: [] })
+  const [filter, setFilter] = useState<DrawFilter>({ categoryIds: [], typeIds: [], difficulties: [], places: [] })
   const [step, setStep] = useState<Step>('filters')
   const [winner, setWinner] = useState<Quest | null>(null)
   const [stars, setStars] = useState<Quest[]>([])
