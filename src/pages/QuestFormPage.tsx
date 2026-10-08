@@ -234,7 +234,8 @@ function QuestForm({ data, existing, parentId, initialCategory }: { data: AppDat
             <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} />
           </label>
           {category?.has_place && <PlaceField value={place} inherited={inherited ? placeLabel(inherited) : null} onChange={setPlace} />}
-          <fieldset>
+          {/* min-w-0: a fieldset is min-content wide by default and would push the time field off the card */}
+          <fieldset className="min-w-0">
             <legend className="mb-1 font-bold">Quando <span className="font-normal text-ink/60">(opcional)</span></legend>
             <div className="flex gap-2">
               <input

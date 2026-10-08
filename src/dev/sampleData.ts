@@ -7,6 +7,8 @@ const PARTNER = 'preview-bubs'
 const T = '2026-01-01T00:00:00Z'
 const [Y, M, D] = todayISO().split('-').map(Number)
 
+const ahead = (n: number) => todayISO(new Date(Date.now() + n * 86_400_000))
+
 const day = (d: number, monthsAgo = 0) => {
   const index = Y * 12 + (M - 1) - monthsAgo
   return toISO(Math.floor(index / 12), (index % 12) + 1, monthsAgo === 0 ? Math.min(d, D) : d)
@@ -65,15 +67,16 @@ export const sampleData: AppData = {
   ],
   quests: [
     quest('japao', 'Japão', 'viagem', 'epic', { notes: 'Ver as cerejeiras em abril e comer muito ramen.' }),
-    quest('toquio', 'Tóquio', 'viagem', 'hard', { parent_id: 'japao', city: 'Tóquio', country: 'Japão' }),
+    quest('toquio', 'Tóquio', 'viagem', 'hard', { parent_id: 'japao', city: 'Tóquio', country: 'Japão', lat: 35.6762, lng: 139.6503 }),
     quest('ichiran', 'Ichiran Ramen', 'rest', 'easy', { parent_id: 'toquio', type_id: 't-ramen' }),
     quest('fuji', 'Monte Fuji', 'ativ', 'hard', { parent_id: 'japao' }),
-    quest('batata', 'Batata do Marechal', 'rest', 'medium', { type_id: 't-batata', city: 'Rio de Janeiro', state: 'Rio de Janeiro', country: 'Brasil' }),
-    quest('brabus', 'Brabus Burguer', 'rest', 'easy', { type_id: 't-burger', city: 'Ribeirão Preto', state: 'São Paulo', country: 'Brasil', place_label: 'Ribeirão Preto, São Paulo, Brasil' }),
+    quest('batata', 'Batata do Marechal', 'rest', 'medium', { type_id: 't-batata', city: 'Rio de Janeiro', state: 'Rio de Janeiro', country: 'Brasil', lat: -22.9068, lng: -43.1729 }),
+    quest('brabus', 'Brabus Burguer', 'rest', 'easy', { type_id: 't-burger', city: 'Ribeirão Preto', state: 'São Paulo', country: 'Brasil', place_label: 'Ribeirão Preto, São Paulo, Brasil', lat: -21.1775, lng: -47.8103, scheduled_on: ahead(2), scheduled_time: '20:00:00' }),
+    quest('akira', 'Akira Sushi', 'rest', 'medium', { city: 'Ribeirão Preto', state: 'São Paulo', country: 'Brasil', place_label: 'Ribeirão Preto, São Paulo, Brasil', lat: -21.1775, lng: -47.8103 }),
     quest('hxh', 'Hunter x Hunter', 'anime', 'epic', { type_id: 't-shonen', media_id: 'm-hxh', progress_season: 1, progress_episode: 37 }),
     quest('sm', 'Sailor Moon Crystal', 'anime', 'medium', { media_id: 'm-sm' }),
     quest('dark', 'Dark', 'serie', 'hard', { media_id: 'm-dark', progress_season: 2, progress_episode: 5 }),
-    quest('serra', 'Acampar na Serra da Mantiqueira e ver o nascer do sol lá de cima juntos', 'ativ', 'medium', { city: 'Campos do Jordão', state: 'São Paulo', country: 'Brasil' }),
+    quest('serra', 'Acampar na Serra da Mantiqueira e ver o nascer do sol lá de cima juntos', 'ativ', 'medium', { city: 'Campos do Jordão', state: 'São Paulo', country: 'Brasil', scheduled_on: ahead(1) }),
     quest('matrix', 'Matrix', 'filme', 'easy', { type_id: 't-scifi' }),
   ],
   completions: [

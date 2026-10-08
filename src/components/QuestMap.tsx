@@ -35,7 +35,8 @@ export default function QuestMap({ pins, onPick }: { pins: Pin[]; onPick: (pin: 
     for (const pin of pins) {
       const n = pin.quests.length
       const icon = L.divIcon({ className: '', html: `<span class="map-pin ${pin.pending ? 'map-pin-pending' : 'map-pin-done'}">${n > 1 ? n : ''}</span>`, iconSize: [32, 32], iconAnchor: [16, 16] })
-      L.marker([pin.lat, pin.lng], { icon, title: pin.quests.map((q) => q.title).join(', '), keyboard: true })
+      // Pending pins on top: a done pin never hides a place still to visit.
+      L.marker([pin.lat, pin.lng], { icon, title: pin.quests.map((q) => q.title).join(', '), keyboard: true, zIndexOffset: pin.pending ? 1000 : 0 })
         .on('click', () => pick.current(pin))
         .addTo(group)
     }
@@ -43,5 +44,6 @@ export default function QuestMap({ pins, onPick }: { pins: Pin[]; onPick: (pin: 
     else m.setView(BRASIL, 4)
   }, [pins])
 
-  return <div ref={box} data-lenis-prevent className="size-full" />
+  // Sea-colored background (OpenStreetMap's water), so a zoomed-out world has no gray bands around it.
+  return <div ref={box} data-lenis-prevent className="size-full" style={{ background: '#aad3df' }} />
 }
