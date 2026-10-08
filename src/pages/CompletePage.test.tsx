@@ -117,3 +117,21 @@ it('editing a completion that no longer exists shows a readable not-found hero',
   renderRoute(routes, '/quests/japao/concluir?completion=sumiu')
   expect(await screen.findByRole('heading', { level: 1, name: 'Conclusão não encontrada' })).toBeInTheDocument()
 })
+
+it('completing a scheduled quest clears its schedule, so it leaves Próximas', async () => {
+  load({ quests: [{ ...japao, scheduled_on: todayISO(), scheduled_time: '20:00:00' }] })
+  const user = userEvent.setup()
+  const router = renderRoute(routes, '/quests/japao/concluir')
+  await user.click(await screen.findByRole('button', { name: 'Pular resenha' }))
+  await waitFor(() => expect(router.state.location.pathname).toBe('/quests/japao'))
+  expect(api.updateQuest).toHaveBeenCalledWith('japao', { scheduled_on: null, scheduled_time: null })
+})
+
+it('completing a quest with no date leaves it untouched', async () => {
+  load()
+  const user = userEvent.setup()
+  const router = renderRoute(routes, '/quests/japao/concluir')
+  await user.click(await screen.findByRole('button', { name: 'Pular resenha' }))
+  await waitFor(() => expect(router.state.location.pathname).toBe('/quests/japao'))
+  expect(api.updateQuest).not.toHaveBeenCalled()
+})

@@ -8,10 +8,10 @@ import QuestActions from '../components/QuestActions'
 import { QuestCards } from '../components/QuestList'
 import Stagger from '../components/Stagger'
 import { LoadError, PageLoading } from '../components/Status'
-import { useAppData } from '../data/hooks'
+import { useAppData, useToday } from '../data/hooks'
 import { useUserId } from '../data/session'
 import { evaluateAchievements } from '../lib/achievements'
-import { formatDate, todayISO } from '../lib/dates'
+import { formatDate } from '../lib/dates'
 import { filterQuests, pendingReviews } from '../lib/filters'
 import { isOverdue, scheduleLabel, upcoming } from '../lib/schedule'
 import { count } from '../lib/text'
@@ -22,6 +22,7 @@ export default function QuestsPage() {
   const q = useAppData()
   const me = useUserId()
   const [search, setSearch] = useState('')
+  const today = useToday()
 
   if (q.error) return <LoadError retry={() => q.refetch()} />
   if (!q.data) return <PageLoading />
@@ -29,9 +30,8 @@ export default function QuestsPage() {
   const data = q.data
   const done = doneQuestIds(data.completions)
   const pending = pendingReviews(data.completions, data.reviews, me)
-  const today = todayISO()
   const month = today.slice(0, 7)
-  const next = upcoming(data.quests, done)
+  const next = upcoming(data.quests)
   const openCount = data.quests.filter((x) => x.parent_id === null && !done.has(x.id)).length
   const doneThisMonth = data.completions.filter((c) => c.done_on.startsWith(month)).length
   const unlocked = evaluateAchievements(data.achievements, data.quests, data.completions).filter((s) => s.unlockedOn).length

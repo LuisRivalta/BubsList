@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { fetchCatalogDetails } from '../lib/catalog'
+import { todayISO } from '../lib/dates'
 import { supabase } from '../lib/supabase'
 import type { Media } from '../lib/types'
 import { loadAll, signedUrls, upsertMedia } from './api'
@@ -48,4 +49,15 @@ export function useMediaRefresh(media: Media | undefined) {
       .then(() => refresh())
       .catch(() => {})
   }, [stale, media])
+}
+
+// "Hoje" moves at midnight, and the installed app stays open in the background for days: re-read the date whenever it comes back.
+export function useToday() {
+  const [today, setToday] = useState(todayISO)
+  useEffect(() => {
+    const update = () => setToday(todayISO())
+    document.addEventListener('visibilitychange', update)
+    return () => document.removeEventListener('visibilitychange', update)
+  }, [])
+  return today
 }

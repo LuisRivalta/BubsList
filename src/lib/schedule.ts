@@ -20,10 +20,11 @@ export function scheduleLabel(on: string, time: string | null, today: string): s
   return time ? `${day} · ${timeLabel(time)}` : day
 }
 
-// Pending quests with a date, soonest first; late ones come first because their date is smaller.
-export function upcoming(quests: Quest[], done: Set<string>): Quest[] {
+// Quests with a date, soonest first; late ones come first because their date is smaller.
+// Completing a quest clears its date (CompletePage), so a done quest with a date is planned again ("Fazer de novo").
+export function upcoming(quests: Quest[]): Quest[] {
   const key = (q: Quest) => `${q.scheduled_on} ${q.scheduled_time ?? ''}`
-  return quests.filter((q) => q.scheduled_on && !done.has(q.id)).sort((a, b) => key(a).localeCompare(key(b)))
+  return quests.filter((q) => q.scheduled_on).sort((a, b) => key(a).localeCompare(key(b)))
 }
 
 export function calendarUrl(q: Pick<Quest, 'id' | 'title' | 'scheduled_on' | 'scheduled_time'>, place: string | null): string {

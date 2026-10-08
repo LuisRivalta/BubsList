@@ -12,9 +12,9 @@ import QuestCard from '../components/QuestCard'
 import Stars from '../components/Stars'
 import { LoadError, NotFound, PageLoading } from '../components/Status'
 import { deleteCompletion, deleteQuest, setProgress } from '../data/api'
-import { useAppData, useMediaRefresh, useRefresh, useSignedUrls } from '../data/hooks'
+import { useAppData, useMediaRefresh, useRefresh, useSignedUrls, useToday } from '../data/hooks'
 import { useUserId } from '../data/session'
-import { formatDate, todayISO } from '../lib/dates'
+import { formatDate } from '../lib/dates'
 import { prefersReducedMotion } from '../lib/motion'
 import { effectivePlace, placeLabel } from '../lib/place'
 import { episodesWatched, formatProgress, nextEpisode, progressOf } from '../lib/progress'
@@ -117,7 +117,7 @@ export default function QuestPage() {
       />
 
       <div className="space-y-6">
-        {quest.scheduled_on && !isDone && <ScheduleCard quest={quest} data={data} />}
+        {quest.scheduled_on && <ScheduleCard quest={quest} data={data} />}
 
         {(media?.synopsis || quest.notes) && (
           <section className="card space-y-2 p-5">
@@ -174,7 +174,7 @@ export default function QuestPage() {
 }
 
 function ScheduleCard({ quest, data }: { quest: Quest; data: AppData }) {
-  const today = todayISO()
+  const today = useToday()
   const label = scheduleLabel(quest.scheduled_on!, quest.scheduled_time, today)
   const late = isOverdue(quest.scheduled_on!, today)
   const place = effectivePlace(data.quests, quest.id)

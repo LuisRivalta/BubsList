@@ -5,7 +5,7 @@ import PageHero from '../components/PageHero'
 import PhotoPicker, { uploadPending } from '../components/PhotoPicker'
 import Stars from '../components/Stars'
 import { LoadError, NotFound, PageLoading } from '../components/Status'
-import { createCompletion, deletePhoto, deleteReview, saveReview, updateCompletion } from '../data/api'
+import { createCompletion, deletePhoto, deleteReview, saveReview, updateCompletion, updateQuest } from '../data/api'
 import { useAppData, useRefresh } from '../data/hooks'
 import { useUserId } from '../data/session'
 import { evaluateAchievements, newlyUnlocked } from '../lib/achievements'
@@ -63,6 +63,8 @@ function CompleteForm({ data, quest, existing }: { data: AppData; quest: Quest; 
         completion = await createCompletion(quest.id, doneOn)
         created.current = completion
       }
+      // Done: the plan is over, so it leaves Próximas. Outside the branch above so a retry clears it too.
+      if (!existing && quest.scheduled_on) await updateQuest(quest.id, { scheduled_on: null, scheduled_time: null })
       let failed: Blob[] = []
       let reviewId: string | null = null
       if (withReview) {

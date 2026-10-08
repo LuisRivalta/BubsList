@@ -137,9 +137,9 @@ it('a scheduled pending quest shows when, and the calendar link carries it', asy
   expect(link).toHaveAttribute('target', '_blank')
 })
 
-it('a done quest hides its schedule', async () => {
+it('a quest done before and scheduled again (Fazer de novo) shows its new date', async () => {
   load({ quests: [quest({ id: 'cine', title: 'Cinema', category_id: CATS.filme.id, scheduled_on: '2099-01-03' })], completions: [completion({ quest_id: 'cine' })] })
   renderRoute(routes, '/quests/cine')
-  await screen.findByRole('heading', { level: 1, name: 'Cinema' })
-  expect(screen.queryByRole('link', { name: 'Adicionar ao calendário' })).not.toBeInTheDocument()
+  expect(await screen.findByText('Agendada · sáb, 03/01')).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Adicionar ao calendário' })).toBeInTheDocument()
 })

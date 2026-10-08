@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, expect, it, vi } from 'vitest'
 import * as api from '../data/api'
@@ -88,7 +88,7 @@ it('draws a pending quest you can actually do and opens it', async () => {
 const shift = (days: number) => todayISO(new Date(Date.now() + days * 86_400_000))
 const dayMonth = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`
 
-it('Próximas lists pending scheduled quests by date, late ones first and flagged, done ones left out', async () => {
+it('Próximas lists scheduled quests by date, late ones first and flagged, a done one scheduled again included', async () => {
   vi.mocked(api.loadAll).mockResolvedValue({
     ...data,
     quests: [
@@ -101,15 +101,34 @@ it('Próximas lists pending scheduled quests by date, late ones first and flagge
   open()
   const next = await screen.findByRole('region', { name: 'Próximas' })
   const items = within(next).getAllByRole('link')
-  expect(items).toHaveLength(2)
+  expect(items).toHaveLength(3)
   expect(items[0]).toHaveTextContent('Sushi')
   expect(within(items[0]).getByText(`Atrasada · ${dayMonth(shift(-2))}`)).toHaveClass('text-red-600')
-  expect(items[1]).toHaveTextContent('BrabusAmanhã · 20h')
-  expect(items[1]).toHaveAttribute('href', '/quests/brabus')
+  expect(items[1]).toHaveTextContent('MatrixHoje')
+  expect(items[2]).toHaveTextContent('BrabusAmanhã · 20h')
+  expect(items[2]).toHaveAttribute('href', '/quests/brabus')
 })
 
 it('without scheduled quests there is no Próximas', async () => {
   open()
   await screen.findByRole('link', { name: /^Viagem/ })
   expect(screen.queryByRole('region', { name: 'Próximas' })).not.toBeInTheDocument()
+})
+
+it('Hoje and Amanhã follow the calendar when the app comes back the next day', async () => {
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(new Date(2026, 9, 9, 22, 0)) // Friday night
+  vi.mocked(api.loadAll).mockResolvedValue({
+    ...data,
+    quests: [...data.quests, quest({ id: 'brabus', title: 'Brabus', category_id: CATS.restaurante.id, scheduled_on: '2026-10-10', scheduled_time: '20:00:00' })],
+  })
+  open()
+  const next = await screen.findByRole('region', { name: 'Próximas' })
+  expect(next).toHaveTextContent('Amanhã · 20h')
+  vi.setSystemTime(new Date(2026, 9, 10, 9, 0)) // Saturday morning, the app comes back from the background
+  act(() => {
+    document.dispatchEvent(new Event('visibilitychange'))
+  })
+  expect(next).toHaveTextContent('Hoje · 20h')
+  vi.useRealTimers()
 })

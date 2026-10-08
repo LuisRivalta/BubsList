@@ -23,14 +23,17 @@ describe('scheduleLabel', () => {
 })
 
 describe('upcoming', () => {
-  it('lists pending scheduled quests by date, then time, a day without time first', () => {
+  it('lists scheduled quests by date, then time, a day without time first', () => {
     const late = quest({ id: 'late', scheduled_on: '2026-10-01' })
     const night = quest({ id: 'night', scheduled_on: '2026-10-10', scheduled_time: '20:00:00' })
     const allDay = quest({ id: 'allday', scheduled_on: '2026-10-10' })
     const morning = quest({ id: 'morning', scheduled_on: '2026-10-10', scheduled_time: '09:00:00' })
-    const done = quest({ id: 'done', scheduled_on: '2026-10-09' })
     const loose = quest({ id: 'loose' })
-    expect(upcoming([night, done, loose, morning, allDay, late], new Set(['done'])).map((q) => q.id)).toEqual(['late', 'allday', 'morning', 'night'])
+    expect(upcoming([night, loose, morning, allDay, late]).map((q) => q.id)).toEqual(['late', 'allday', 'morning', 'night'])
+  })
+  it('a quest done before and scheduled again ("Fazer de novo") is upcoming again', () => {
+    // Completing clears the date (CompletePage), so any date still set is a plan for the next time.
+    expect(upcoming([quest({ id: 'again', scheduled_on: '2026-10-10' })]).map((q) => q.id)).toEqual(['again'])
   })
 })
 
