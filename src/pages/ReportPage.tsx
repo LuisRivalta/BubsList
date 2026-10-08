@@ -34,7 +34,7 @@ export default function ReportPage() {
   return (
     <>
       <PageHero
-        title="Relatório"
+        title="Retrospectiva"
         actions={
           period.kind === 'year' && report.total > 0 ? (
             <Link to={`/retrospectiva/${period.year}`} className="btn btn-primary">

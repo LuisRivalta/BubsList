@@ -19,7 +19,7 @@ const NAV = [
   { to: '/', label: 'Quests', Icon: ScrollText },
   { to: '/mapa', label: 'Mapa', Icon: MapIcon },
   { to: '/conquistas', label: 'Conquistas', Icon: Trophy },
-  { to: '/relatorio', label: 'Relatório', Icon: ChartColumn },
+  { to: '/relatorio', label: 'Retrospectiva', Icon: ChartColumn },
   { to: '/perfil', label: 'Perfil', Icon: User },
 ]
 
@@ -138,7 +138,7 @@ export default function Layout() {
                 key={n.to}
                 to={n.to}
                 aria-current={active ? 'page' : undefined}
-                className={`relative z-10 flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 rounded-full text-[11px] font-bold transition-colors md:min-h-11 md:flex-none md:flex-row md:justify-start md:gap-3 md:rounded-xl md:px-3 md:text-sm ${
+                className={`relative z-10 flex min-h-12 flex-auto flex-col items-center justify-center gap-0.5 rounded-full text-[11px] font-bold transition-colors md:min-h-11 md:flex-none md:flex-row md:justify-start md:gap-3 md:rounded-xl md:px-3 md:text-sm ${
                   active ? 'text-white' : 'text-ink/70 md:text-white/60 md:hover:text-white'
                 }`}
               >
