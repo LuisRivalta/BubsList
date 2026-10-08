@@ -3,7 +3,7 @@ import { expect, it, vi } from 'vitest'
 vi.mock('../lib/supabase', () => ({ supabase: { from: vi.fn(), storage: { from: vi.fn() } } }))
 
 import { supabase } from '../lib/supabase'
-import { loadAll, saveQuestType, uploadAvatar } from './api'
+import { loadAll, saveQuestType, setCategoryPlace, uploadAvatar } from './api'
 
 it('pages through tables with more than 1000 rows', async () => {
   const rows = (n: number, prefix: string) => Array.from({ length: n }, (_, i) => ({ id: `${prefix}${i}` }))
@@ -60,4 +60,14 @@ it('saving a quest type inserts it, or updates it by id, and returns the row', a
   await saveQuestType({ id: 't1', category_id: 'c1', name: 'Hamburguer' })
   expect(update).toHaveBeenCalledWith({ category_id: 'c1', name: 'Hamburguer' })
   expect(eq).toHaveBeenCalledWith('id', 't1')
+})
+
+it('setCategoryPlace switches the physical place of a category', async () => {
+  const eq = vi.fn().mockResolvedValue({ data: null, error: null })
+  const update = vi.fn(() => ({ eq }))
+  vi.mocked(supabase.from).mockReturnValue({ update } as never)
+  await setCategoryPlace('c1', true)
+  expect(supabase.from).toHaveBeenCalledWith('categories')
+  expect(update).toHaveBeenCalledWith({ has_place: true })
+  expect(eq).toHaveBeenCalledWith('id', 'c1')
 })

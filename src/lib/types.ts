@@ -20,6 +20,7 @@ export interface Category {
   color: string
   kind: CategoryKind
   builtin: boolean
+  has_place: boolean
   created_at: string
 }
 
@@ -55,6 +56,11 @@ export interface Quest {
   media_id: string | null
   type_id: string | null
   city: string | null
+  state: string | null
+  country: string | null
+  place_label: string | null
+  lat: number | null
+  lng: number | null
   progress_season: number | null
   progress_episode: number | null
   created_by: string

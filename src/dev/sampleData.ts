@@ -12,12 +12,12 @@ const day = (d: number, monthsAgo = 0) => {
   return toISO(Math.floor(index / 12), (index % 12) + 1, monthsAgo === 0 ? Math.min(d, D) : d)
 }
 
-const cat = (id: string, name: string, icon: string, color: string, kind: CategoryKind = 'general'): Category => ({
-  id, name, icon, color, kind, builtin: true, created_at: T,
+const cat = (id: string, name: string, icon: string, color: string, kind: CategoryKind = 'general', has_place = false): Category => ({
+  id, name, icon, color, kind, builtin: true, has_place, created_at: T,
 })
 
 const quest = (id: string, title: string, category_id: string, difficulty: Difficulty, extra: Partial<Quest> = {}): Quest => ({
-  id, parent_id: null, category_id, title, notes: null, difficulty, media_id: null, type_id: null, city: null, progress_season: null,
+  id, parent_id: null, category_id, title, notes: null, difficulty, media_id: null, type_id: null, city: null, state: null, country: null, place_label: null, lat: null, lng: null, progress_season: null,
   progress_episode: null, created_by: ME, created_at: T, updated_at: T, ...extra,
 })
 
@@ -43,9 +43,9 @@ export const sampleData: AppData = {
     { id: PARTNER, display_name: 'Bubs', avatar_path: null, created_at: T },
   ],
   categories: [
-    cat('viagem', 'Viagem', 'plane', '#0ea5e9'),
-    cat('rest', 'Restaurante', 'utensils', '#f97316'),
-    cat('ativ', 'Atividade', 'target', '#22c55e'),
+    cat('viagem', 'Viagem', 'plane', '#0ea5e9', 'general', true),
+    cat('rest', 'Restaurante', 'utensils', '#f97316', 'general', true),
+    cat('ativ', 'Atividade', 'target', '#22c55e', 'general', true),
     cat('filme', 'Filme', 'clapperboard', '#ef4444', 'movie'),
     cat('serie', 'Série', 'tv', '#8b5cf6', 'series'),
     cat('anime', 'Anime', 'swords', '#ec4899', 'anime'),

@@ -125,6 +125,8 @@ function QuestForm({ data, existing, parentId, initialCategory }: { data: AppDat
       const input: QuestInput = {
         parent_id: parentId, category_id: category.id, title: title.trim(), notes: notes.trim() || null, difficulty, media_id: mediaId,
         type_id: typeId, city: city.trim() || null,
+        state: existing?.state ?? null, country: existing?.country ?? null, place_label: existing?.place_label ?? null,
+        lat: existing?.lat ?? null, lng: existing?.lng ?? null,
       }
       let questId: string
       if (existing) {

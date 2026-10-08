@@ -8,7 +8,7 @@ let seq = 0
 const nextId = (prefix: string) => `${prefix}-${++seq}`
 
 export const category = (o: Partial<Category> = {}): Category => ({
-  id: nextId('cat'), name: 'Viagem', icon: 'plane', color: '#0ea5e9', kind: 'general', builtin: true, created_at: T, ...o,
+  id: nextId('cat'), name: 'Viagem', icon: 'plane', color: '#0ea5e9', kind: 'general', builtin: true, has_place: false, created_at: T, ...o,
 })
 
 export const questType = (o: Partial<QuestType> = {}): QuestType => ({
@@ -17,7 +17,7 @@ export const questType = (o: Partial<QuestType> = {}): QuestType => ({
 
 export const quest = (o: Partial<Quest> = {}): Quest => ({
   id: nextId('q'), parent_id: null, category_id: 'cat-none', title: 'Quest', notes: null, difficulty: 'easy',
-  media_id: null, type_id: null, city: null, progress_season: null, progress_episode: null, created_by: ME, created_at: T, updated_at: T, ...o,
+  media_id: null, type_id: null, city: null, state: null, country: null, place_label: null, lat: null, lng: null, progress_season: null, progress_episode: null, created_by: ME, created_at: T, updated_at: T, ...o,
 })
 
 export const completion = (o: Partial<Completion> = {}): Completion => ({
@@ -43,9 +43,9 @@ export const media = (o: Partial<Media> = {}): Media => ({
 })
 
 export const CATS = {
-  viagem: category({ id: 'cat-viagem', name: 'Viagem', icon: 'plane', color: '#0ea5e9' }),
-  restaurante: category({ id: 'cat-rest', name: 'Restaurante', icon: 'utensils', color: '#f97316' }),
-  atividade: category({ id: 'cat-ativ', name: 'Atividade', icon: 'target', color: '#22c55e' }),
+  viagem: category({ id: 'cat-viagem', name: 'Viagem', icon: 'plane', color: '#0ea5e9', has_place: true }),
+  restaurante: category({ id: 'cat-rest', name: 'Restaurante', icon: 'utensils', color: '#f97316', has_place: true }),
+  atividade: category({ id: 'cat-ativ', name: 'Atividade', icon: 'target', color: '#22c55e', has_place: true }),
   filme: category({ id: 'cat-filme', name: 'Filme', icon: 'clapperboard', color: '#ef4444', kind: 'movie' }),
   serie: category({ id: 'cat-serie', name: 'Série', icon: 'tv', color: '#8b5cf6', kind: 'series' }),
   anime: category({ id: 'cat-anime', name: 'Anime', icon: 'swords', color: '#ec4899', kind: 'anime' }),

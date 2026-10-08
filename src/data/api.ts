@@ -36,7 +36,10 @@ export async function loadAll(): Promise<AppData> {
 }
 
 // Quests -----------------------------------------------------------------
-export type QuestInput = Pick<Quest, 'parent_id' | 'category_id' | 'title' | 'notes' | 'difficulty' | 'media_id' | 'type_id' | 'city'>
+export type QuestInput = Pick<
+  Quest,
+  'parent_id' | 'category_id' | 'title' | 'notes' | 'difficulty' | 'media_id' | 'type_id' | 'city' | 'state' | 'country' | 'place_label' | 'lat' | 'lng'
+>
 
 export const createQuest = async (input: QuestInput) =>
   check<Quest>(await supabase.from('quests').insert(input).select().single())
@@ -122,6 +125,10 @@ export async function saveCategory({ id, ...row }: CategoryInput & { id?: string
 
 export async function deleteCategory(id: string) {
   check(await supabase.from('categories').delete().eq('id', id))
+}
+
+export async function setCategoryPlace(id: string, hasPlace: boolean) {
+  check(await supabase.from('categories').update({ has_place: hasPlace }).eq('id', id))
 }
 
 export async function saveQuestType({ id, ...row }: { id?: string; category_id: string; name: string }): Promise<QuestType> {

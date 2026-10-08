@@ -36,6 +36,7 @@ it('creates a top-level quest', async () => {
   await waitFor(() => expect(router.state.location.pathname).toBe('/quests/new-q'))
   expect(api.createQuest).toHaveBeenCalledWith({
     parent_id: null, category_id: CATS.restaurante.id, title: 'Batata do Marechal', notes: null, difficulty: 'medium', media_id: null, type_id: null, city: null,
+    state: null, country: null, place_label: null, lat: null, lng: null,
   })
 })
 
