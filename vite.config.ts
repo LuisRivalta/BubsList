@@ -11,7 +11,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'prompt',
       includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png', 'logo.svg', 'tmdb.svg'],
-      workbox: { globPatterns: ['**/*.{js,css,html,woff2,png,svg,webp,ico}'] },
+      workbox: { globPatterns: ['**/*.{js,css,html,woff2,png,svg,webp,ico}'], navigateFallbackDenylist: [/^\/api\//] },
       manifest: {
         name: 'Bubs2Do',
         short_name: 'Bubs2Do',
