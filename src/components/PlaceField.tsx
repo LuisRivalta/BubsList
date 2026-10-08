@@ -81,7 +81,7 @@ export default function PlaceField({ value, inherited, onChange }: { value: Plac
         <ul className="space-y-1">
           {results.map((p) => (
             <li key={`${p.label}-${p.lat}-${p.lng}`}>
-              <button type="button" onClick={() => pick(p)} className="w-full rounded-xl px-3 py-2 text-left hover:bg-blush/30">{p.label}</button>
+              <button type="button" onClick={() => pick(p)} className="flex w-full items-center gap-2 rounded-xl border border-blush/70 bg-white px-3 py-2.5 text-left font-semibold hover:bg-blush/30"><MapPin aria-hidden className="size-4 shrink-0 text-accent" /> {p.label}</button>
             </li>
           ))}
         </ul>
