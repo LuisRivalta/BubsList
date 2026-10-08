@@ -1,3 +1,4 @@
+import { effectivePlace, mostSpecific } from './place'
 import type { AppData, Completion, Photo, Quest } from './types'
 
 export const doneQuestIds = (completions: Completion[]) => new Set(completions.map((c) => c.quest_id))
@@ -57,19 +58,9 @@ export function completionPhotos(data: PhotoData, completionId: string): Photo[]
   return data.photos.filter((p) => p.review_id !== null && reviewIds.has(p.review_id))
 }
 
-// The quest's own city, or the nearest ancestor's (a subquest of "Japão — Tóquio" lives in Tóquio).
-export function effectiveCity(quests: Quest[], id: string): string | null {
-  const byId = new Map(quests.map((q) => [q.id, q]))
-  let q = byId.get(id)
-  for (let hops = 0; q && hops <= quests.length; hops++) {
-    if (q.city?.trim()) return q.city.trim()
-    q = q.parent_id ? byId.get(q.parent_id) : undefined
-  }
-  return null
-}
-
-// "Hamburgueria · Ribeirão Preto" — only the parts that exist.
+// "Hamburgueria · Ribeirão Preto" — the type and the most specific level of the effective place, when they exist.
 export function questMeta(data: Pick<AppData, 'quests' | 'questTypes'>, quest: Quest): string {
   const type = data.questTypes.find((t) => t.id === quest.type_id)?.name
-  return [type, effectiveCity(data.quests, quest.id)].filter(Boolean).join(' · ')
+  const place = effectivePlace(data.quests, quest.id)
+  return [type, place && mostSpecific(place)].filter(Boolean).join(' · ')
 }

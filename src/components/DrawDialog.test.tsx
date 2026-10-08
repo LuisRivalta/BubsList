@@ -10,17 +10,18 @@ vi.mock('./DrawConstellation', () => ({
 }))
 afterEach(() => vi.unstubAllGlobals())
 
-const brabus = quest({ id: 'brabus', title: 'Brabus Burguer', category_id: CATS.restaurante.id, type_id: 't-burger', city: 'Ribeirão Preto', difficulty: 'easy' })
-const forno = quest({ id: 'forno', title: 'Forno a Lenha', category_id: CATS.restaurante.id, type_id: 't-pizza', city: 'São Paulo', difficulty: 'medium' })
+const brabus = quest({ id: 'brabus', title: 'Brabus Burguer', category_id: CATS.restaurante.id, type_id: 't-burger', city: 'Ribeirão Preto', state: 'São Paulo', country: 'Brasil', difficulty: 'easy' })
+const forno = quest({ id: 'forno', title: 'Forno a Lenha', category_id: CATS.restaurante.id, type_id: 't-pizza', city: 'Niterói', state: 'Rio de Janeiro', country: 'Brasil', difficulty: 'medium' })
 const interstellar = quest({ id: 'interstellar', title: 'Interstellar', category_id: CATS.filme.id, difficulty: 'hard' })
 const matrix = quest({ id: 'matrix', title: 'Matrix', category_id: CATS.filme.id })
+const naruto = quest({ id: 'naruto', title: 'Naruto', category_id: CATS.anime.id })
 const data = appData({
   categories: allCats(),
   questTypes: [
     questType({ id: 't-burger', category_id: CATS.restaurante.id, name: 'Hamburgueria' }),
     questType({ id: 't-pizza', category_id: CATS.restaurante.id, name: 'Pizzaria' }),
   ],
-  quests: [brabus, forno, interstellar, matrix],
+  quests: [brabus, forno, interstellar, matrix, naruto],
   completions: [completion({ quest_id: 'matrix' })],
 })
 const open = (categoryId: string | null = null) =>
@@ -69,14 +70,29 @@ it('a type narrows only its own category', async () => {
   expect(screen.getByText('2 quests no sorteio')).toBeInTheDocument()
 })
 
-it('cities narrow the draw, and no match disables it', async () => {
+it('a place narrows the physical categories only, and no match disables the draw', async () => {
   const user = userEvent.setup()
-  open()
+  open(CATS.restaurante.id)
+  await user.click(button('Anime'))
+  expect(screen.getByText('3 quests no sorteio')).toBeInTheDocument()
   await user.click(button('Ribeirão Preto'))
-  expect(screen.getByText('1 quest no sorteio')).toBeInTheDocument()
+  expect(screen.getByText('2 quests no sorteio')).toBeInTheDocument()
+  await user.click(button('Anime'))
   await user.click(button('Difícil'))
   expect(screen.getByText('Nenhuma quest com esses filtros')).toBeInTheDocument()
   expect(draw()).toBeDisabled()
+})
+
+it('Local shows countries, states and cities, and a country or state takes everything inside', async () => {
+  const user = userEvent.setup()
+  open(CATS.restaurante.id)
+  expect(within(screen.getByRole('group', { name: 'Países' })).getByRole('button', { name: 'Brasil' })).toBeInTheDocument()
+  expect(within(screen.getByRole('group', { name: 'Estados' })).getAllByRole('button').map((b) => b.textContent)).toEqual(['Rio de Janeiro', 'São Paulo'])
+  await user.click(button('Brasil'))
+  expect(screen.getByText('2 quests no sorteio')).toBeInTheDocument()
+  await user.click(button('Brasil'))
+  await user.click(button('São Paulo'))
+  expect(screen.getByText('1 quest no sorteio')).toBeInTheDocument()
 })
 
 it('with reduced motion the result shows right away and Bora! opens the quest', async () => {

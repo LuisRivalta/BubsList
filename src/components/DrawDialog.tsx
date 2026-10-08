@@ -4,8 +4,9 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } 
 import { Link } from 'react-router'
 import { pickStars } from '../lib/constellation'
 import { DIFFICULTIES } from '../lib/difficulty'
-import { cityOptions, drawPool, sameText, type DrawFilter } from '../lib/filters'
+import { drawPool, type DrawFilter } from '../lib/filters'
 import { prefersReducedMotion } from '../lib/motion'
+import { placeOptions, type PlaceLevel, type PlaceOption } from '../lib/place'
 import { count } from '../lib/text'
 import { doneQuestIds, pathLabel, questMeta } from '../lib/tree'
 import type { AppData, Quest, QuestType } from '../lib/types'
@@ -17,6 +18,8 @@ const DrawConstellation = lazy(() => import('./DrawConstellation'))
 const SPARKS = 14
 // .chip has a white background but no text color of its own: over the night sky it needs ink text and an opaque pressed state.
 const CHIP = 'chip text-ink aria-pressed:bg-blush'
+const LEVELS: PlaceLevel[] = ['country', 'state', 'city']
+const LEVEL_LABEL: Record<PlaceLevel, string> = { country: 'Países', state: 'Estados', city: 'Cidades' }
 const toggle = <T,>(list: T[], item: T) => (list.includes(item) ? list.filter((x) => x !== item) : [...list, item])
 
 type Step = 'filters' | 'rolling' | 'result'
@@ -24,7 +27,7 @@ type Step = 'filters' | 'rolling' | 'result'
 // Full-screen draw: choose the filters, watch the constellation, get a quest.
 export default function DrawDialog({ data, categoryId, onClose }: { data: AppData; categoryId: string | null; onClose: () => void }) {
   useHideSky()
-  const [filter, setFilter] = useState<DrawFilter>({ categoryIds: categoryId ? [categoryId] : [], typeIds: [], difficulties: [], cities: [] })
+  const [filter, setFilter] = useState<DrawFilter>({ categoryIds: categoryId ? [categoryId] : [], typeIds: [], difficulties: [], places: [] })
   const [step, setStep] = useState<Step>('filters')
   const [winner, setWinner] = useState<Quest | null>(null)
   const [stars, setStars] = useState<Quest[]>([])
@@ -34,14 +37,19 @@ export default function DrawDialog({ data, categoryId, onClose }: { data: AppDat
   const types = data.questTypes
     .filter((t) => filter.categoryIds.includes(t.category_id))
     .sort((a, b) => order(a.category_id) - order(b.category_id) || a.name.localeCompare(b.name, 'pt-BR'))
-  const cities = cityOptions(data.quests, drawPool(data.quests, done, { categoryIds: filter.categoryIds, typeIds: [], difficulties: [], cities: [] }))
-  // Selections whose chip is not on screen (a city of another category, a type deleted meanwhile) are ignored, never silently applied.
+  const physical = data.categories.filter((c) => c.has_place).map((c) => c.id)
+  const candidates = drawPool(data.quests, done, { categoryIds: filter.categoryIds, typeIds: [], difficulties: [], places: [] }).filter((q) =>
+    physical.includes(q.category_id),
+  )
+  const places = placeOptions(data.quests, candidates)
+  const placeKeys = [...places.country, ...places.state, ...places.city].map((o) => o.key)
+  // Selections whose chip is not on screen (a place of another category, a type deleted meanwhile) are ignored, never silently applied.
   const active: DrawFilter = {
     ...filter,
     typeIds: filter.typeIds.filter((id) => types.some((t) => t.id === id)),
-    cities: filter.cities.filter((c) => cities.some((o) => sameText(o, c))),
+    places: filter.places.filter((k) => placeKeys.includes(k)),
   }
-  const pool = drawPool(data.quests, done, active, data.questTypes)
+  const pool = drawPool(data.quests, done, active, { types: data.questTypes, categories: data.categories })
   const closeRef = useRef(onClose)
   closeRef.current = onClose
 
@@ -76,7 +84,7 @@ export default function DrawDialog({ data, categoryId, onClose }: { data: AppDat
 
       <p aria-live="polite" className="sr-only">{step === 'result' && winner ? `Sorteada: ${winner.title}` : ''}</p>
 
-      {step === 'filters' && <Filters data={data} filter={active} types={types} cities={cities} onChange={setFilter} poolSize={pool.length} onDraw={draw} />}
+      {step === 'filters' && <Filters data={data} filter={active} types={types} places={places} onChange={setFilter} poolSize={pool.length} onDraw={draw} />}
 
       {step === 'rolling' && winner && (
         <div className="fixed inset-0 z-10" onClick={() => setStep('result')}>
@@ -105,11 +113,11 @@ function Group({ id, title, children }: { id: string; title: string; children: R
   )
 }
 
-function Filters({ data, filter, types, cities, onChange, poolSize, onDraw }: {
+function Filters({ data, filter, types, places, onChange, poolSize, onDraw }: {
   data: AppData
   filter: DrawFilter
   types: QuestType[]
-  cities: string[]
+  places: Record<PlaceLevel, PlaceOption[]>
   onChange: (f: DrawFilter) => void
   poolSize: number
   onDraw: () => void
@@ -144,20 +152,20 @@ function Filters({ data, filter, types, cities, onChange, poolSize, onDraw }: {
           </button>
         ))}
       </Group>
-      {cities.length > 0 && (
-        <Group id="draw-city" title="Cidade">
-          {cities.map((c) => (
-            <button
-              key={c}
-              type="button"
-              className={`${CHIP} pl-3`}
-              aria-pressed={filter.cities.some((x) => sameText(x, c))}
-              onClick={() => onChange({ ...filter, cities: filter.cities.some((x) => sameText(x, c)) ? filter.cities.filter((x) => !sameText(x, c)) : [...filter.cities, c] })}
-            >
-              {c}
-            </button>
+      {LEVELS.some((l) => places[l].length > 0) && (
+        <section className="space-y-2">
+          <h3 className="text-sm font-bold text-white/80">Local</h3>
+          {LEVELS.filter((l) => places[l].length > 0).map((level) => (
+            <div key={level} role="group" aria-label={LEVEL_LABEL[level]} className="flex flex-wrap items-center gap-2">
+              <span className="w-16 text-xs font-semibold text-white/70">{LEVEL_LABEL[level]}</span>
+              {places[level].map((o) => (
+                <button key={o.key} type="button" className={`${CHIP} pl-3`} aria-pressed={filter.places.includes(o.key)} onClick={() => onChange({ ...filter, places: toggle(filter.places, o.key) })}>
+                  {o.label}
+                </button>
+              ))}
+            </div>
           ))}
-        </Group>
+        </section>
       )}
       <div className="mt-auto space-y-3 pt-4 text-center">
         <p aria-live="polite" className="font-semibold text-white/90">

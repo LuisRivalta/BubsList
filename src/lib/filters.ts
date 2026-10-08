@@ -1,6 +1,6 @@
 import { normalizeText } from './text'
-import { effectiveCity } from './tree'
-import type { Completion, Difficulty, Quest, QuestType, Review } from './types'
+import { effectivePlace, placeWithin } from './place'
+import type { Category, Completion, Difficulty, Quest, QuestType, Review } from './types'
 
 export { normalizeText, sameText } from './text'
 
@@ -25,15 +25,15 @@ export interface DrawFilter {
   categoryIds: string[] // empty = any
   typeIds: string[] // empty = any; each type narrows only its own category
   difficulties: Difficulty[] // empty = any
-  cities: string[] // empty = any; compared with sameText against the effective city
+  places: string[] // placeOptions keys; empty = any; only narrows categories with a physical place
 }
 
 // What "Sortear" picks from: pending quests you can do right now (none of their subquests still pending) that pass the filters.
-export function drawPool(quests: Quest[], done: Set<string>, f: DrawFilter, types: QuestType[] = []): Quest[] {
+export function drawPool(quests: Quest[], done: Set<string>, f: DrawFilter, ctx: { types?: QuestType[]; categories?: Category[] } = {}): Quest[] {
   const pending = quests.filter((q) => !done.has(q.id))
   const hasPendingChild = new Set(pending.flatMap((q) => q.parent_id ?? []))
-  const cities = new Set(f.cities.map(normalizeText))
-  const categoryOf = new Map(types.map((t) => [t.id, t.category_id]))
+  const categoryOf = new Map((ctx.types ?? []).map((t) => [t.id, t.category_id]))
+  const physical = new Set((ctx.categories ?? []).filter((c) => c.has_place).map((c) => c.id))
   // "Filme + Restaurante + Hamburgueria" = any film, or a burger place: a chosen type narrows only its own category.
   const chosenTypes = (categoryId: string) => f.typeIds.filter((id) => categoryOf.get(id) === categoryId)
   return pending
@@ -44,17 +44,12 @@ export function drawPool(quests: Quest[], done: Set<string>, f: DrawFilter, type
       return !chosen.length || (q.type_id !== null && chosen.includes(q.type_id))
     })
     .filter((q) => !f.difficulties.length || f.difficulties.includes(q.difficulty))
-    .filter((q) => !cities.size || cities.has(normalizeText(effectiveCity(quests, q.id) ?? '')))
-}
-
-// Effective cities of `among`, once each (first spelling wins), alphabetical.
-export function cityOptions(quests: Quest[], among: Quest[] = quests): string[] {
-  const seen = new Map<string, string>()
-  for (const q of among) {
-    const city = effectiveCity(quests, q.id)
-    if (city && !seen.has(normalizeText(city))) seen.set(normalizeText(city), city)
-  }
-  return [...seen.values()].sort((a, b) => a.localeCompare(b, 'pt-BR'))
+    // A place only narrows categories with a physical place: an anime is never cut by "Ribeirão Preto".
+    .filter((q) => {
+      if (!f.places.length || !physical.has(q.category_id)) return true
+      const place = effectivePlace(quests, q.id)
+      return !!place && f.places.some((k) => placeWithin(place, k))
+    })
 }
 
 export function pendingReviews(completions: Completion[], reviews: Review[], userId: string): Completion[] {
