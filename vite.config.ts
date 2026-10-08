@@ -9,7 +9,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png', 'logo.svg', 'tmdb.svg'],
       workbox: { globPatterns: ['**/*.{js,css,html,woff2,png,svg,webp,ico}'] },
       manifest: {

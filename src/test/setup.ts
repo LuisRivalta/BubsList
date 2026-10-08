@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
-import { afterEach } from 'vitest'
+import { afterEach, vi } from 'vitest'
 
 afterEach(cleanup)
 
@@ -12,3 +12,8 @@ globalThis.Request = class extends NodeRequest {
     super(input, init?.signal ? { ...init, signal: undefined } : init)
   }
 } as typeof Request
+
+// The service worker only exists in the built app; tests see no new version unless they say so.
+vi.mock('virtual:pwa-register/react', () => ({
+  useRegisterSW: vi.fn(() => ({ needRefresh: [false, () => {}], offlineReady: [false, () => {}], updateServiceWorker: vi.fn() })),
+}))

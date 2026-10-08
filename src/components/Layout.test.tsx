@@ -1,6 +1,8 @@
 import { act, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, expect, it, vi } from 'vitest'
+import { useRegisterSW } from 'virtual:pwa-register/react'
 import { BeforePaint } from '../test/render'
 import Layout, { useHideSky } from './Layout'
 
@@ -13,6 +15,7 @@ const withMotion = () => vi.stubGlobal('matchMedia', () => ({ matches: false, ad
 afterEach(() => {
   Object.defineProperty(navigator, 'onLine', { value: true, configurable: true })
   vi.unstubAllGlobals()
+  vi.mocked(useRegisterSW).mockReset() // back to "no new version" (setup.ts)
 })
 
 it('shows the four sections and the page content', () => {
@@ -76,4 +79,32 @@ it('a full-screen draw hides the page sky while it is open', async () => {
   expect(screen.queryByTestId('sky')).not.toBeInTheDocument()
   await act(() => r.navigate('/'))
   expect(await screen.findByTestId('sky')).toBeInTheDocument()
+})
+
+const newVersion = (update = vi.fn(), registration?: Partial<ServiceWorkerRegistration>) =>
+  vi.mocked(useRegisterSW).mockImplementation((options) => {
+    if (registration) options?.onRegisteredSW?.('/sw.js', registration as ServiceWorkerRegistration)
+    return { needRefresh: [!registration, vi.fn()], offlineReady: [false, vi.fn()], updateServiceWorker: update }
+  })
+
+it('offers the new version and only reloads when asked', async () => {
+  const update = vi.fn()
+  newVersion(update)
+  renderLayout()
+  expect(screen.getByRole('status')).toHaveTextContent('Nova versão do Bubs2Do')
+  expect(update).not.toHaveBeenCalled()
+  await userEvent.setup().click(screen.getByRole('button', { name: 'Atualizar' }))
+  expect(update).toHaveBeenCalledWith(true)
+})
+
+it('looks for a new version whenever the app comes back to the screen, quietly when offline', async () => {
+  const check = vi.fn().mockRejectedValue(new Error('offline'))
+  newVersion(vi.fn(), { update: check })
+  renderLayout()
+  act(() => {
+    document.dispatchEvent(new Event('visibilitychange'))
+  })
+  expect(check).toHaveBeenCalled()
+  await new Promise((r) => setTimeout(r, 0))
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
 })

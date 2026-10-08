@@ -2,6 +2,7 @@ import { animate } from 'animejs'
 import { ChartColumn, Map as MapIcon, Trophy, User } from 'lucide-react'
 import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, Outlet, useLocation } from 'react-router'
+import { useRegisterSW } from 'virtual:pwa-register/react'
 import { prefersReducedMotion } from '../lib/motion'
 
 const SkyScene = lazy(() => import('./SkyScene'))
@@ -53,6 +54,23 @@ function useSaveFailed() {
   return failed
 }
 
+// A deploy shows "Nova versão" instead of reloading on its own, so nothing typed is lost.
+// The installed iPhone app stays open in the background for days: look for a new version whenever it comes back.
+function useNewVersion() {
+  const {
+    needRefresh: [needRefresh],
+    updateServiceWorker,
+  } = useRegisterSW({
+    onRegisteredSW(_url, registration) {
+      if (!registration) return
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') registration.update().catch(() => {})
+      })
+    },
+  })
+  return needRefresh ? () => updateServiceWorker(true) : null
+}
+
 // New page content rises in; the inline transform is removed afterwards so fixed overlays inside keep covering the screen.
 function PageEnter({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -69,6 +87,7 @@ function PageEnter({ children }: { children: ReactNode }) {
 export default function Layout() {
   const online = useOnline()
   const saveFailed = useSaveFailed()
+  const update = useNewVersion()
   const { pathname } = useLocation()
   const [animated] = useState(() => !prefersReducedMotion())
   const [hiders, setHiders] = useState(0)
@@ -147,6 +166,12 @@ export default function Layout() {
           </div>
         </main>
         <div className="fixed inset-x-3 top-[max(0.75rem,env(safe-area-inset-top))] z-40 space-y-2 md:left-auto md:right-6 md:max-w-md">
+          {update && (
+            <div role="status" className="flex items-center gap-3 rounded-xl bg-white p-3 text-sm font-semibold text-ink shadow-lg">
+              <span className="flex-1">Nova versão do Bubs2Do</span>
+              <button type="button" className="btn btn-primary" onClick={update}>Atualizar</button>
+            </div>
+          )}
           {!online && (
             <p role="alert" className="rounded-xl bg-yellow-100 p-3 text-sm text-yellow-900 shadow-lg">
               Sem conexão. O que você digitar continua aqui — tente salvar quando a internet voltar.
