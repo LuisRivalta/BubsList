@@ -1,6 +1,6 @@
-import { screen, waitFor } from '@testing-library/react'
+import { act, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { normalizeAniList } from '../../supabase/functions/_shared/catalog'
 import * as api from '../data/api'
 import * as catalog from '../lib/catalog'
@@ -269,4 +269,56 @@ it('moving a quest to a category without a physical place keeps its stored place
   expect(screen.queryByLabelText(/Local/)).not.toBeInTheDocument()
   await user.click(screen.getByRole('button', { name: 'Salvar' }))
   await waitFor(() => expect(api.updateQuest).toHaveBeenCalledWith('brabus', expect.objectContaining({ city: 'Ribeirão Preto', country: 'Brasil', place_label: 'Ribeirão Preto, Brasil' })))
+})
+
+const saoPaulo = { city: null, state: 'São Paulo', country: 'Brasil', label: 'São Paulo, Brasil', lat: -22, lng: -48 }
+const hanging = (_q: string, signal?: AbortSignal) =>
+  new Promise<never>((_, reject) => signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError'))))
+
+afterEach(() => vi.useRealTimers())
+
+async function searchRibeirao() {
+  const user = userEvent.setup(vi.isFakeTimers() ? { advanceTimers: vi.advanceTimersByTime } : {})
+  renderRoute(routes, '/quests/nova')
+  await user.click(await screen.findByRole('button', { name: 'Restaurante' }))
+  await user.type(screen.getByLabelText(/Local/), 'Ribeirão')
+  await user.click(screen.getByRole('button', { name: 'Buscar' }))
+  return user
+}
+
+it('a search that never answers gives up after 10 s and says so', async () => {
+  vi.useFakeTimers({ shouldAdvanceTime: true })
+  withTypes()
+  vi.mocked(place.searchPlaces).mockImplementation(hanging)
+  await searchRibeirao()
+  expect(screen.getByText('Buscando…').closest('[role="status"]')).not.toBeNull()
+  await act(() => vi.advanceTimersByTimeAsync(10_000))
+  expect(screen.getByRole('alert')).toHaveTextContent('Não deu para buscar agora')
+})
+
+it('typing again during a search never ends in a false error', async () => {
+  vi.useFakeTimers({ shouldAdvanceTime: true })
+  withTypes()
+  vi.mocked(place.searchPlaces).mockImplementation(hanging)
+  const user = await searchRibeirao()
+  await user.type(screen.getByLabelText(/Local/), ' Preto')
+  await act(() => vi.advanceTimersByTimeAsync(10_000))
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+})
+
+it('screen readers hear how many places came back', async () => {
+  withTypes()
+  vi.mocked(place.searchPlaces).mockResolvedValue([ribeirao, saoPaulo])
+  await searchRibeirao()
+  await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('2 lugares encontrados'))
+})
+
+it('picking a place moves the focus to Limpar local, and clearing brings it back to the field', async () => {
+  withTypes()
+  vi.mocked(place.searchPlaces).mockResolvedValue([ribeirao])
+  const user = await searchRibeirao()
+  await user.click(await screen.findByRole('button', { name: 'Ribeirão Preto, São Paulo, Brasil' }))
+  expect(screen.getByRole('button', { name: 'Limpar local' })).toHaveFocus()
+  await user.click(screen.getByRole('button', { name: 'Limpar local' }))
+  expect(screen.getByLabelText(/Local/)).toHaveFocus()
 })

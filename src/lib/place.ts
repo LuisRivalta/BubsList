@@ -26,14 +26,17 @@ interface NominatimResult {
   address?: Record<string, string | undefined>
 }
 
+// Database limits: 80 characters per level, 200 for the label. Cutting never leaves a dangling comma or space.
+const cut = (s: string | null | undefined, max: number) => (s ? s.trim().slice(0, max).replace(/[\s,]+$/, '') || null : null)
+
 export function normalizePlace(r: NominatimResult): PlaceChoice {
   const a = r.address ?? {}
-  const city = a.city ?? a.town ?? a.village ?? a.municipality ?? null
-  const state = a.state ?? null
-  const country = a.country ?? null
+  const city = cut(a.city ?? a.town ?? a.village ?? a.municipality, 80)
+  const state = cut(a.state, 80)
+  const country = cut(a.country, 80)
   const parts = [city, state, country].filter((p): p is string => !!p)
   const name = r.name && !parts.some((p) => sameText(p, r.name!)) ? r.name : null
-  return { city, state, country, label: [name, ...parts].filter(Boolean).join(', '), lat: Number(r.lat), lng: Number(r.lon) }
+  return { city, state, country, label: cut([name, ...parts].filter(Boolean).join(', '), 200) ?? '', lat: Number(r.lat), lng: Number(r.lon) }
 }
 
 const cache = new Map<string, PlaceChoice[]>()

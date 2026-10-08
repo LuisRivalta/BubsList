@@ -3,6 +3,13 @@ import { quest } from '../test/fixtures'
 import { effectivePlace, mostSpecific, normalizePlace, placeLabel, placeOptions, placeWithin, searchPlaces } from './place'
 
 describe('normalizePlace', () => {
+  it('cuts the parts at 80 characters and the label at 200, the database limits', () => {
+    const long = (c: string) => c.repeat(120)
+    const p = normalizePlace({ name: long('N'), lat: '1', lon: '2', address: { city: long('C'), state: long('S'), country: long('P') } })
+    expect([p.city!.length, p.state!.length, p.country!.length]).toEqual([80, 80, 80])
+    expect(p.label.length).toBeLessThanOrEqual(200)
+    expect(p.label).not.toMatch(/[\s,]$/)
+  })
   it('reads city, state and country, and builds a label without repeats', () => {
     expect(
       normalizePlace({ name: 'Ribeirão Preto', lat: '-21.17', lon: '-47.81', address: { city: 'Ribeirão Preto', state: 'São Paulo', country: 'Brasil' } }),

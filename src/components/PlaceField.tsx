@@ -1,6 +1,7 @@
 import { MapPin, Search, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { searchPlaces, type PlaceChoice } from '../lib/place'
+import { count } from '../lib/text'
 
 export interface PlaceFields {
   city: string | null
@@ -11,6 +12,7 @@ export interface PlaceFields {
   lng: number | null
 }
 export const NO_PLACE: PlaceFields = { city: null, state: null, country: null, place_label: null, lat: null, lng: null }
+export const PLACE_SEARCH_TIMEOUT_MS = 10_000
 
 // Place search (OpenStreetMap): type, then Buscar (or Enter), then pick a suggestion. Never searches while typing (Nominatim policy).
 // Text typed without picking is kept as the city.
@@ -23,12 +25,27 @@ export default function PlaceField({ value, inherited, onChange }: { value: Plac
   const pending = useRef<AbortController | null>(null)
   useEffect(() => () => pending.current?.abort(), [])
 
+  const input = useRef<HTMLInputElement>(null)
+  const clearButton = useRef<HTMLButtonElement>(null)
+  const focusNext = useRef<'clear' | 'input' | null>(null)
+  useEffect(() => {
+    if (focusNext.current === 'clear') clearButton.current?.focus()
+    if (focusNext.current === 'input') input.current?.focus()
+    focusNext.current = null
+  }, [chosen])
+
   async function search() {
     const q = text.trim()
     if (q.length < 3) return
     pending.current?.abort()
     const controller = new AbortController()
     pending.current = controller
+    // A search that hangs gives up instead of saying "Buscando…" forever. Typing or picking aborts first, so no false error.
+    const timer = setTimeout(() => {
+      if (controller.signal.aborted) return
+      controller.abort()
+      setStatus('error')
+    }, PLACE_SEARCH_TIMEOUT_MS)
     setResults([])
     setStatus('loading')
     try {
@@ -38,6 +55,8 @@ export default function PlaceField({ value, inherited, onChange }: { value: Plac
       setStatus(list.length ? 'idle' : 'empty')
     } catch {
       if (!controller.signal.aborted) setStatus('error')
+    } finally {
+      clearTimeout(timer)
     }
   }
 
@@ -50,12 +69,14 @@ export default function PlaceField({ value, inherited, onChange }: { value: Plac
   }
 
   function pick(p: PlaceChoice) {
+    focusNext.current = 'clear'
     pending.current?.abort()
     onChange({ city: p.city, state: p.state, country: p.country, place_label: p.label, lat: p.lat, lng: p.lng })
     setResults([])
   }
 
   function clear() {
+    focusNext.current = 'input'
     setText('')
     onChange(NO_PLACE)
   }
@@ -67,13 +88,14 @@ export default function PlaceField({ value, inherited, onChange }: { value: Plac
         <div className="flex items-center gap-2 rounded-2xl bg-blush/30 p-2 pl-3">
           <MapPin aria-hidden className="size-4 shrink-0 text-accent" />
           <span className="flex-1 font-semibold">{chosen}</span>
-          <button type="button" aria-label="Limpar local" onClick={clear} className="grid size-9 place-items-center rounded-full hover:bg-blush/50">
+          <button ref={clearButton} type="button" aria-label="Limpar local" onClick={clear} className="grid size-9 place-items-center rounded-full hover:bg-blush/50">
             <X aria-hidden className="size-4" />
           </button>
         </div>
       ) : (
         <div className="flex gap-2">
           <input
+            ref={input}
             aria-labelledby="place-label"
             className="input min-w-0 flex-1"
             value={text}
@@ -93,8 +115,9 @@ export default function PlaceField({ value, inherited, onChange }: { value: Plac
         </div>
       )}
       {!chosen && !text && inherited && <p className="text-sm text-ink/60">Herdado: {inherited}</p>}
-      {status === 'loading' && <p className="text-sm text-ink/60">Buscando…</p>}
-      {status === 'empty' && <p className="text-sm text-ink/60">Nenhum lugar encontrado.</p>}
+      <p role="status" className="text-sm text-ink/60">
+        {status === 'loading' ? 'Buscando…' : status === 'empty' ? 'Nenhum lugar encontrado.' : results.length > 0 && <span className="sr-only">{count(results.length, 'lugar encontrado', 'lugares encontrados')}</span>}
+      </p>
       {status === 'error' && <p role="alert" className="text-sm text-red-600">Não deu para buscar agora. O que você digitou fica salvo como cidade.</p>}
       {results.length > 0 && (
         <ul className="space-y-1">
