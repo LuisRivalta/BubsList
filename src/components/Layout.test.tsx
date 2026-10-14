@@ -4,7 +4,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, expect, it, vi } from 'vitest'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { BeforePaint } from '../test/render'
-import Layout, { useHideSky } from './Layout'
+import Layout, { SAVE_FAILED, useHideSky } from './Layout'
 
 vi.mock('./SkyScene', () => ({ default: () => <div data-testid="sky" /> }))
 
@@ -90,7 +90,7 @@ const newVersion = ({ update = vi.fn(), registration, needRefresh = true }: { up
 
 it('offers the new version and only reloads when asked', async () => {
   const update = vi.fn()
-  newVersion({ update, registration: { waiting: new EventTarget() as ServiceWorker } })
+  newVersion({ update, registration: { waiting: new EventTarget() as ServiceWorker, update: async () => ({}) as ServiceWorkerRegistration } })
   renderLayout()
   expect(screen.getByRole('status')).toHaveTextContent('Nova versão do Bubs2Do')
   expect(update).not.toHaveBeenCalled()
@@ -108,4 +108,17 @@ it('looks for a new version whenever the app comes back to the screen, quietly w
   expect(check).toHaveBeenCalled()
   await new Promise((r) => setTimeout(r, 0))
   expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+})
+
+it('the update notice has a live region from the start, so its text is announced when it appears', () => {
+  renderLayout()
+  expect(screen.getByRole('status')).toBeEmptyDOMElement()
+})
+
+it('a save that handles its own failure can still raise the warning', () => {
+  renderLayout()
+  act(() => {
+    window.dispatchEvent(new Event(SAVE_FAILED))
+  })
+  expect(screen.getByRole('alert')).toHaveTextContent('Não deu para salvar')
 })

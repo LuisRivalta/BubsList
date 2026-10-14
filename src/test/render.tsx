@@ -5,8 +5,7 @@ import { createMemoryRouter, RouterProvider, type RouteObject } from 'react-rout
 import { SessionIdProvider } from '../data/session'
 import { ME } from './fixtures'
 
-export function renderRoute(routes: RouteObject[], url: string) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+export function renderRoute(routes: RouteObject[], url: string, client = new QueryClient({ defaultOptions: { queries: { retry: false } } })) {
   const router = createMemoryRouter(routes, { initialEntries: [url] })
   render(
     <QueryClientProvider client={client}>

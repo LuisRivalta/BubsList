@@ -10,7 +10,7 @@ export interface IcsEvent {
   now: Date
 }
 
-const escape = (s: string) => s.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n')
+const escape = (s: string) => s.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r\n|\r|\n/g, '\\n')
 const stamp = (d: Date) => d.toISOString().slice(0, 19).replace(/[-:]/g, '') // 20261010T203000, from the UTC parts
 const encoder = new TextEncoder()
 

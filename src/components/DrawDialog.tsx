@@ -156,13 +156,15 @@ function Filters({ data, filter, types, places, onChange, poolSize, onDraw }: {
         <section className="space-y-2">
           <h3 className="text-sm font-bold text-white/80">Local</h3>
           {LEVELS.filter((l) => places[l].length > 0).map((level) => (
-            <div key={level} role="group" aria-label={LEVEL_LABEL[level]} className="flex flex-wrap items-center gap-2">
-              <span className="w-16 text-xs font-semibold text-white/70">{LEVEL_LABEL[level]}</span>
-              {places[level].map((o) => (
-                <button key={o.key} type="button" className={`${CHIP} pl-3`} aria-pressed={filter.places.includes(o.key)} onClick={() => onChange({ ...filter, places: toggle(filter.places, o.key) })}>
-                  {o.label}
-                </button>
-              ))}
+            <div key={level} role="group" aria-label={LEVEL_LABEL[level]} className="flex items-start gap-2">
+              <span className="w-16 shrink-0 pt-2.5 text-xs font-semibold text-white/70">{LEVEL_LABEL[level]}</span>
+              <div className="flex flex-wrap gap-2">
+                {places[level].map((o) => (
+                  <button key={o.key} type="button" className={`${CHIP} pl-3`} aria-pressed={filter.places.includes(o.key)} onClick={() => onChange({ ...filter, places: toggle(filter.places, o.key) })}>
+                    {o.label}
+                  </button>
+                ))}
+              </div>
             </div>
           ))}
         </section>

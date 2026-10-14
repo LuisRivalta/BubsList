@@ -3,6 +3,7 @@ import { useState, type FormEvent } from 'react'
 import Avatar from '../components/Avatar'
 import Bubble from '../components/Bubble'
 import { IconPicker } from '../components/Icon'
+import { SAVE_FAILED } from '../components/Layout'
 import PageHero from '../components/PageHero'
 import { LoadError, PageLoading } from '../components/Status'
 import { deleteCategory, deleteQuestType, saveCategory, saveQuestType, setCategoryPlace, signOut, updateProfile, uploadAvatar, type CategoryInput } from '../data/api'
@@ -160,6 +161,8 @@ interface RowProps {
 }
 
 function CategoryRow({ data, category: c, onSave, onDelete, onChange }: RowProps) {
+  const [savingPlace, setSavingPlace] = useState<boolean | null>(null) // the value being saved, shown right away
+  const hasPlace = savingPlace ?? c.has_place
   const [editing, setEditing] = useState(false)
   if (editing) {
     return (
@@ -197,15 +200,23 @@ function CategoryRow({ data, category: c, onSave, onDelete, onChange }: RowProps
         <button
           type="button"
           role="switch"
-          aria-checked={c.has_place}
+          aria-checked={hasPlace}
           aria-label={`Lugar físico em ${c.name}`}
+          disabled={savingPlace !== null}
           onClick={async () => {
-            await setCategoryPlace(c.id, !c.has_place)
-            onChange()
+            setSavingPlace(!hasPlace)
+            try {
+              await setCategoryPlace(c.id, !hasPlace)
+              await onChange()
+            } catch {
+              window.dispatchEvent(new Event(SAVE_FAILED))
+            } finally {
+              setSavingPlace(null)
+            }
           }}
-          className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors ${c.has_place ? 'bg-accent' : 'bg-ink/20'}`}
+          className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors disabled:opacity-70 ${hasPlace ? 'bg-accent' : 'bg-ink/20'}`}
         >
-          <span aria-hidden className={`size-5 rounded-full bg-white shadow transition-transform ${c.has_place ? 'translate-x-6' : 'translate-x-1'}`} />
+          <span aria-hidden className={`size-5 rounded-full bg-white shadow transition-transform ${hasPlace ? 'translate-x-6' : 'translate-x-1'}`} />
         </button>
         <span aria-hidden className="text-sm text-ink/60">Lugar físico</span>
       </div>

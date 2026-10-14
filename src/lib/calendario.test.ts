@@ -23,6 +23,11 @@ describe('buildIcs', () => {
     const ics = buildIcs({ ...base, title: 'Pizza; vinho\\e\nmais', location: 'Ribeirão Preto, São Paulo, Brasil' })
     expect(lines(ics)).toEqual(expect.arrayContaining(['SUMMARY:Pizza\\; vinho\\\\e\\nmais', 'LOCATION:Ribeirão Preto\\, São Paulo\\, Brasil']))
   })
+  it('a lone carriage return is escaped too, so no line can be injected', () => {
+    const ics = buildIcs({ ...base, title: 'Pizza\rLOCATION:Hackeado' })
+    expect(lines(ics)).toContain('SUMMARY:Pizza\\nLOCATION:Hackeado')
+    expect(ics).not.toMatch(/\r(?!\n)/)
+  })
   it('folds lines over 75 bytes without splitting a character, and ends with CRLF', () => {
     const ics = buildIcs({ ...base, title: 'Ação '.repeat(40) })
     expect(ics.endsWith('END:VCALENDAR\r\n')).toBe(true)

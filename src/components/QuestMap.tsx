@@ -6,7 +6,8 @@ import type { Pin } from '../lib/map'
 const BRASIL: L.LatLngTuple = [-14.2, -51.9]
 
 // Leaflet with the OpenStreetMap tiles. Pins are drawn here; the card of the tapped pin is React (MapPage).
-export default function QuestMap({ pins, onPick }: { pins: Pin[]; onPick: (pin: Pin) => void }) {
+export default function QuestMap({ pins, frame, onPick }: { pins: Pin[]; frame: string; onPick: (pin: Pin) => void }) {
+  const framed = useRef<string | null>(null)
   const box = useRef<HTMLDivElement>(null)
   const map = useRef<L.Map | null>(null)
   const layer = useRef<L.LayerGroup | null>(null)
@@ -40,9 +41,12 @@ export default function QuestMap({ pins, onPick }: { pins: Pin[]; onPick: (pin: 
         .on('click', () => pick.current(pin))
         .addTo(group)
     }
+    // Frame the pins when the map opens and when the filter changes; a change from the other phone only redraws, so the view never jumps.
+    if (framed.current === frame) return
+    framed.current = frame
     if (pins.length) m.fitBounds(L.latLngBounds(pins.map((p) => [p.lat, p.lng] as L.LatLngTuple)), { padding: [48, 48], maxZoom: 13 })
     else m.setView(BRASIL, 4)
-  }, [pins])
+  }, [pins, frame])
 
   // Sea-colored background (OpenStreetMap's water), so a zoomed-out world has no gray bands around it.
   return <div ref={box} data-lenis-prevent className="size-full" style={{ background: '#aad3df' }} />

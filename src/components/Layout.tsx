@@ -40,13 +40,20 @@ function useOnline() {
   return online
 }
 
+// Saves that catch their own failure (to undo what they showed) raise this event instead.
+export const SAVE_FAILED = 'bubs:save-failed'
+
 // Async click handlers that fail without their own try/catch end up here, so a failed save never goes unnoticed.
 function useSaveFailed() {
   const [failed, setFailed] = useState(false)
   useEffect(() => {
     const show = () => setFailed(true)
     window.addEventListener('unhandledrejection', show)
-    return () => window.removeEventListener('unhandledrejection', show)
+    window.addEventListener(SAVE_FAILED, show)
+    return () => {
+      window.removeEventListener('unhandledrejection', show)
+      window.removeEventListener(SAVE_FAILED, show)
+    }
   }, [])
   useEffect(() => {
     if (!failed) return
@@ -170,12 +177,6 @@ export default function Layout() {
           </div>
         </main>
         <div className="fixed inset-x-3 top-[max(0.75rem,env(safe-area-inset-top))] z-40 space-y-2 md:left-auto md:right-6 md:max-w-md">
-          {update && (
-            <div role="status" className="flex items-center gap-3 rounded-xl bg-white p-3 text-sm font-semibold text-ink shadow-lg">
-              <span className="flex-1">Nova versão do Bubs2Do</span>
-              <button type="button" className="btn btn-primary" onClick={update}>Atualizar</button>
-            </div>
-          )}
           {!online && (
             <p role="alert" className="rounded-xl bg-yellow-100 p-3 text-sm text-yellow-900 shadow-lg">
               Sem conexão. O que você digitar continua aqui — tente salvar quando a internet voltar.
@@ -186,6 +187,15 @@ export default function Layout() {
               Não deu para salvar. Confira a internet e tente de novo.
             </p>
           )}
+          {/* Always mounted, so screen readers announce the notice when it appears. */}
+          <div role="status">
+            {update && (
+              <div className="flex items-center gap-3 rounded-xl bg-white p-3 text-sm font-semibold text-ink shadow-lg">
+                <span className="flex-1">Nova versão do Bubs2Do</span>
+                <button type="button" className="btn btn-primary" onClick={update}>Atualizar</button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </HideSkyContext.Provider>

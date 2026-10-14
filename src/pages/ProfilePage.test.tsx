@@ -1,6 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { expect, it, vi } from 'vitest'
+import { SAVE_FAILED } from '../components/Layout'
 import * as api from '../data/api'
 import { ME, achievement, allCats, appData, category, quest, questType } from '../test/fixtures'
 import { renderRoute } from '../test/render'
@@ -147,4 +148,22 @@ it('the physical-place switch sits on its own line, so the edit and delete butto
   const name = await screen.findByText('Shows')
   expect(name.parentElement).not.toContainElement(screen.getByRole('switch', { name: 'Lugar físico em Shows' }))
   expect(name.parentElement).toContainElement(screen.getByRole('button', { name: 'Excluir Shows' }))
+})
+
+it('the physical-place switch moves at once and waits locked while it saves; a failure puts it back', async () => {
+  let fail!: (e: Error) => void
+  vi.mocked(api.setCategoryPlace).mockReturnValue(new Promise((_, reject) => (fail = reject)))
+  const warned = vi.fn()
+  window.addEventListener(SAVE_FAILED, warned)
+  open()
+  const user = userEvent.setup()
+  const filme = await screen.findByRole('switch', { name: 'Lugar físico em Filme' })
+  await user.click(filme)
+  expect(filme).toHaveAttribute('aria-checked', 'true')
+  expect(filme).toBeDisabled()
+  fail(new Error('offline'))
+  await waitFor(() => expect(filme).toHaveAttribute('aria-checked', 'false'))
+  expect(filme).toBeEnabled()
+  expect(warned).toHaveBeenCalled()
+  window.removeEventListener(SAVE_FAILED, warned)
 })

@@ -1,4 +1,5 @@
-import { screen, within } from '@testing-library/react'
+import { QueryClient } from '@tanstack/react-query'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, expect, it, vi } from 'vitest'
 import * as api from '../data/api'
@@ -62,4 +63,35 @@ it('without pins it says how to put quests on the map', async () => {
   vi.mocked(api.loadAll).mockResolvedValue(appData({ categories: allCats(), quests: [legacy] }))
   open()
   expect(await screen.findByText('Nenhuma quest no mapa ainda. Escolham o lugar pela busca no formulário.')).toBeInTheDocument()
+})
+
+it('a change that arrives while the card is open shows up in it, and the card closes if its pin is gone', async () => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  const user = userEvent.setup()
+  renderRoute([{ path: '/mapa', element: <MapPage /> }], '/mapa', client)
+  await user.click(await screen.findByRole('button', { name: 'alfinete Akira Sushi + Brabus' }))
+  vi.mocked(api.loadAll).mockResolvedValue(appData({ categories: allCats(), quests: [{ ...brabus, title: 'Brabus Burguer' }, sushi, rio], completions: [completion({ quest_id: 'rio' })] }))
+  await client.invalidateQueries()
+  await waitFor(() => expect(within(screen.getByRole('region', { name: 'Neste ponto' })).getByRole('link', { name: /Brabus Burguer/ })).toBeInTheDocument())
+  vi.mocked(api.loadAll).mockResolvedValue(appData({ categories: allCats(), quests: [rio], completions: [completion({ quest_id: 'rio' })] }))
+  await client.invalidateQueries()
+  await waitFor(() => expect(screen.queryByRole('region', { name: 'Neste ponto' })).not.toBeInTheDocument())
+})
+
+it('an empty filter says what is missing instead of "ainda"', async () => {
+  const user = userEvent.setup()
+  vi.mocked(api.loadAll).mockResolvedValue(appData({ categories: allCats(), quests: [brabus] }))
+  open()
+  await user.click(await screen.findByRole('tab', { name: 'Feitas' }))
+  expect(screen.getByText('Nenhuma quest feita no mapa.')).toBeInTheDocument()
+  expect(screen.queryByText(/ainda/)).not.toBeInTheDocument()
+})
+
+it('the card takes the focus when it opens, and Fechar gives it back to the map', async () => {
+  const user = userEvent.setup()
+  open()
+  await user.click(await screen.findByRole('button', { name: 'alfinete Akira Sushi + Brabus' }))
+  expect(within(screen.getByRole('region', { name: 'Neste ponto' })).getByRole('link', { name: /Akira Sushi/ })).toHaveFocus()
+  await user.click(screen.getByRole('button', { name: 'Fechar' }))
+  expect(screen.getByRole('region', { name: 'Mapa das quests' })).toHaveFocus()
 })

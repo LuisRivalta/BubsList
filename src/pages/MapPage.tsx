@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import Bubble from '../components/Bubble'
 import { useHideSky } from '../components/Layout'
@@ -13,6 +13,12 @@ import type { AppData } from '../lib/types'
 
 const QuestMap = lazy(() => import('../components/QuestMap'))
 
+const EMPTY: Record<MapShow, string> = {
+  all: 'Nenhuma quest no mapa ainda. Escolham o lugar pela busca no formulário.',
+  pending: 'Nenhuma quest pendente no mapa.',
+  done: 'Nenhuma quest feita no mapa.',
+}
+
 const SHOW: { value: MapShow; label: string }[] = [
   { value: 'all', label: 'Todas' },
   { value: 'pending', label: 'Pendentes' },
@@ -22,7 +28,8 @@ const SHOW: { value: MapShow; label: string }[] = [
 export default function MapPage() {
   const q = useAppData()
   const [show, setShow] = useState<MapShow>('all')
-  const [picked, setPicked] = useState<Pin | null>(null)
+  const [pickedKey, setPickedKey] = useState<string | null>(null) // by key, so the card follows changes from the other phone
+  const mapBox = useRef<HTMLDivElement>(null)
   useHideSky() // the map covers the page; no point animating the sky behind it
   // Memoized so tapping a pin (a re-render) does not refit the map.
   const result = useMemo(() => (q.data ? mapPins(q.data, show) : null), [q.data, show])
@@ -30,6 +37,7 @@ export default function MapPage() {
   if (q.error) return <LoadError retry={() => q.refetch()} />
   if (!q.data || !result) return <PageLoading />
   const { pins, unplaced } = result
+  const picked = pins.find((p) => p.key === pickedKey)
 
   return (
     <>
@@ -41,20 +49,30 @@ export default function MapPage() {
           value={show}
           onChange={(v) => {
             setShow(v)
-            setPicked(null)
+            setPickedKey(null)
           }}
         />
         {/* isolate: Leaflet panes (z-index up to 1000) stay under the menu bar */}
-        <div className="relative isolate h-[60dvh] min-h-80 overflow-hidden rounded-3xl border border-white/70 bg-paper shadow-lg">
+        <div ref={mapBox} role="region" aria-label="Mapa das quests" tabIndex={-1} className="relative isolate h-[60dvh] min-h-80 overflow-hidden rounded-3xl border border-white/70 bg-paper shadow-lg">
           <Suspense fallback={<p className="grid size-full place-items-center text-ink/60">Carregando o mapa…</p>}>
-            <QuestMap pins={pins} onPick={setPicked} />
+            <QuestMap pins={pins} frame={show} onPick={(p) => setPickedKey(p.key)} />
           </Suspense>
           {pins.length === 0 && (
             <p className="absolute inset-x-3 top-3 z-[1001] rounded-xl bg-white/95 p-3 text-sm font-semibold shadow">
-              Nenhuma quest no mapa ainda. Escolham o lugar pela busca no formulário.
+              {EMPTY[show]}
             </p>
           )}
-          {picked && <PinCard pin={picked} data={q.data} onClose={() => setPicked(null)} />}
+          {picked && (
+            <PinCard
+              key={picked.key}
+              pin={picked}
+              data={q.data}
+              onClose={() => {
+                setPickedKey(null)
+                mapBox.current?.focus()
+              }}
+            />
+          )}
         </div>
         {unplaced.length > 0 && (
           <section className="card space-y-2 p-4 text-sm">
@@ -75,8 +93,10 @@ export default function MapPage() {
 }
 
 function PinCard({ pin, data, onClose }: { pin: Pin; data: AppData; onClose: () => void }) {
+  const card = useRef<HTMLElement>(null)
+  useEffect(() => card.current?.querySelector('a')?.focus(), [])
   return (
-    <section aria-label="Neste ponto" className="absolute inset-x-3 bottom-3 z-[1001] max-h-[55%] space-y-2 overflow-y-auto rounded-2xl bg-white p-3 shadow-xl">
+    <section ref={card} aria-label="Neste ponto" className="absolute inset-x-3 bottom-3 z-[1001] max-h-[55%] space-y-2 overflow-y-auto rounded-2xl bg-white p-3 shadow-xl">
       <ul className="space-y-1">
         {pin.quests.map((x) => {
           const c = data.categories.find((k) => k.id === x.category_id)
